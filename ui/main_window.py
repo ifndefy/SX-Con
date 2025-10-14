@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QApplication
 from handlers.api_handler import APIHandler
 
-
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
