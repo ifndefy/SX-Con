@@ -1,4 +1,4 @@
-from . import connectDB as db
+from services import connectDB as db
 
 class DatabaseService:
     def __init__(self):

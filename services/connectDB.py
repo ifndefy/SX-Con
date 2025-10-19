@@ -57,7 +57,7 @@ class DatabaseConnection:
             return -1
         
         credential = DefaultAzureCredential(
-            exclude_interactive_browser_credential=False
+            exclude_interactive_browser_credential=True
         )
         
         connection_string = f"Driver={driver};" \
@@ -66,7 +66,7 @@ class DatabaseConnection:
                             "Encrypt=yes;" \
                             "TrustServerCertificate=no;" \
                             "Connection Timeout=30"
-        
+
         token = credential.get_token("https://database.windows.net/.default")
         token_bytes = token.token.encode("UTF-16-LE")
 
