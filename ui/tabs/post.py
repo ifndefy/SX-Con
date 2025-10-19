@@ -24,7 +24,10 @@ class PostTab(BaseTab):
         self.products_layout = None
         self.remove_product_btn = None
         self.add_product_btn = None
+        self.clear_btn = None
         self.revenue_generation = None
+        self.status_label = None
+        self.create_btn = None
 
         self.product_sections = []
         self.product_counter = 1
@@ -34,6 +37,11 @@ class PostTab(BaseTab):
         self.setup_button_connections()
 
     def setup_ui(self):
+        """
+        :author(s): Joe Lee
+        :purpose: initializes the "Create New Record" tab
+        :return: None
+        """
         # Enable scrolling for when the content exceeds the height of the window
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -223,7 +231,11 @@ class PostTab(BaseTab):
         main_layout.addWidget(scroll)
 
     def add_product_section(self):
-        """Add a new product section to the form"""
+        """
+        :author(s): Joe Lee
+        :purpose: adds additional product lines
+        :return: None
+        """
         product_section = {}
 
         # Product section container
@@ -286,6 +298,11 @@ class PostTab(BaseTab):
         self.product_counter += 1
 
     def remove_product_section(self):
+        """
+        :author(s): Joe Lee
+        :purpose: removes added product lines
+        :return: None
+        """
         if len(self.product_sections) > 2:
             self.product_sections.pop()
             last_widget = self.products_layout.itemAt(self.products_layout.count() - 1).widget()
@@ -301,6 +318,11 @@ class PostTab(BaseTab):
             self.status_label.setText("Cannot remove the last 2 product lines")
 
     def setup_button_connections(self):
+        """
+        :author(s): Joe Lee
+        :purpose: links buttons with methods
+        :return: None
+        """
         self.create_btn.clicked.connect(self.create_record)
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
@@ -311,8 +333,13 @@ class PostTab(BaseTab):
         # todo: SXC-21
 
     def create_record(self):
+        """
+        :author(s): Joe Lee
+        :purpose: initializes record to be posted to database
+        :return: record
+        """
         # Get record
-        vendor_data = {
+        record_data = {
             'ticket_number': self.ticket_input.text(),
             'vendor_id': self.vendor_id_input.text(),
             'phone': self.phone_input.text(),
@@ -335,17 +362,26 @@ class PostTab(BaseTab):
                 'price': product_section['price'].text(),
                 'quantity': product_section['quantity'].text()
             }
-            vendor_data['products'].append(product_data)
+            record_data['products'].append(product_data)
 
         # Get revenue sharing data from the existing component
-        vendor_data['revenue_sharing'] = self.revenue_generation.get_revenue_data()
+        record_data['revenue_sharing'] = self.revenue_generation.get_revenue_data()
 
         # Do something with the data
         self.status_label.setText(
-            f"Creating vendor: {vendor_data['first_name']} {vendor_data['last_name']} - Ticket: {vendor_data['ticket_number']} - Products: {len(vendor_data['products'])}")
-        print("Vendor Data:", vendor_data)
+            f"Creating vendor: {record_data['first_name']} {record_data['last_name']} "
+            f"- Ticket: {record_data['ticket_number']} "
+            f"- Products: {len(record_data['products'])}")
+        print("Vendor Data:", record_data)
+
+        return record_data
 
     def clear_form(self):
+        """
+        :author(s): Joe Lee
+        :purpose: clears all input fields
+        :return: None
+        """
         self.vendor_id_input.clear()
         self.phone_input.clear()
         self.first_name_input.clear()
