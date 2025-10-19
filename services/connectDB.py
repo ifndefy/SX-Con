@@ -12,14 +12,17 @@ class DatabaseConnection:
         #Create object to read from config file
         config = cparser.ConfigParser()
 
-        config.read('config.ini')
-
         #fetch fields for connection string from config.ini
-        self.odbc_driver = config.get('SQL Connection Parameters', 'odbc_driver')
-        self.server_addr = config.get('SQL Connection Parameters', 'server_addr')
-        self.server_port = config.get('SQL Connection Parameters', 'server_port')
-        self.db_name_default = config.get('SQL Connection Parameters', 'db_name')
-        self.sql_access_token = config.getint('SQL Connection Parameters', 'sql_access_token')
+        try:
+            config.read('config.ini')
+
+            self.odbc_driver = config.get('SQL Connection Parameters', 'odbc_driver')
+            self.server_addr = config.get('SQL Connection Parameters', 'server_addr')
+            self.server_port = config.get('SQL Connection Parameters', 'server_port')
+            self.db_name_default = config.get('SQL Connection Parameters', 'db_name')
+            self.sql_access_token = config.getint('SQL Connection Parameters', 'sql_access_token')
+        except:
+            print("Error fetching from config.ini")
 
     def establish_connection(self, 
                             driver = None, 
@@ -71,7 +74,12 @@ class DatabaseConnection:
                                    len(token_bytes), 
                                    token_bytes)
 
-        self.db_connection = odbc.connect(connection_string, attrs_before={access_mode: token_struct})
+        try:
+            self.db_connection = odbc.connect(connection_string, attrs_before={access_mode: token_struct})
+        except:
+            print("Failed to establish connection")
+            return -1
+        
         return 0
     
     def create_cursor(self):
