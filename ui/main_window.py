@@ -1,112 +1,117 @@
 import sys
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QVBoxLayout
-from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QTabWidget
-from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QComboBox
+from PyQt6.QtWidgets import QHBoxLayout
+from PyQt6.QtWidgets import QLabel
+
 from handlers.api_handler import APIHandler
+from ui.core.theme_manager import ThemeManager
+from ui.tabs.post import PostTab
+from ui.tabs.get import GetTab
+from ui.tabs.delete import DeleteTab
+from ui.tabs.view import ViewTab
+from ui.tabs.admin import AdminTab
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("SX-Con")
-        self.setGeometry(0, 0, 1000, 600)
+        self.revision_label = None
+        self.theme_dropdown_menu = None
+        self.tabs = None
+        self.post_tab = None
+        self.get_tab = None
+        self.delete_tab = None
+        self.view_tab = None
+        self.admin_tab = None
+
         self.api_handler = APIHandler()
+        self.theme_manager = ThemeManager()
+        self.setup_window()
+        self.theme_manager.apply_default_theme(self)
         self.setup_ui()
 
+    def setup_window(self):
+        self.setWindowTitle("SX-Con")
+        self.setGeometry(0, 0, 1100, 695)
+        # todo: Resize height to fit Super X logo when delivered to developers
+
     def setup_ui(self):
-        main_layout = QVBoxLayout()
+        main_layout = QVBoxLayout(self)
+
+        # Setup theme selector (no argument needed)
+        self.setup_theme_selector()
+
+        # Setup tabs
+        self.setup_tabs()
+        main_layout.addWidget(self.tabs)
+
+    def setup_theme_selector(self):
+        # Create header layout
+        header_layout = QHBoxLayout()
+
+        # Left side: Logo + Program title + Revision info
+        title_layout = QHBoxLayout()
+
+        # todo: Insert Super X image logo
+
+        # Program title
+        program_name = QLabel("SX-Con")
+        program_name.setObjectName("program_name")
+        title_layout.addWidget(program_name)
+
+        # Revision info
+        self.revision_label = QLabel("v0.0.0")
+        self.revision_label.setObjectName("revision_label")
+        title_layout.addWidget(self.revision_label)
+
+        title_layout.addStretch()  # Push to left
+        header_layout.addLayout(title_layout)
+
+        # Push to the right and add theme selector
+        header_layout.addStretch()
+
+        # Right side: Theme dropdown menu
+        theme_label = QLabel("Theme:")
+        self.theme_dropdown_menu = QComboBox()
+
+        themes = self.theme_manager.get_available_themes()
+        self.theme_dropdown_menu.addItems(themes)
+        self.theme_dropdown_menu.setCurrentText(self.theme_manager.get_current_theme())
+        self.theme_dropdown_menu.currentTextChanged.connect(self.on_theme_changed)
+
+        header_layout.addWidget(theme_label)
+        header_layout.addWidget(self.theme_dropdown_menu)
+
+        # Add header to main layout
+        main_layout = self.layout()
+        if isinstance(main_layout, QVBoxLayout):
+            main_layout.insertLayout(0, header_layout)
+
+    def setup_tabs(self):
         self.tabs = QTabWidget()
 
-        self.post_tab = QWidget()
-        self.get_tab = QWidget()
-        self.delete_tab = QWidget()
-        self.view_tab = QWidget()
-        self.admin_tab = QWidget()
+        self.post_tab = PostTab(self.api_handler)
+        self.get_tab = GetTab(self.api_handler)
+        self.delete_tab = DeleteTab(self.api_handler)
+        self.view_tab = ViewTab(self.api_handler)
+        self.admin_tab = AdminTab(self.api_handler)
 
-        self.tabs.addTab(self.post_tab, "POST")
-        self.tabs.addTab(self.get_tab, "GET")
-        self.tabs.addTab(self.delete_tab, "DELETE")
-        self.tabs.addTab(self.view_tab, "VIEW")
-        self.tabs.addTab(self.admin_tab, "ADMIN SETTINGS")
-
-        post_layout = QVBoxLayout()
-        self.post_label = QLabel("POST tab")
-        self.post_button = QPushButton("Do Something")
-        self.post_button.clicked.connect(self.on_post_clicked)
-        post_layout.addWidget(self.post_label)
-        post_layout.addWidget(self.post_button)
-        self.post_tab.setLayout(post_layout)
-
-        get_layout = QVBoxLayout()
-        self.get_label = QLabel("GET tab")
-        self.get_button = QPushButton("Do Something")
-        self.get_button.clicked.connect(self.on_get_clicked)
-        get_layout.addWidget(self.get_label)
-        get_layout.addWidget(self.get_button)
-        self.get_tab.setLayout(get_layout)
-
-        delete_layout = QVBoxLayout()
-        self.delete_label = QLabel("DELETE tab")
-        self.delete_button = QPushButton("Do Something")
-        self.delete_button.clicked.connect(self.on_delete_clicked)
-        delete_layout.addWidget(self.delete_label)
-        delete_layout.addWidget(self.delete_button)
-        self.delete_tab.setLayout(delete_layout)
-
-        view_layout = QVBoxLayout()
-        self.view_label = QLabel("VIEW tab")
-        self.view_button = QPushButton("Do Something")
-        self.view_button.clicked.connect(self.on_view_clicked)
-        view_layout.addWidget(self.view_label)
-        view_layout.addWidget(self.view_button)
-        self.view_tab.setLayout(view_layout)
-
-        admin_layout = QVBoxLayout()
-        self.admin_label = QLabel("ADMIN SETTINGS tab")
-        self.admin_button = QPushButton("Do Something")
-        self.admin_button.clicked.connect(self.on_admin_clicked)
-        admin_layout.addWidget(self.admin_label)
-        admin_layout.addWidget(self.admin_button)
-        self.admin_tab.setLayout(admin_layout)
+        self.tabs.addTab(self.post_tab, "Create New Record")
+        self.tabs.addTab(self.get_tab, "Fetch from Database")
+        self.tabs.addTab(self.delete_tab, "Delete (Temporary)")
+        self.tabs.addTab(self.view_tab, "View Open Tickets")
+        self.tabs.addTab(self.admin_tab, "Admin Settings")
 
         self.tabs.currentChanged.connect(self.on_tab_changed)
-        main_layout.addWidget(self.tabs)
-        self.setLayout(main_layout)
+
+    def on_theme_changed(self, theme_name):
+        self.theme_manager.apply_theme(theme_name, self)
 
     def on_tab_changed(self, index):
-        self.post_label.setText("POST tab")
-        self.get_label.setText("GET tab")
-        self.delete_label.setText("DELETE tab")
-        self.view_label.setText("VIEW tab")
-        self.admin_label.setText("ADMIN SETTINGS tab")
         print(f"{self.tabs.tabText(index)} tab clicked")
-
-    def on_post_clicked(self):
-        print("POST button clicked")
-        result = self.api_handler.process_action("POST")
-        self.post_label.setText(result)
-
-    def on_get_clicked(self):
-        print("GET button clicked")
-        result = self.api_handler.process_action("GET")
-        self.get_label.setText(result)
-
-    def on_delete_clicked(self):
-        print("DELETE button clicked")
-        result = self.api_handler.process_action("DELETE")
-        self.delete_label.setText(result)
-
-    def on_view_clicked(self):
-        print("VIEW button clicked")
-        result = self.api_handler.process_action("VIEW")
-        self.view_label.setText(result)
-
-    def on_admin_clicked(self):
-        print("ADMIN SETTINGS button clicked")
-        result = self.api_handler.process_action("ADMIN SETTINGS")
-        self.admin_label.setText(result)
 
 
 if __name__ == "__main__":
