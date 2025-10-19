@@ -1,10 +1,10 @@
-import connectDB as db
+from . import connectDB as db
 
 class DatabaseService:
     def __init__(self):
         print("Database init")
 
     def connect(self):
-        connection = db.DatabaseConnection()
-        connection.establish_connection()
-        return connection
+        self.connection = db.DatabaseConnection()
+        self.connection.establish_connection()
+        return self.connection
