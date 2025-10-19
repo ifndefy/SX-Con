@@ -8,6 +8,11 @@ class ThemeManager:
         self.current_theme = "super"
 
     def get_available_themes(self):
+        """
+        :author(s): Joe Lee
+        :purpose: parses the themes file and returns the available themes
+        :return: list of available themes
+        """
         themes = []
         if os.path.exists(self.themes_dir):
             for file in os.listdir(self.themes_dir):
@@ -25,6 +30,11 @@ class ThemeManager:
         return themes
 
     def apply_theme(self, theme_name, widget=None):
+        """
+        :author(s): Joe Lee
+        :purpose: applies the theme to the given theme name
+        :return: boolean indicating if the theme was applied
+        """
         if widget is None:
             return False
 
@@ -46,7 +56,17 @@ class ThemeManager:
         return False
 
     def apply_default_theme(self, widget):
-        return self.apply_theme("super", widget)
+        """
+        :author(s): Joe Lee
+        :purpose: applies "Super" theme by default
+        :return: boolean indicating if the theme was applied
+        """
+        return self.apply_theme("Super", widget)
 
     def get_current_theme(self):
+        """
+        :author(s): Joe Lee
+        :purpose: returns the current theme
+        :return: current theme
+        """
         return self.current_theme
