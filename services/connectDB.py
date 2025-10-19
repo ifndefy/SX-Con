@@ -1,9 +1,13 @@
 import configparser as cparser
 import pyodbc as odbc
+import struct
+from azure.identity import DefaultAzureCredential
 
 class DatabaseConnection:
     def __init__(self):
         print("Initializing connectDB defaults...")
+
+        self.db_connection = None
 
         #Create object to read from config file
         config = cparser.ConfigParser()
@@ -15,16 +19,14 @@ class DatabaseConnection:
         self.server_addr = config.get('SQL Connection Parameters', 'server_addr')
         self.server_port = config.get('SQL Connection Parameters', 'server_port')
         self.db_name_default = config.get('SQL Connection Parameters', 'db_name')
-        self.db_user_default = config.get('SQL Connection Parameters', 'db_user')
-        self.db_user_pass =  config.get('SQL Connection Parameters', 'db_user_pass')
+        self.sql_access_token = config.getint('SQL Connection Parameters', 'sql_access_token')
 
     def establish_connection(self, 
                             driver = None, 
                             addr = None, 
                             port = None, 
                             db_name = None, 
-                            db_user = None, 
-                            user_pass = None):
+                            access_mode = None):
         """
         Establishes a connection with the Azure SQL Database.
 
@@ -34,7 +36,7 @@ class DatabaseConnection:
             port (string): Server port being used
             db_name (string): Name of the specific database on the server
             db_user (string): The user connecting to the server, must exist as a valid user in the db
-            user_pass (string): Password for db_user
+            access_mode (int): used to identify what form of authentication is being used, almost no reason to ever change  
         
         On success return 0, connection is established and stored in self.db_connection can be used to create cursors. Failures return -1 and no values are written to self.db_connection    
         """
@@ -44,25 +46,32 @@ class DatabaseConnection:
         addr = addr or self.server_addr
         port = port or self.server_port
         db_name = db_name or self.db_name_default
-        db_user = db_user or self.db_user_default
-        ##todo: add popup to ask for password instead of hardcoding
-        user_pass = user_pass or self.db_user_pass
+        access_mode = access_mode or self.sql_access_token
 
         #Check if any connection string fields are null
-        if not all([driver, addr, port, db_name, db_user, user_pass]):
+        if not all([driver, addr, port, db_name, access_mode]):
             print("one or more required fields are null")
             return -1
-
+        
+        credential = DefaultAzureCredential(
+            exclude_interactive_browser_credential=False
+        )
+        
         connection_string = f"Driver={driver};" \
                             f"Server={addr},{port};" \
                             f"Database={db_name};" \
-                            f"Uid={db_user};" \
-                            f"Pwd={user_pass};" \
-                            f"Encrypt=yes;" \
-                            f"TrustServerCertificate=no;" \
-                            f"Connection Timeout=30;"
+                            "Encrypt=yes;" \
+                            "TrustServerCertificate=no;" \
+                            "Connection Timeout=30"
         
-        self.db_connection = odbc.connect(connection_string)
+        token = credential.get_token("https://database.windows.net/.default")
+        token_bytes = token.token.encode("UTF-16-LE")
+
+        token_struct = struct.pack(f'<I{len(token_bytes)}s', 
+                                   len(token_bytes), 
+                                   token_bytes)
+
+        self.db_connection = odbc.connect(connection_string, attrs_before={access_mode: token_struct})
         return 0
     
     def create_cursor(self):
