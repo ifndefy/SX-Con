@@ -215,12 +215,12 @@ class PostTab(BaseTab):
 
         # Push to center and add Status label
         button_layout.addStretch()
-        self.status_label = QLabel("Ready to create vendor record")
+        self.status_label = QLabel("Ready to create record")
         button_layout.addWidget(self.status_label)
         button_layout.addStretch()
 
-        # Create Vendor Record button on right
-        self.create_btn = QPushButton("Create Vendor Record")
+        # Create Record button on right
+        self.create_btn = QPushButton("Create Record")
         button_layout.addWidget(self.create_btn)
 
         layout.addLayout(button_layout)
