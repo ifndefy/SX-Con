@@ -1,15 +1,15 @@
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
-from .base import BaseTab
+from ui.tabs.base import BaseTab
 
-class DeleteTab(BaseTab):
+class SettingsTab(BaseTab):
     def __init__(self, api_handler):
-        super().__init__(api_handler, "delete")
+        super().__init__(api_handler, "settings")
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
-        self.label = QLabel("DELETE tab")
+        self.label = QLabel("SETTINGS tab")
         self.button = QPushButton("Do Something")
         layout.addWidget(self.label)
         layout.addWidget(self.button)
@@ -19,5 +19,5 @@ class DeleteTab(BaseTab):
 
     def on_button_clicked(self):
         super().on_button_clicked()
-        result = self.api_handler.process_action("DELETE")
+        result = self.api_handler.process_action("SETTINGS")
         self.label.setText(result)

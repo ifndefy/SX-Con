@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
-from .base import BaseTab
+from ui.tabs.base import BaseTab
 
 class GetTab(BaseTab):
     def __init__(self, api_handler):
