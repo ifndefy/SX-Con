@@ -1,6 +1,5 @@
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QVBoxLayout
-from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QPushButton
@@ -8,9 +7,14 @@ from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import Qt
 
 from SPOT import APP_VERSION
+from ui.forgot_pw import ForgotPasswordScreen
 
 
 class LoginScreen(QDialog):
+    """
+    purpose: object to store all screen elements
+    author(s): Joe Lee
+    """
     def __init__(self, theme_manager, parent=None):
         super().__init__(parent)
         self.theme_manager = theme_manager
@@ -24,6 +28,10 @@ class LoginScreen(QDialog):
         self.theme_manager.apply_default_theme(self)
 
     def setup_ui(self):
+        """
+        purpose: initializes the UI
+        author(s): Joe Lee
+        """
         layout = QVBoxLayout()
 
         # todo: Insert Client Logo
@@ -71,11 +79,18 @@ class LoginScreen(QDialog):
 
         # Forgot Password button
         forgot_pw_btn = QPushButton("Forgot Password")
-        # forgot_pw_btn.clicked.connect() # todo: go to forgot pw screen
+        forgot_pw_btn.clicked.connect(self.show_forgot_password_screen)
         layout.addWidget(forgot_pw_btn)
 
-
         self.setLayout(layout)
+
+    def show_forgot_password_screen(self):
+        """
+        purpose: opens the forgot password screen in another window
+        author(s): Joe Lee
+        """
+        forgot_pw_screen = ForgotPasswordScreen(self.theme_manager, self)
+        forgot_pw_screen.exec()
 
     def attempt_login(self):
         username = self.username_input.text().strip()
@@ -90,11 +105,17 @@ class LoginScreen(QDialog):
             self.username_input.selectAll()
 
     def authenticate(self, username, password):
-        # todo: replace with Azure DB built in authentication
-        valid_users = {
-            "admin": "admin123"
-        }
-        return username in valid_users and valid_users[username] == password
+        """
+        purpose: allows anything to login (for now), pass in specific username to cause fail
+        author(s): Joe Lee
+        """
+        # TODO: replace with Azure DB built in authentication
 
-    def get_username(self):
-        return self.username
+        # Allow any non-empty credentials to succeed
+        if username.strip() and password.strip():
+            # pass in "testfail" username to intentionally cause fail -- for testing purposes
+            if username.strip().lower() == "testfail":
+                return False
+            return True
+
+        return False

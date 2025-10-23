@@ -7,21 +7,16 @@ from ui.core.theme_manager import ThemeManager
 
 def main():
     app = QApplication(sys.argv)
-
-    # Create theme manager
     theme_manager = ThemeManager()
 
-    # Show login screen first
     login_screen = LoginScreen(theme_manager)
 
-    # Check if login was successful
     if login_screen.exec() == QDialog.DialogCode.Accepted:
-        # Only show main window if login succeeded
         window = MainWindow()
         window.show()
         sys.exit(app.exec())
+
     else:
-        # Login failed or was cancelled - exit the application
         sys.exit(0)
 
 
