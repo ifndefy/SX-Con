@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import Qt
 
-from SPOT import APP_VERSION
+from src.SPOT import APP_VERSION
 from ui.forgot_pw import ForgotPasswordScreen
 
 
