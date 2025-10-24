@@ -367,12 +367,16 @@ class PostTab(BaseTab):
         # Get revenue sharing data from the existing component
         record_data['revenue_sharing'] = self.revenue_generation.get_revenue_data()
 
-        # Do something with the data
+        # update status
+        # todo: output should be justified alignment
+        # todo: increase font size
         self.status_label.setText(
-            f"Creating vendor: {record_data['first_name']} {record_data['last_name']} "
-            f"- Ticket: {record_data['ticket_number']} "
-            f"- Products: {len(record_data['products'])}")
-        print("Vendor Data:", record_data)
+            f"Creating record"
+            f"\nTicket: {record_data['ticket_number']} "
+            f"\nVendor ID: {record_data['vendor_id']}"
+            f"\nVendor Name: {record_data['first_name']} {record_data['last_name']}"
+            f"\nProducts: {len(record_data['products'])}")
+        print("Record Data:", record_data)
 
         return record_data
 
