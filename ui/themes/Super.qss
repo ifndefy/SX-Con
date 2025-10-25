@@ -141,3 +141,22 @@ QLabel#hr {
     padding: 0px;
     margin: 0px;
 }
+
+/* Large button style */
+QPushButton#large_btn {
+    min-height: 88px;
+    min-width: 50px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Large button style */
+QWidget#post_tab QPushButton#crit_large_btn {
+    background-color: #691601;
+    min-height: 88px;
+    min-width: 50px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}

@@ -191,7 +191,7 @@ class PostTab(BaseTab):
         add_remove_layout.addWidget(self.add_product_btn)
 
         layout.addLayout(add_remove_layout)
-        layout.addStretch()
+        layout.addStretch(1)
 
         # HR Line between Product and Revenue sections
         hr2 = QLabel()
@@ -206,24 +206,44 @@ class PostTab(BaseTab):
         self.revenue_generation = RevenueGeneration()
         layout.addWidget(self.revenue_generation)
 
+        # HR Line to separate buttons at the bottom
+        hr3 = QLabel()
+        hr3.setObjectName("hr")
+        layout.addWidget(hr3)
+
         # Buttons at bottom - Clear left, Status center, Create right
-        button_layout = QHBoxLayout()
+        btn_layout = QHBoxLayout()
 
         # Clear Form button on left
         self.clear_btn = QPushButton("Clear Form")
-        button_layout.addWidget(self.clear_btn)
+        self.clear_btn.setObjectName("crit_large_btn")
+        btn_layout.addWidget(self.clear_btn)
 
         # Push to center and add Status label
-        button_layout.addStretch()
+        btn_layout.addStretch()
         self.status_label = QLabel("Ready to create record")
-        button_layout.addWidget(self.status_label)
-        button_layout.addStretch()
+        btn_layout.addWidget(self.status_label)
+        btn_layout.addStretch()
+
+        # Action buttons
+        action_btns_container = QWidget()
+        action_btns_layout = QVBoxLayout(action_btns_container)
+
+        self.print_btn = QPushButton("Print")
+        self.export_btn = QPushButton("Export")
+        self.pdf_btn = QPushButton("PDF")
+
+        action_btns_layout.addWidget(self.print_btn)
+        action_btns_layout.addWidget(self.export_btn)
+        action_btns_layout.addWidget(self.pdf_btn)
+        btn_layout.addWidget(action_btns_container)
 
         # Create Record button on right
         self.create_btn = QPushButton("Create Record")
-        button_layout.addWidget(self.create_btn)
+        self.create_btn.setObjectName("large_btn")
+        btn_layout.addWidget(self.create_btn)
 
-        layout.addLayout(button_layout)
+        layout.addLayout(btn_layout)
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
