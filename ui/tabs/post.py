@@ -151,8 +151,16 @@ class PostTab(BaseTab):
         self.state_input = QLineEdit()
         self.state_input.setPlaceholderText("ST")
         self.state_input.setMaxLength(2)
-        self.state_input.setFixedWidth(60)
+        self.state_input.setFixedWidth(50)
         line3_layout.addWidget(self.state_input)
+
+        # Zip Code
+        line3_layout.addWidget(QLabel("Zip Code:"))
+        self.zip_input = QLineEdit()
+        self.zip_input.setPlaceholderText("XXXXX")
+        self.zip_input.setMaxLength(5)
+        self.zip_input.setFixedWidth(70)
+        line3_layout.addWidget(self.zip_input)
 
         # End creation and adds line3_layout to the window
         layout.addLayout(line3_layout)
@@ -370,6 +378,7 @@ class PostTab(BaseTab):
             'address': self.address_input.text(),
             'city': self.city_input.text(),
             'state': self.state_input.text(),
+            'zip': self.zip_input.text(),
             'products': []
         }
 
