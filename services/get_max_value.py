@@ -1,6 +1,11 @@
 from services.database_service import DatabaseService
 
 def get_max_value(table_name, column_name):
+    """
+    :purpose: returns the max value of a column in a table
+    :return(s): the max value of a column in a table
+    :author(s): Joe Lee
+    """
     db_service = DatabaseService()
     db_service.connect()
 

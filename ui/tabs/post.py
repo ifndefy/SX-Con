@@ -40,9 +40,9 @@ class PostTab(BaseTab):
 
     def setup_ui(self):
         """
-        :author(s): Joe Lee
         :purpose: initializes the "Create New Record" tab
         :return: None
+        :author(s): Joe Lee
         """
         # Enable scrolling for when the content exceeds the height of the window
         scroll = QScrollArea()
@@ -262,9 +262,9 @@ class PostTab(BaseTab):
 
     def add_product_section(self):
         """
-        :author(s): Joe Lee
         :purpose: adds additional product lines
         :return: None
+        :author(s): Joe Lee
         """
         product_section = {}
 
@@ -329,9 +329,9 @@ class PostTab(BaseTab):
 
     def remove_product_section(self):
         """
-        :author(s): Joe Lee
         :purpose: removes added product lines
         :return: None
+        :author(s): Joe Lee
         """
         if len(self.product_sections) > 2:
             self.product_sections.pop()
@@ -349,9 +349,9 @@ class PostTab(BaseTab):
 
     def setup_button_connections(self):
         """
-        :author(s): Joe Lee
         :purpose: links buttons with methods
         :return: None
+        :author(s): Joe Lee
         """
         self.create_btn.clicked.connect(self.create_record)
         self.clear_btn.clicked.connect(self.clear_form)
@@ -360,9 +360,9 @@ class PostTab(BaseTab):
 
     def create_record(self):
         """
-        :author(s): Joe Lee
         :purpose: initializes record to be posted to database
         :return: record
+        :author(s): Joe Lee
         """
         # Get record
         record_data = {
@@ -408,14 +408,19 @@ class PostTab(BaseTab):
         return record_data
 
     def update_ticket_number(self):
+        """
+        :purpose: updates ticket number
+        :return: None
+        :author(s): Joe Lee
+        """
         ticket_num = str(autogen_ticket_num())
         self.ticket_input.setText(ticket_num)
 
     def clear_form(self):
         """
-        :author(s): Joe Lee
         :purpose: clears all input fields
         :return: None
+        :author(s): Joe Lee
         """
         self.ticket_input.clear()
         self.vendor_id_input.clear()
