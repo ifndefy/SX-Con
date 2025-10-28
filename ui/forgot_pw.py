@@ -35,35 +35,59 @@ class ForgotPasswordScreen(QDialog):
         layout.addWidget(title)
 
         # Username
-        layout.addWidget(QLabel("Username"))
-        self.question1 = QLineEdit()
-        self.question1.setPlaceholderText("Enter username")
-        self.question1.setMaxLength(30)
-        layout.addWidget(self.question1)
+        username_label = QLabel("Username:")
+        username_label.setObjectName("label")
+        layout.addWidget(username_label)
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Enter username")
+        self.username_input.setObjectName("response_field")
+        self.username_input.setMaxLength(30)
+
+        layout.addWidget(self.username_input)
+
+        hr1 = QLabel()
+        hr1.setObjectName("hr")
+        layout.addWidget(hr1)
 
         # Question 1
-        layout.addWidget(QLabel("Security Question 1:"))
+        prompt_label = QLabel("Security Question 1:")
+        prompt_label.setObjectName("label")
+        layout.addWidget(prompt_label)
         self.question1 = QComboBox()
         self.question1.addItems(self.questionList)
+        self.question1.setObjectName("prompt_label")
         self.question1.setCurrentIndex(-1)
         layout.addWidget(self.question1)
 
-        layout.addWidget(QLabel("Response for Question 1"))
+        res1_label = QLabel("Response for Question 1:")
+        res1_label.setObjectName("label")
+        layout.addWidget(res1_label)
         self.question1_response = QLineEdit()
         self.question1_response.setPlaceholderText("test 1")
+        self.question1_response.setObjectName("response_field")
         self.question1_response.setMaxLength(255)
         layout.addWidget(self.question1_response)
 
+        hr2 = QLabel()
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
+
         # Question 2
-        layout.addWidget(QLabel("Security Question 1:"))
+        prompt_label = QLabel("Security Question 2:")
+        prompt_label.setObjectName("label")
+        layout.addWidget(prompt_label)
         self.question2 = QComboBox()
         self.question2.addItems(self.questionList)
+        self.question2.setObjectName("prompt_label")
         self.question2.setCurrentIndex(-1)
         layout.addWidget(self.question2)
 
-        layout.addWidget(QLabel("Response for Question 2"))
+        res2_label = QLabel("Response for Question 2:")
+        res2_label.setObjectName("label")
+        layout.addWidget(res2_label)
         self.question2_response = QLineEdit()
         self.question2_response.setPlaceholderText("test 2")
+        self.question2_response.setObjectName("response_field")
         self.question2_response.setMaxLength(255)
         layout.addWidget(self.question2_response)
 
