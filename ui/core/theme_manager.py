@@ -50,7 +50,6 @@ class ThemeManager:
             widget.setStyleSheet(stream.readAll())
             style_file.close()
             self.current_theme = theme_name
-            print(f"Theme applied: {theme_name}")
             return True
 
         return False
