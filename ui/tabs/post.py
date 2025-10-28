@@ -6,9 +6,9 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from services.get_max_value import get_max_value as getMaxValue
 from ui.tabs.base import BaseTab
 from ui.core.revenue_generation import RevenueGeneration
+from ui.core.autogen_ticket_num import autogen_ticket_num
 
 
 class PostTab(BaseTab):
@@ -64,8 +64,7 @@ class PostTab(BaseTab):
         # Ticket Number on right: Read-only
         line0_layout.addWidget(QLabel("Ticket Number:"))
         self.ticket_input = QLineEdit()
-        ticket_num = str(getMaxValue("Consignments", "ticket_num") + 1)
-        self.ticket_input.setText(ticket_num)
+        self.update_ticket_number()
         self.ticket_input.setReadOnly(True)
         self.ticket_input.setFixedWidth(240)
         line0_layout.addWidget(self.ticket_input)
@@ -80,7 +79,7 @@ class PostTab(BaseTab):
         line1_layout.addWidget(QLabel("Vendor ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setPlaceholderText("4 INTS")
-        self.vendor_id_input.setMaxLength(4) # todo: length needs to match with DB
+        self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         line1_layout.addWidget(self.vendor_id_input)
 
@@ -88,7 +87,7 @@ class PostTab(BaseTab):
         line1_layout.addWidget(QLabel("Phone Number:"))
         self.phone_input = QLineEdit()
         self.phone_input.setPlaceholderText("12 INTS")
-        self.phone_input.setMaxLength(12) # todo: length needs to match with DB
+        self.phone_input.setMaxLength(12)
         self.phone_input.setFixedWidth(150)
         line1_layout.addWidget(self.phone_input)
 
@@ -139,7 +138,7 @@ class PostTab(BaseTab):
         line3_layout.addWidget(QLabel("Address:"))
         self.address_input = QLineEdit()
         self.address_input.setPlaceholderText("Street address")
-        self.address_input.setMaxLength(255) # todo: must be the same as database, the safe usage is to set at 255
+        self.address_input.setMaxLength(255)
         line3_layout.addWidget(self.address_input)
 
         # City
@@ -359,10 +358,6 @@ class PostTab(BaseTab):
         self.add_product_btn.clicked.connect(self.add_product_section)
         self.remove_product_btn.clicked.connect(self.remove_product_section)
 
-        # Autopopulate calls go here
-        # todo: SXC-20
-        # todo: SXC-21
-
     def create_record(self):
         """
         :author(s): Joe Lee
@@ -413,7 +408,7 @@ class PostTab(BaseTab):
         return record_data
 
     def update_ticket_number(self):
-        ticket_num = str(getMaxValue("Consignments", "ticket_num") + 1)
+        ticket_num = str(autogen_ticket_num())
         self.ticket_input.setText(ticket_num)
 
     def clear_form(self):
@@ -442,8 +437,8 @@ class PostTab(BaseTab):
 
         self.revenue_generation.clear_revenue_data()
 
+        self.status_label.setText("Form cleared")
+
         # Autopopulate again after clear fields (method calls)
         self.update_ticket_number()
         # todo: SXC-21
-
-        self.status_label.setText("Form cleared")
