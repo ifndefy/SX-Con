@@ -144,8 +144,8 @@ QLabel#hr {
 
 /* Large button style */
 QPushButton#large_btn {
-    min-height: 88px;
-    min-width: 50px;
+    min-height: 50px;
+    min-width: 100px;
     padding: 12px 20px;
     font-size: 14px;
     font-weight: bold;
@@ -154,11 +154,16 @@ QPushButton#large_btn {
 /* Large button style */
 QWidget#post_tab QPushButton#crit_large_btn {
     background-color: #691601;
-    min-height: 88px;
-    min-width: 50px;
+    min-height: 50px;
+    min-width: 100px;
     padding: 12px 20px;
     font-size: 14px;
     font-weight: bold;
+}
+
+/* Status Section */
+QWidget#status_container {
+    background-color: #5C4033;
 }
 
 /* login screen styles */
