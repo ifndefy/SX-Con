@@ -91,6 +91,7 @@ class DatabaseConnection:
 
     def close_connection(self):
         if self.db_connection is not None:
+            print("Closing connection")
             self.db_connection.close()
         else:
             print("Connection not found")
