@@ -216,15 +216,14 @@ class PostTab(BaseTab):
         # combo_section_row_0
         combo_section_row_0 = QHBoxLayout()
 
-        clear_widget = QWidget()
-        clear_section = QVBoxLayout(clear_widget)
+        clear_section = QVBoxLayout()
         # Clear Form button on left bottom
         clear_section.addStretch()
         self.clear_btn = QPushButton("Clear Form")
         self.clear_btn.setObjectName("crit_large_btn")
         clear_section.addWidget(self.clear_btn)
 
-        combo_section_row_0.addWidget(clear_widget)
+        combo_section_row_0.addLayout(clear_section)
         combo_section_row_0.addStretch()
 
         # Revenue Sharing section
@@ -247,8 +246,7 @@ class PostTab(BaseTab):
         combo_section_row_0.addStretch()
 
         # Action buttons
-        action_widget = QWidget()
-        action_layout = QVBoxLayout(action_widget)
+        action_layout = QVBoxLayout()
 
         self.print_btn = QPushButton("Print")
         self.export_btn = QPushButton("Export")
@@ -265,7 +263,7 @@ class PostTab(BaseTab):
         self.create_btn.setObjectName("large_btn")
         action_layout.addWidget(self.create_btn)
 
-        combo_section_row_0.addWidget(action_widget)
+        combo_section_row_0.addLayout(action_layout)
         layout.addLayout(combo_section_row_0)
 
         # HR Line to separate buttons at the bottom

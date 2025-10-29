@@ -144,8 +144,10 @@ QLabel#hr {
 
 /* Large button style */
 QPushButton#large_btn {
-    min-height: 50px;
-    min-width: 100px;
+    max-height: 76px;
+    max-width: 129px;
+    min-height: 76px;
+    min-width: 129px;
     padding: 12px 20px;
     font-size: 14px;
     font-weight: bold;
@@ -154,8 +156,10 @@ QPushButton#large_btn {
 /* Large button style */
 QWidget#post_tab QPushButton#crit_large_btn {
     background-color: #691601;
-    min-height: 50px;
-    min-width: 100px;
+    max-height: 64px;
+    max-width: 129px;
+    min-height: 64px;
+    min-width: 129px;
     padding: 12px 20px;
     font-size: 14px;
     font-weight: bold;
