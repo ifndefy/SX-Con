@@ -58,6 +58,7 @@ class GetTab(BaseTab):
         # Phone Number
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
         self.phone_input = QLineEdit()
+        self.phone_input.setObjectName("READ_ONLY")
         self.phone_input.setPlaceholderText("READ_ONLY_FROM_DB")
         self.phone_input.setReadOnly(True)
         self.phone_input.setFixedWidth(150)
@@ -73,6 +74,7 @@ class GetTab(BaseTab):
         # First Name
         vendor_section_row_2.addWidget(QLabel("First Name:"))
         self.first_name_input = QLineEdit()
+        self.first_name_input.setObjectName("READ_ONLY")
         self.first_name_input.setPlaceholderText("READ_ONLY_FROM_DB")
         self.first_name_input.setReadOnly(True)
         self.first_name_input.setMaxLength(30)
@@ -82,6 +84,7 @@ class GetTab(BaseTab):
         # Middle Name
         vendor_section_row_2.addWidget(QLabel("Middle Name:"))
         self.middle_name_input = QLineEdit()
+        self.middle_name_input.setObjectName("READ_ONLY")
         self.middle_name_input.setPlaceholderText("READ_ONLY_FROM_DB")
         self.middle_name_input.setReadOnly(True)
         self.middle_name_input.setMaxLength(10)
@@ -91,6 +94,7 @@ class GetTab(BaseTab):
         # Last Name
         vendor_section_row_2.addWidget(QLabel("Last Name:"))
         self.last_name_input = QLineEdit()
+        self.last_name_input.setObjectName("READ_ONLY")
         self.last_name_input.setPlaceholderText("READ_ONLY_FROM_DB")
         self.last_name_input.setReadOnly(True)
         self.last_name_input.setMaxLength(30)
@@ -106,6 +110,7 @@ class GetTab(BaseTab):
         # Address
         vendor_section_row_3.addWidget(QLabel("Address:"))
         self.address_input = QLineEdit()
+        self.address_input.setObjectName("READ_ONLY")
         self.address_input.setPlaceholderText("READ_ONLY_FROM_DB")
         self.address_input.setReadOnly(True)
         self.address_input.setMaxLength(255)
@@ -114,6 +119,7 @@ class GetTab(BaseTab):
         # City
         vendor_section_row_3.addWidget(QLabel("City:"))
         self.city_input = QLineEdit()
+        self.city_input.setObjectName("READ_ONLY")
         self.city_input.setPlaceholderText("READ_ONLY_FROM_DB")
         self.city_input.setReadOnly(True)
         self.city_input.setMaxLength(30)
@@ -122,6 +128,7 @@ class GetTab(BaseTab):
         # State
         vendor_section_row_3.addWidget(QLabel("State:"))
         self.state_input = QLineEdit()
+        self.state_input.setObjectName("READ_ONLY")
         self.state_input.setPlaceholderText("XX")
         self.state_input.setReadOnly(True)
         self.state_input.setMaxLength(2)
@@ -131,6 +138,7 @@ class GetTab(BaseTab):
         # Zip Code
         vendor_section_row_3.addWidget(QLabel("Zip Code:"))
         self.zip_input = QLineEdit()
+        self.zip_input.setObjectName("READ_ONLY")
         self.zip_input.setPlaceholderText("XXXXX")
         self.zip_input.setReadOnly(True)
         self.zip_input.setMaxLength(5)
@@ -217,6 +225,7 @@ class GetTab(BaseTab):
         # ticket_num
         line1_layout.addWidget(QLabel("Ticket Number:"))
         ticket_num_input = QLineEdit()
+        ticket_num_input.setObjectName("READ_ONLY")
         ticket_num_input.setPlaceholderText("XXXX")
         ticket_num_input.setReadOnly(True)
         ticket_num_input.setMaxLength(4)
@@ -226,16 +235,18 @@ class GetTab(BaseTab):
 
         # datetime
         line1_layout.addWidget(QLabel("Date and Time:"))
-        date_time_input = QLineEdit()
-        date_time_input.setPlaceholderText("10/29/2025--04:48:00")
-        date_time_input.setReadOnly(True)
-        date_time_input.setFixedWidth(250)
-        line1_layout.addWidget(date_time_input)
-        tickets_section['datetime'] = date_time_input
+        datetime_input = QLineEdit()
+        datetime_input.setObjectName("READ_ONLY")
+        datetime_input.setPlaceholderText("10/29/2025--04:48:00")
+        datetime_input.setReadOnly(True)
+        datetime_input.setFixedWidth(250)
+        line1_layout.addWidget(datetime_input)
+        tickets_section['datetime'] = datetime_input
 
         # status
         line1_layout.addWidget(QLabel("Status:"))
         status_input = QLineEdit()
+        status_input.setObjectName("READ_ONLY")
         status_input.setPlaceholderText("CLOSED")
         status_input.setReadOnly(True)
         status_input.setFixedWidth(80)
