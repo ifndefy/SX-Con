@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 from .base import BaseTab
 from ui.core.revenue_generation import RevenueGeneration
+from ui.core.autogen_date import generate_host_datetime
 
 
 class PostTab(BaseTab):
@@ -360,6 +361,12 @@ class PostTab(BaseTab):
         # todo: SXC-20
         # todo: SXC-21
 
+        _dt = generate_host_datetime()  # HH:MM (less text)
+        self.datetime_input.setText(dt_val if dt_val != -1 else "")
+
+        # wire up Clear Form
+        self.clear_btn.clicked.connect(self.clear_form)
+
     def create_record(self):
         """
         :author(s): Joe Lee
@@ -437,5 +444,11 @@ class PostTab(BaseTab):
         # Autopopulate again after clear fields (method calls)
         # todo: SXC-20
         # todo: SXC-21
+
+        dt_val = generate_host_datetime()
+        if dt_val != -1:
+            self.datetime_input.setText(dt_val)
+        else:
+            self.dt_field.clear()
 
         self.status_label.setText("Form cleared")
