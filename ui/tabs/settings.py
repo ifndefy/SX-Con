@@ -14,7 +14,7 @@ class SettingsTab(BaseTab):
         layout.addWidget(self.label)
         layout.addWidget(self.button)
 
-    def button_actions(self):
+    def btn_actions(self):
         self.button.clicked.connect(self.on_button_clicked)
 
     def on_button_clicked(self):

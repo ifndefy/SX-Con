@@ -7,5 +7,9 @@ def autogen_ticket_num():
     :return(s): string of 1 + max ticket_num from DB table "Consignments"
     :author(s): Joe Lee
     """
-    ticket_num = str(get_max_value("Consignments", "ticket_num") + 1)
-    return ticket_num
+    try:
+        ticket_num = str(get_max_value("Consignments", "ticket_num") + 1)
+        return ticket_num
+    except Exception as e:
+        print(e)
+        return "OFFLINE"
