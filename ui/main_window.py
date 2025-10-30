@@ -11,8 +11,8 @@ from handlers.api_handler import APIHandler
 from ui.core.theme_manager import ThemeManager
 from ui.tabs.post import PostTab
 from ui.tabs.get import GetTab
-from ui.tabs.delete import DeleteTab
 from ui.tabs.view import ViewTab
+from ui.tabs.settings import SettingsTab
 from ui.tabs.admin import AdminTab
 
 class MainWindow(QWidget):
@@ -23,8 +23,8 @@ class MainWindow(QWidget):
         self.tabs = None
         self.post_tab = None
         self.get_tab = None
-        self.delete_tab = None
         self.view_tab = None
+        self.settings_tab = None
         self.admin_tab = None
 
         self.api_handler = APIHandler()
@@ -35,7 +35,8 @@ class MainWindow(QWidget):
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
-        self.setGeometry(0, 0, 1100, 695)
+        self.setGeometry(0, 0, 1100, 756)
+        self.setMinimumSize(1100, 756)
         # todo: Resize height to fit Super X logo when delivered to developers
 
     def setup_ui(self):
@@ -95,14 +96,14 @@ class MainWindow(QWidget):
 
         self.post_tab = PostTab(self.api_handler)
         self.get_tab = GetTab(self.api_handler)
-        self.delete_tab = DeleteTab(self.api_handler)
         self.view_tab = ViewTab(self.api_handler)
+        self.settings_tab = SettingsTab(self.api_handler)
         self.admin_tab = AdminTab(self.api_handler)
 
         self.tabs.addTab(self.post_tab, "Create New Record")
         self.tabs.addTab(self.get_tab, "Fetch from Database")
-        self.tabs.addTab(self.delete_tab, "Delete (Temporary)")
         self.tabs.addTab(self.view_tab, "View Open Tickets")
+        self.tabs.addTab(self.settings_tab, "Settings")
         self.tabs.addTab(self.admin_tab, "Admin Settings")
 
         self.tabs.currentChanged.connect(self.on_tab_changed)

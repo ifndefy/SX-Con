@@ -2,6 +2,8 @@ import configparser as cparser
 import pyodbc as odbc
 import struct
 from azure.identity import DefaultAzureCredential
+from pathlib import Path
+
 
 class DatabaseConnection:
     def __init__(self):
@@ -9,20 +11,21 @@ class DatabaseConnection:
 
         self.db_connection = None
 
-        #Create object to read from config file
         config = cparser.ConfigParser()
 
-        #fetch fields for connection string from config.ini
+        current_dir = Path(__file__).parent
+        config_path = current_dir / 'config.ini'
+
         try:
-            config.read('config.ini')
+            config.read(config_path)
 
             self.odbc_driver = config.get('SQL Connection Parameters', 'odbc_driver')
             self.server_addr = config.get('SQL Connection Parameters', 'server_addr')
             self.server_port = config.get('SQL Connection Parameters', 'server_port')
             self.db_name_default = config.get('SQL Connection Parameters', 'db_name')
-            self.sql_access_token = config.getint('SQL Connection Parameters', 'sql_access_token')
-        except:
-            print("Error fetching from config.ini")
+            self.sql_access_token = config.getint('SQL Connection Parameters','sql_access_token')
+        except Exception as e:
+            print(f"Error fetching from config.ini: {e}")
 
     def establish_connection(self, 
                             driver = None, 
@@ -55,11 +58,9 @@ class DatabaseConnection:
         if not all([driver, addr, port, db_name, access_mode]):
             print("one or more required fields are null")
             return -1
-        
         credential = DefaultAzureCredential(
             exclude_interactive_browser_credential=True
         )
-        
         connection_string = f"Driver={driver};" \
                             f"Server={addr},{port};" \
                             f"Database={db_name};" \
@@ -81,7 +82,7 @@ class DatabaseConnection:
             return -1
         
         return 0
-    
+
     def create_cursor(self):
         if self.db_connection is not None:
             return self.db_connection.cursor()
@@ -90,14 +91,7 @@ class DatabaseConnection:
 
     def close_connection(self):
         if self.db_connection is not None:
+            print("Closing connection")
             self.db_connection.close()
         else:
             print("Connection not found")
-    
-    def __del__(self):
-        print("Cleaning up connectDB connection...")
-        self.close_connection()
-        
-
-        
-
