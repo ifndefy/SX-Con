@@ -111,15 +111,21 @@ QLabel#revision_label {
     font-style: italic;
 }
 
-/* Style specific to PostTab */
-QWidget#post_tab QLineEdit {
+QWidget QLineEdit {
     background-color: #E5C59B;
     border: 1px solid #5C4033;
     border-radius: 3px;
     padding: 4px 8px;
 }
 
-QWidget#post_tab QPushButton {
+QWidget QLineEdit#READ_ONLY {
+    background-color: #B0B0B0;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+QWidget QPushButton {
     background-color: #0862C8;
     border: 1px solid #5C4033;
     border-radius: 5px;
@@ -127,7 +133,7 @@ QWidget#post_tab QPushButton {
     font-weight: bold;
 }
 
-QWidget#post_tab QPushButton:hover {
+QWidget QPushButton:hover {
     background-color: #008000;
     color: #ffffff;
     font-weight: bold;
@@ -154,7 +160,7 @@ QPushButton#large_btn {
 }
 
 /* Large button style */
-QWidget#post_tab QPushButton#crit_large_btn {
+QWidget QPushButton#crit_large_btn {
     background-color: #691601;
     max-height: 64px;
     max-width: 129px;
