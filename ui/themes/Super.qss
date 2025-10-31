@@ -74,6 +74,13 @@ QLabel {
     font-weight: bold;
 }
 
+QLabel#post_title {
+    background-color: transparent;
+    font-size: 18px;
+    font-weight: bold;
+    border-bottom: 1px solid;
+}
+
 /* DROP DOWN MENU STYLING */
 QComboBox {
     background-color: #E5C59B;
@@ -207,19 +214,6 @@ LoginScreen QLabel#rev_label {
     font-style: italic;
 }
 
-LoginScreen QLineEdit {
-    background-color: #E5C59B;
-    color: #000000;
-    font-size: 16px;
-    font-weight: normal;
-}
-
-LoginScreen QPushButton {
-    background-color: #E5C59B;
-    color: #000000;
-    font-size: 16px;
-    font-weight: bold;
-}
 
 /* forgot_pw screen styles */
 ForgotPasswordScreen {
@@ -291,11 +285,4 @@ ForgotPasswordScreen QComboBox QAbstractItemView::item:hover {
 ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
     background-color: #E5C59B;
     color: #000000;
-}
-
-ForgotPasswordScreen QPushButton {
-    background-color: #E5C59B;
-    color: #000000;
-    font-size: 16px;
-    font-weight: bold;
 }

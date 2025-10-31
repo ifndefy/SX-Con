@@ -183,6 +183,8 @@ class PostTab(BaseTab):
         product_title.setObjectName("post_title")
         product_section_row_0.addWidget(product_title)
 
+        product_section_row_0.addStretch()
+
         # End creation and adds product_section_row_0 to the window
         layout.addLayout(product_section_row_0)
 
