@@ -1,0 +1,1 @@
+Info about log structure goes here (keep this here to allow the directory structure to be commited)
