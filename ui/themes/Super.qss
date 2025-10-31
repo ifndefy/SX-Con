@@ -59,6 +59,10 @@ QPushButton {
     font-weight: bold;
 }
 
+QPushButton#red_btn {
+    background-color: #691601;
+}
+
 QPushButton:hover {
     background-color: #F5D8A7;
 }
