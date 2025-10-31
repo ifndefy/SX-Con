@@ -361,7 +361,7 @@ class PostTab(BaseTab):
         # todo: SXC-20
         # todo: SXC-21
 
-        _dt = generate_host_datetime()  # HH:MM (less text)
+        dt_val = generate_host_datetime()  # HH:MM (less text)
         self.datetime_input.setText(dt_val if dt_val != -1 else "")
 
         # wire up Clear Form
