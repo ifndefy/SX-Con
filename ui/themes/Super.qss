@@ -1,0 +1,297 @@
+/* BASE STYLING */
+QWidget {
+    background-color: #B88E6D;
+    color: #000000;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+/* TAB WIDGET */
+QTabWidget::pane {
+    border: 1px solid #5C4033;
+    top: -1px;
+}
+
+QTabWidget QStackedWidget {
+    background-color: #8A6A52;
+}
+
+QTabBar::tab {
+    background-color: #0862C8;
+    color: #000000;
+    border: 1px solid #000000;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding: 8px 16px;
+    margin: 0px;
+    min-width: 80px;
+}
+
+QTabBar::tab:selected {
+    background-color: #8A6A52;
+    color: #ffffff;
+    border-color: #5C4033;
+    margin-bottom: -1px;
+    font-weight: bold;
+}
+
+QTabBar::tab:!selected {
+    border-bottom: 1px solid #000000;
+}
+
+QTabBar::tab:hover {
+    background-color: #008000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+}
+
+QTabBar::tab:selected:hover {
+    border-bottom: 1px solid #ffffff;
+}
+
+/* BUTTON STYLING */
+QPushButton {
+    background-color: #E5C59B;
+    color: #000000;
+    border: 1px solid #5C4033;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #F5D8A7;
+}
+
+/* LABEL STYLING */
+QLabel {
+    background-color: transparent;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+/* DROP DOWN MENU STYLING */
+QComboBox {
+    background-color: #E5C59B;
+    color: #000000;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 120px;
+}
+
+QComboBox:hover {
+    background-color: #F5D8A7;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #5C4033;
+    width: 0px;
+    height: 0px;
+}
+
+/* Program Name Styling */
+QLabel#program_name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000000;
+}
+
+QLabel#revision_label {
+    font-size: 12px;
+    color: #666666;
+    font-style: italic;
+}
+
+QWidget QLineEdit {
+    background-color: #E5C59B;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+QWidget QLineEdit#READ_ONLY {
+    background-color: #B0B0B0;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+QWidget QPushButton {
+    background-color: #0862C8;
+    border: 1px solid #5C4033;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-weight: bold;
+}
+
+QWidget QPushButton:hover {
+    background-color: #008000;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* Horizontal Rule Style */
+QLabel#hr {
+    background-color: #5C4033;
+    min-height: 1px;
+    max-height: 1px;
+    padding: 0px;
+    margin: 0px;
+}
+
+/* Large button style */
+QPushButton#large_btn {
+    max-height: 76px;
+    max-width: 129px;
+    min-height: 76px;
+    min-width: 129px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Large button style */
+QWidget QPushButton#crit_large_btn {
+    background-color: #691601;
+    max-height: 64px;
+    max-width: 129px;
+    min-height: 64px;
+    min-width: 129px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Status Section */
+QWidget#status_container {
+    background-color: #5C4033;
+}
+
+/* login screen styles */
+LoginScreen {
+    background-color: #B88E6D;
+    color: #000000;
+    font-family: "Cascadia Mono";
+    font-size: 16px;
+}
+
+LoginScreen QLabel {
+    background-color: transparent;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+LoginScreen QLabel#login_title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000000;
+}
+
+LoginScreen QLabel#rev_label {
+    font-size: 12px;
+    color: #5C4033;
+    font-style: italic;
+}
+
+LoginScreen QLineEdit {
+    background-color: #E5C59B;
+    color: #000000;
+    font-size: 16px;
+    font-weight: normal;
+}
+
+LoginScreen QPushButton {
+    background-color: #E5C59B;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* forgot_pw screen styles */
+ForgotPasswordScreen {
+    background-color: #B88E6D;
+    color: #000000;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+ForgotPasswordScreen QLabel {
+    background-color: transparent;
+    color: #000000;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLabel#title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000000;
+}
+
+ForgotPasswordScreen QLabel#label {
+    background-color: transparent;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLineEdit#response_field {
+    background-color: #E5C59B;
+    color: #000000;
+    font-size: 16px;
+    font-weight: normal;
+}
+
+ForgotPasswordScreen QComboBox {
+    background-color: #5C4033;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox::item {
+    background-color: #5C4033;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView {
+    background-color: #5C4033;
+    font-size: 16px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item {
+    background-color: #5C4033;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:hover {
+    background-color: #E5C59B;
+    color: #000000;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
+    background-color: #E5C59B;
+    color: #000000;
+}
+
+ForgotPasswordScreen QPushButton {
+    background-color: #E5C59B;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+}
