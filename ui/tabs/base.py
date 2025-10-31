@@ -7,12 +7,12 @@ class BaseTab(QWidget):
         self.tab_name = tab_name
         self.setObjectName(f"{tab_name.lower()}_tab")
         self.setup_ui()
-        self.button_actions()
+        self.btn_actions()
 
     def setup_ui(self):
         raise NotImplementedError(f"{self.__class__.__name__} must implement setup_ui()")
 
-    def button_actions(self):
+    def btn_actions(self):
         pass
 
     def on_button_clicked(self):

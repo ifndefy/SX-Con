@@ -111,15 +111,21 @@ QLabel#revision_label {
     font-style: italic;
 }
 
-/* Style specific to PostTab */
-QWidget#post_tab QLineEdit {
+QWidget QLineEdit {
     background-color: #E5C59B;
     border: 1px solid #5C4033;
     border-radius: 3px;
     padding: 4px 8px;
 }
 
-QWidget#post_tab QPushButton {
+QWidget QLineEdit#READ_ONLY {
+    background-color: #B0B0B0;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+QWidget QPushButton {
     background-color: #0862C8;
     border: 1px solid #5C4033;
     border-radius: 5px;
@@ -127,7 +133,7 @@ QWidget#post_tab QPushButton {
     font-weight: bold;
 }
 
-QWidget#post_tab QPushButton:hover {
+QWidget QPushButton:hover {
     background-color: #008000;
     color: #ffffff;
     font-weight: bold;
@@ -144,19 +150,148 @@ QLabel#hr {
 
 /* Large button style */
 QPushButton#large_btn {
-    min-height: 88px;
-    min-width: 50px;
+    max-height: 76px;
+    max-width: 129px;
+    min-height: 76px;
+    min-width: 129px;
     padding: 12px 20px;
     font-size: 14px;
     font-weight: bold;
 }
 
 /* Large button style */
-QWidget#post_tab QPushButton#crit_large_btn {
+QWidget QPushButton#crit_large_btn {
     background-color: #691601;
-    min-height: 88px;
-    min-width: 50px;
+    max-height: 64px;
+    max-width: 129px;
+    min-height: 64px;
+    min-width: 129px;
     padding: 12px 20px;
     font-size: 14px;
+    font-weight: bold;
+}
+
+/* Status Section */
+QWidget#status_container {
+    background-color: #5C4033;
+}
+
+/* login screen styles */
+LoginScreen {
+    background-color: #B88E6D;
+    color: #000000;
+    font-family: "Cascadia Mono";
+    font-size: 16px;
+}
+
+LoginScreen QLabel {
+    background-color: transparent;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+LoginScreen QLabel#login_title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000000;
+}
+
+LoginScreen QLabel#rev_label {
+    font-size: 12px;
+    color: #5C4033;
+    font-style: italic;
+}
+
+LoginScreen QLineEdit {
+    background-color: #E5C59B;
+    color: #000000;
+    font-size: 16px;
+    font-weight: normal;
+}
+
+LoginScreen QPushButton {
+    background-color: #E5C59B;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* forgot_pw screen styles */
+ForgotPasswordScreen {
+    background-color: #B88E6D;
+    color: #000000;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+ForgotPasswordScreen QLabel {
+    background-color: transparent;
+    color: #000000;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLabel#title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000000;
+}
+
+ForgotPasswordScreen QLabel#label {
+    background-color: transparent;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLineEdit#response_field {
+    background-color: #E5C59B;
+    color: #000000;
+    font-size: 16px;
+    font-weight: normal;
+}
+
+ForgotPasswordScreen QComboBox {
+    background-color: #5C4033;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox::item {
+    background-color: #5C4033;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView {
+    background-color: #5C4033;
+    font-size: 16px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item {
+    background-color: #5C4033;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:hover {
+    background-color: #E5C59B;
+    color: #000000;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
+    background-color: #E5C59B;
+    color: #000000;
+}
+
+ForgotPasswordScreen QPushButton {
+    background-color: #E5C59B;
+    color: #000000;
+    font-size: 16px;
     font-weight: bold;
 }
