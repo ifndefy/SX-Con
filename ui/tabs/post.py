@@ -392,52 +392,259 @@ class PostTab(BaseTab):
 
     def create_record(self):
         """
-        :purpose: initializes record to be posted to database
-        :return: record
-        :author(s): Joe Lee
+        :author(s): Joe Lee, Alexander Bubienko
+        :purpose: gathers all text inputs and posts to Azure SQL database as a single record
+        :return: record ID on success, -1 on error
         """
-        # Get record
-        record_data = {
-            'ticket_number': self.ticket_input.text(),
-            'vendor_id': self.vendor_id_input.text(),
-            'phone': self.phone_input.text(),
-            'datetime': self.datetime_input.text(),
-            'first_name': self.first_name_input.text(),
-            'middle_name': self.middle_name_input.text(),
-            'last_name': self.last_name_input.text(),
-            'address': self.address_input.text(),
-            'city': self.city_input.text(),
-            'state': self.state_input.text(),
-            'zip': self.zip_input.text(),
-            'products': []
-        }
+        try:
+            # Get record data using existing method
+            record_data = self._gather_record_data()
+        
+            # Validate required fields
+            if not self._validate_required_fields(record_data):
+                return -1
+        
+            # Post to database
+            record_id = self._post_to_database(record_data)
+        
+            if record_id != -1:
+                self.status_label.setText(f"Record created successfully! ID: {record_id}")
+                self.clear_form()
+                return record_id
+            else:
+                self.status_label.setText("Failed to create record")
+                return -1
+            
+        except Exception as e:
+            self.status_label.setText(f"Error creating record: {str(e)}")
+            print(f"Database error: {e}")
+            return -1
 
-        # Get all product data
+    def _gather_record_data(self):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Gather all field data and convert empty strings to NULL
+        :return: Dictionary containing vendor data, products data, and revenue data
+        """
+        # Vendor information
+        vendor_data = {
+            'ticket_number': self.ticket_input.text().strip() or "NULL",
+            'vendor_id': self.vendor_id_input.text().strip() or "NULL",
+            'phone': self.phone_input.text().strip() or "NULL",
+            'datetime': self.datetime_input.text().strip() or "NULL",
+            'first_name': self.first_name_input.text().strip() or "NULL",
+            'middle_name': self.middle_name_input.text().strip() or "NULL",
+            'last_name': self.last_name_input.text().strip() or "NULL",
+            'address': self.address_input.text().strip() or "NULL",
+            'city': self.city_input.text().strip() or "NULL",
+            'state': self.state_input.text().strip() or "NULL"
+        }
+    
+        # Product information
+        products_data = []
         for i, product_section in enumerate(self.product_sections):
             product_data = {
-                'product_id': product_section['product_id'].text(),
-                'product_name': product_section['product_name'].text(),
-                'notes': product_section['notes'].text(),
-                'price': product_section['price'].text(),
-                'quantity': product_section['quantity'].text()
+                'product_id': product_section['product_id'].text().strip() or "NULL",
+                'product_name': product_section['product_name'].text().strip() or "NULL",
+                'notes': product_section['notes'].text().strip() or "NULL",
+                'price': product_section['price'].text().strip() or "NULL",
+                'quantity': product_section['quantity'].text().strip() or "NULL"
             }
-            record_data['products'].append(product_data)
+            products_data.append(product_data)
+    
+        # Revenue sharing data
+        revenue_data = self.revenue_generation.get_revenue_data()
+    
+        return {
+            'vendor': vendor_data,
+            'products': products_data,
+            'revenue': revenue_data
+        }
 
-        # Get revenue sharing data from the existing component
-        record_data['revenue_sharing'] = self.revenue_generation.get_revenue_data()
+    def _validate_required_fields(self, record_data):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Validate that required fields are filled
+        :return: True if all required fields are valid, False otherwise
+        """
+        vendor = record_data['vendor']
+        
+        if not vendor['vendor_id'] or vendor['vendor_id'] == "NULL":
+            self.status_label.setText("Error: Vendor ID is required")
+            return False
+            
+        if not vendor['first_name'] or vendor['first_name'] == "NULL":
+            self.status_label.setText("Error: First Name is required")
+            return False
+            
+        if not vendor['last_name'] or vendor['last_name'] == "NULL":
+            self.status_label.setText("Error: Last Name is required")
+            return False
+            
+        return True
 
-        # update status
-        # todo: output should be justified alignment
-        # todo: increase font size
-        self.status_label.setText(
-            f"Creating record"
-            f"\nTicket: {record_data['ticket_number']} "
-            f"\nVendor ID: {record_data['vendor_id']}"
-            f"\nVendor Name: {record_data['first_name']} {record_data['last_name']}"
-            f"\nProducts: {len(record_data['products'])}")
-        print("Record Data:", record_data)
+    def _post_to_database(self, record_data):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Convert product ID to be within 0-9999 range for the CHECK constraint
+        :return: Valid product ID as integer, or None if invalid
+        """
+        try:
+            # Import and use DatabaseConnection
+            from services.connectDB import DatabaseConnection
+            
+            db_connection = DatabaseConnection()
+            
+            # Establish connection
+            result = db_connection.establish_connection()
+            if result == -1:
+                self.status_label.setText("Error: Failed to establish database connection")
+                return -1
+            
+            cursor = db_connection.create_cursor()
+            if not cursor:
+                self.status_label.setText("Error: Failed to create database cursor")
+                return -1
+            
+            try:
+                # Start transaction
+                cursor.execute("BEGIN TRANSACTION")
+                
+                # Insert vendor record into existing Vendors table
+                vendor_sql = """
+                INSERT INTO Vendors (vendor_id, phone_number, first_name, middle_name, last_name, address, city, state, zip_code)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """
+                
+                vendor_values = (
+                    int(record_data['vendor']['vendor_id']) if record_data['vendor']['vendor_id'] != "NULL" else None,
+                    self._convert_null(record_data['vendor']['phone']),
+                    self._convert_null(record_data['vendor']['first_name']),
+                    self._convert_null(record_data['vendor']['middle_name']),
+                    self._convert_null(record_data['vendor']['last_name']),
+                    self._convert_null(record_data['vendor']['address']),
+                    self._convert_null(record_data['vendor']['city']),
+                    self._convert_null(record_data['vendor']['state']),
+                    95819  # Default zip code
+                )
+                
+                print("Executing vendor insert...")
+                cursor.execute(vendor_sql, vendor_values)
+                
+                # Get the vendor_id
+                vendor_id = int(record_data['vendor']['vendor_id'])
+                
+                print(f"Vendor inserted with ID: {vendor_id}")
+                
+                # Insert product records into existing Products table
+                for i, product in enumerate(record_data['products']):
+                    if self._has_product_data(product):
+                        # Convert product_id to be within 0-9999 range
+                        product_id = self._convert_product_id(product['product_id'])
+                        if product_id is None:
+                            print(f"Skipping product {i+1} - invalid product ID")
+                            continue
+                            
+                        product_sql = """
+                        INSERT INTO Products (product_id, product_name, notes, price, quantity)
+                        VALUES (?, ?, ?, ?, ?)
+                        """
+                        
+                        product_values = (
+                            product_id,
+                            self._convert_null(product['product_name']),
+                            self._convert_null(product['notes']),
+                            self._convert_null(product['price']),
+                            # Use validated quantity
+                            self._convert_quantity(product['quantity'])
+                        )
+                        
+                        print(f"Inserting product {i+1} with ID: {product_id}...")
+                        cursor.execute(product_sql, product_values)
+                
+                # Commit transaction
+                db_connection.db_connection.commit()
+                print("Transaction committed successfully!")
+                return vendor_id
+                
+            except Exception as e:
+                # Rollback on error
+                db_connection.db_connection.rollback()
+                print(f"Database operation failed: {e}")
+                raise e
+                
+            finally:
+                cursor.close()
+                db_connection.close_connection()
+                
+        except Exception as e:
+            print(f"Database insertion error: {e}")
+            return -1
+    def _convert_product_id(self, product_id_str):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Convert product ID to be within 0-9999 range for the CHECK constraint
+        :return: Valid product ID as integer, or None if invalid
+        """
+        if product_id_str == "NULL" or not product_id_str:
+            return None
+        
+        try:
+            product_id = int(product_id_str)
+            # Ensure it's within the CHECK constraint range (0-9999)
+            if 0 <= product_id <= 9999:
+                return product_id
+            else:
+                print(f"Product ID {product_id} is outside valid range")
+                return None
+        except (ValueError, TypeError):
+            print(f"Invalid product ID: {product_id_str}")
+            return None
 
-        return record_data
+    def _convert_quantity(self, quantity_str):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Convert quantity to be within 0-9999 range for the CHECK constraint
+        :return: Valid quantity as integer, or None if invalid
+        """
+        if quantity_str == "NULL" or not quantity_str:
+            return None
+        
+        try:
+            quantity = int(quantity_str)
+            # Ensure it's within the CHECK constraint range (0-9999)
+            if 0 <= quantity <= 9999:
+                return quantity
+            else:
+                print(f"Quantity {quantity} is outside valid range (0-9999)")
+                return None
+        except (ValueError, TypeError):
+            print(f"Invalid quantity: {quantity_str}")
+            return None
+    
+    def _convert_null(self, value):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Convert "NULL" string to actual None for database NULL
+        :return: None if value is "NULL", otherwise the original value
+        """
+        return None if value == "NULL" else value
+
+    def _has_product_data(self, product):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Check if product has any data (not all fields are NULL/empty)
+        :return: True if product has at least one non-NULL field, False otherwise
+        """
+        return any(field != "NULL" and field for field in product.values())
+
+    def _has_revenue_data(self, revenue_data):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Check if revenue data exists
+        :return: True if revenue data exists, False otherwise
+        """
+        return bool(revenue_data)
 
     def update_ticket_number(self):
         """
