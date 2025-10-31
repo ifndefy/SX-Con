@@ -57,6 +57,11 @@ class UsersTab(BaseTab):
         layout.addStretch()
 
         vendor_section_row_3 = QHBoxLayout()
+        self.create_btn = QPushButton("Create New User")
+        vendor_section_row_3.addWidget(self.create_btn)
+
+        vendor_section_row_3.addStretch()
+
         self.update_btn = QPushButton("Update")
         vendor_section_row_3.addWidget(self.update_btn)
         layout.addLayout(vendor_section_row_3)
