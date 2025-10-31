@@ -183,6 +183,8 @@ class PostTab(BaseTab):
         product_title.setObjectName("post_title")
         product_section_row_0.addWidget(product_title)
 
+        product_section_row_0.addStretch()
+
         # End creation and adds product_section_row_0 to the window
         layout.addLayout(product_section_row_0)
 
@@ -197,11 +199,6 @@ class PostTab(BaseTab):
 
         # Product Line Management buttons
         product_section_row_2 = QHBoxLayout()
-
-        # Remove Product Line button
-        # todo: remove from here, add inline at self.products_layout
-        self.remove_product_btn = QPushButton("Remove Product Line")
-        product_section_row_2.addWidget(self.remove_product_btn)
 
         # Add Product Line button
         self.add_product_btn = QPushButton("Add Product Line")
@@ -323,6 +320,12 @@ class PostTab(BaseTab):
         line1_layout.addWidget(product_name_input)
         product_section['product_name'] = product_name_input
 
+        # Add removal button for this specific line
+        remove_btn = QPushButton("Remove Product Line")
+        remove_btn.setObjectName("red_btn")
+        remove_btn.clicked.connect(self.create_removal_handler(section_widget, product_section))
+        line1_layout.addWidget(remove_btn)
+
         section_layout.addLayout(line1_layout)
 
         # Line 2: Notes, Price, Quantity
@@ -358,25 +361,29 @@ class PostTab(BaseTab):
         self.product_sections.append(product_section)
         self.product_counter += 1
 
-    def remove_product_line(self):
+    def create_removal_handler(self, widget, product_section):
+        def removal_handler():
+            self.remove_product_line(widget, product_section)
+
+        return removal_handler
+
+    def remove_product_line(self, widget, product_section):
         """
-        :purpose: removes a product line the button is aligned with
+        :purpose: removes a specific product line
+        :param widget: the widget to remove
+        :param product_section: the product section data to remove
         :return: None
-        :author(s): Joe Lee
         """
-        if len(self.product_sections) > 2:
-            self.product_sections.pop()
-            last_widget = self.products_layout.itemAt(self.products_layout.count() - 1).widget()
+        # Remove from product_sections list
+        if product_section in self.product_sections:
+            self.product_sections.remove(product_section)
 
-            self.products_layout.removeWidget(last_widget)
-            last_widget.deleteLater()
+        # Remove from layout
+        self.products_layout.removeWidget(widget)
+        widget.deleteLater()
 
-            self.product_counter -= 1
-
-            # Update status
-            self.status_label.setText(f"Removed product line. Total: {len(self.product_sections)}")
-        else:
-            self.status_label.setText("Cannot remove the last 2 product lines")
+        self.product_counter -= 1
+        self.status_label.setText(f"Removed product line. Total: {len(self.product_sections)}")
 
     def setup_button_connections(self):
         """
@@ -387,7 +394,6 @@ class PostTab(BaseTab):
         self.create_btn.clicked.connect(self.create_record)
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
-        self.remove_product_btn.clicked.connect(self.remove_product_line)
         # self.calc_btn.clicked.connect(self.update_revenue_fields) # todo: SXC-96
 
     def create_record(self):
@@ -657,7 +663,7 @@ class PostTab(BaseTab):
 
     def clear_form(self):
         """
-        :purpose: clears all input fields
+        :purpose: clears all input fields, resets the product lines to 2
         :return: None
         :author(s): Joe Lee
         """
@@ -672,12 +678,16 @@ class PostTab(BaseTab):
         self.state_input.clear()
 
         # Clear all product fields
-        for product_section in self.product_sections:
-            product_section['product_id'].clear()
-            product_section['product_name'].clear()
-            product_section['notes'].clear()
-            product_section['price'].clear()
-            product_section['quantity'].clear()
+        while self.products_layout.count():
+            child = self.products_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        self.product_sections.clear()
+        self.product_counter = 1
+
+        self.add_product_section()
+        self.add_product_section()
 
         self.revenue_generation.clear_revenue_data()
 
