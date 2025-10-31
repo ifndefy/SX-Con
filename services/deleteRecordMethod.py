@@ -1,4 +1,5 @@
-from database_service import DatabaseService as Ds
+from database_service import DatabaseService
+
 
 def delete_record(table_name: str, key: str, unused: str = '') -> int :
     """"
@@ -11,9 +12,17 @@ def delete_record(table_name: str, key: str, unused: str = '') -> int :
     """
     try:
         print("deleting a record")
-        conn = Ds.connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM " + table_name + " WHERE " + key)
+        Ds = DatabaseService()
+        conn = Ds.connect()
+        cursor = conn.create_cursor()
+        cursor.execute(f"""
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            where TABLE_NAME = '{table_name}'
+            """)
+        pk_result = cursor.fetchone()
+        pk_column = pk_result[0]
+        cursor.execute("DELETE FROM " + table_name + " WHERE " + pk_column + "=" + key)
 
         return 0
     except Exception as e:
