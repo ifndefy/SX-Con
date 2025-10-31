@@ -64,6 +64,7 @@ class MainWindow(QWidget):
 
     def setup_tabs(self):
         self.tabs = QTabWidget()
+        self.tabs.setObjectName("main_tabs")
 
         self.post_tab = PostTab(self.api_handler)
         self.get_tab = GetTab(self.api_handler)
@@ -75,7 +76,7 @@ class MainWindow(QWidget):
         self.tabs.addTab(self.get_tab, "Fetch from Database")
         self.tabs.addTab(self.view_tab, "View Open Tickets")
         self.tabs.addTab(self.settings_tab, "Settings")
-        # self.tabs.addTab(self.admin_tab, "Admin Settings")
+        self.tabs.addTab(self.admin_tab, "Admin Settings")
 
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
