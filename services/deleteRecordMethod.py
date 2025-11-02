@@ -23,8 +23,7 @@ def delete_record(table_name: str, key: str, unused: str = '') -> int :
         pk_result = cursor.fetchone()
         pk_column = pk_result[0]
         cursor.execute("DELETE FROM " + table_name + " WHERE " + pk_column + "=" + key)
-
-        return 0
+        cursor.commit()
     except Exception as e:
         print("ERROR: failed to delete " + str(e))
         return -1
