@@ -33,8 +33,8 @@ class MainWindow(QWidget):
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
-        self.setGeometry(0, 0, 1100, 756)
-        self.setMinimumSize(1100, 756)
+        self.setGeometry(0, 0, 1100, 762)
+        self.setMinimumSize(1100, 762)
         # todo: Resize height to fit Super X logo when delivered to developers
 
     def setup_ui(self):
@@ -75,7 +75,7 @@ class MainWindow(QWidget):
         self.tabs.addTab(self.get_tab, "Fetch from Database")
         self.tabs.addTab(self.view_tab, "View Open Tickets")
         self.tabs.addTab(self.settings_tab, "Settings")
-        # self.tabs.addTab(self.admin_tab, "Admin Settings")
+        self.tabs.addTab(self.admin_tab, "Admin Settings")
 
         self.tabs.currentChanged.connect(self.on_tab_changed)
 

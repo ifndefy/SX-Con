@@ -78,7 +78,6 @@ QLabel#post_title {
     background-color: transparent;
     font-size: 18px;
     font-weight: bold;
-    border-bottom: 1px solid;
 }
 
 /* DROP DOWN MENU STYLING */
