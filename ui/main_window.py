@@ -33,8 +33,8 @@ class MainWindow(QWidget):
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
-        self.setGeometry(0, 0, 1100, 756)
-        self.setMinimumSize(1100, 756)
+        self.setGeometry(0, 0, 1100, 762)
+        self.setMinimumSize(1100, 762)
         # todo: Resize height to fit Super X logo when delivered to developers
 
     def setup_ui(self):
