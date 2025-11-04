@@ -391,6 +391,7 @@ class PostTab(BaseTab):
         self.add_product_btn.clicked.connect(self.add_product_section)
         self.remove_product_btn.clicked.connect(self.remove_product_line)
         # self.calc_btn.clicked.connect(self.update_revenue_fields) # todo: SXC-96
+        self.calc_btn.clicked.connect(self.update_revenue_fields)
 
         # wire up Clear Form
         self.clear_btn.clicked.connect(self.clear_form)
@@ -699,4 +700,6 @@ class PostTab(BaseTab):
             self.datetime_input.clear()
 
         self.status_label.setText("Form cleared")
+
+
 
