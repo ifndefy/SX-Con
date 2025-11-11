@@ -2,14 +2,15 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
-from ui.core.revenue_generation import RevenueGeneration
 from ui.core.autogen_ticket_num import autogen_ticket_num
+from ui.core.revenue_generation import RevenueGeneration
 
 
 class PostTab(BaseTab):
@@ -363,7 +364,8 @@ class PostTab(BaseTab):
 
     def create_removal_handler(self, widget, product_section):
         def removal_handler():
-            self.remove_product_line(widget, product_section)
+            if self.show_remove_product_warning(product_section):
+                self.remove_product_line(widget, product_section)
 
         return removal_handler
 
@@ -374,16 +376,29 @@ class PostTab(BaseTab):
         :param product_section: the product section data to remove
         :return: None
         """
-        # Remove from product_sections list
         if product_section in self.product_sections:
             self.product_sections.remove(product_section)
 
-        # Remove from layout
         self.products_layout.removeWidget(widget)
         widget.deleteLater()
 
         self.product_counter -= 1
         self.status_label.setText(f"Removed product line. Total: {len(self.product_sections)}")
+
+    def show_remove_product_warning(self, product_section):
+        product_id = product_section['product_id'].text().strip()
+        product_name = product_section['product_name'].text().strip()
+
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Warning - Product Line Removal")
+        msg_box.setText(f"Are you sure you want to remove this product line?\n{product_id} - {product_name}")
+        confirm_btn = msg_box.addButton("Confirm", QMessageBox.ButtonRole.AcceptRole)
+        cancel_btn = msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+
+        msg_box.setDefaultButton(confirm_btn)
+
+        msg_box.exec()
+        return msg_box.clickedButton() == confirm_btn
 
     def setup_button_connections(self):
         """
