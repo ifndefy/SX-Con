@@ -28,7 +28,7 @@ def insert_record(container_name: str, item_data: dict, entity_type: str):
 
         container.create_item(body=document)
         print(f"Successfully inserted {item_id} into {container_name}")
-        return "0"
+        return 0
 
     except Exception as e:
         print(f"Error in insert_record: {e}")
