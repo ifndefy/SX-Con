@@ -19,19 +19,18 @@ class DatabaseConnection:
             config.read(config_path)
             self.endpoint = config.get('Cosmos Connection Parameters', 'endpoint')
             self.database_name = config.get('Cosmos Connection Parameters', 'database_name')
-            self.container_name = config.get('Cosmos Connection Parameters', 'container_name')
             self.key = config.get('Cosmos Connection Parameters', 'key')
         except Exception as e:
             print(f"Error fetching from config.ini: {e}")
 
-    def establish_connection(self, endpoint=None, database_name=None, container_name=None, key=None):
+    def establish_connection(self, container_name: str, endpoint=None, database_name=None, key=None):
         """
-        :purpose: Connect the object to the database to enable communications between the program and the database
+        :purpose: Connect to a specific container in the database
+        :param container_name: name of the container to connect to (required)
         :author(s): Maksym Komarov, Joe Lee
         """
         endpoint = endpoint or self.endpoint
         database_name = database_name or self.database_name
-        container_name = container_name or self.container_name
         key = key or self.key
 
         if not all([endpoint, database_name, container_name, key]):
@@ -42,7 +41,7 @@ class DatabaseConnection:
             self.client = CosmosClient(url=endpoint, credential=key)
             self.database = self.client.get_database_client(database_name)
             self.container = self.database.get_container_client(container_name)
-            print("Cosmos DB connection established")
+            print(f"Cosmos DB connection established to container: {container_name}")
             return 0
         except Exception as e:
             print(f"Failed to establish Cosmos DB connection: {e}")
