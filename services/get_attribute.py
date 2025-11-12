@@ -1,44 +1,30 @@
-from dotenv import load_dotenv
 from database_service import DatabaseService
 
-load_dotenv()
-
-
-def get_attribute_value(table_name: str, attribute: str, pk: str) -> str:
+def get_attribute_value(container_name: str, attribute: str, id_value: str, entity_type: str) -> str:
     """
-    Takes 3 string inputs (20 CHAR each)
-
-    table_name to represent the table to select from
-    attribute to represent the value to select
-    pk to represent the primary key to filter by
+    :purpose: Gets a specific attribute value from a document by ID
+    :param: container_name: the Cosmos DB container to query
+    :param: attribute: the property name to retrieve
+    :param: id_value: the numeric ID value to find
+    :param: entity_type: "user", "vendor", or "product" (required)
+    :return: value of the attribute
+    :use case: get_attribute_value("Entities", "username", "1", "user")
+    :author(s): Alexander Bubienko, Joe Lee
     """
-    conn = None
     try:
         db = DatabaseService()
-        conn = db.connect()
-        cursor = conn.create_cursor()
+        container = db.connect(container_name)
 
-        # Find the pk column in {table_name}
-        cursor.execute(f"""
-            SELECT COLUMN_NAME 
-            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
-            WHERE TABLE_NAME = '{table_name}' 
-        """)
-        pk_result = cursor.fetchone()
-        pk_column = pk_result[0]
+        item_id = f"{entity_type}_{id_value}"
+        partition_key = item_id
 
-        # Set the query filtering by pk
-        query = f"SELECT {attribute} FROM {table_name} WHERE {pk_column} = {pk}"
-        cursor.execute(query)
-        result = cursor.fetchone()
-
-        if result:
-            return str(result[0])
-        return "-1"
+        try:
+            document = container.read_item(item=item_id, partition_key=partition_key)
+            return str(document.get(attribute, "-1"))
+        except Exception as e:
+            print(f"Error reading document: {e}")
+            return "-1"
 
     except Exception as e:
         print(f"Error in get_attribute_value: {e}")
         return "-1"
-    finally:
-        if conn:
-            conn.close_connection()
