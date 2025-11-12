@@ -310,33 +310,40 @@ class GetTab(BaseTab):
 
     def fetch(self, vendor_id_input):
         """
-        :purpose: fetches all tickets with vendor_id_input from Consignments table
+        :purpose: fetches all tickets with vendor_id_input from Consignments container
         :return: list of tickets
         :author(s): Joe Lee
         """
         try:
             db = DatabaseService()
-            conn = db.connect()
-            cursor = conn.create_cursor()
+            container = db.connect("Consignments")
 
-            query = f"""
-                    SELECT ticket_num, datetime, status
-                    FROM Consignments
-                    WHERE vendor_id = {vendor_id_input}
-                    ORDER BY ticket_num DESC \
+            query = """
+                    SELECT c.ticket_num, c.datetime, c.status
+                    FROM c
+                    WHERE c.vendor_id = @vendor_id
+                    ORDER BY c.ticket_num DESC \
                     """
-            cursor.execute(query)
-            results = cursor.fetchall()
-            print(results)
+
+            parameters = [
+                {"name": "@vendor_id", "value": int(vendor_id_input)}
+            ]
+
+            results = list(container.query_items(
+                query=query,
+                parameters=parameters,
+                enable_cross_partition_query=True
+            ))
 
             tickets = []
-            for row in results:
+            for item in results:
                 tickets.append({
-                    'ticket_number': row[0],
-                    'datetime': row[1],
-                    'status': row[2]
+                    'ticket_number': item['ticket_num'],
+                    'datetime': item['datetime'],
+                    'status': item['status']
                 })
             return tickets
+
         except Exception as e:
             print(f"Error fetching tickets: {e}")
             return []
