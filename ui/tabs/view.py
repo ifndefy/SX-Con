@@ -190,33 +190,40 @@ class ViewTab(BaseTab):
 
     def fetch(self, key, value):
         """
-        :purpose: fetches all tickets with status=="OPEN" from Consignments table
+        :purpose: fetches all tickets with dynamic key=value from Consignments container
         :return: list of tickets
         :author(s): Joe Lee
         """
         try:
             db = DatabaseService()
-            conn = db.connect()
-            cursor = conn.create_cursor()
+            container = db.connect("Consignments")
 
             query = f"""
-                    SELECT ticket_num, datetime, status
-                    FROM Consignments
-                    WHERE {key} = '{value}'
-                    ORDER BY ticket_num ASC
-                    """
-            cursor.execute(query)
-            results = cursor.fetchall()
-            print(results)
+            SELECT c.ticket_num, c.datetime, c.status 
+            FROM c 
+            WHERE c.{key} = @value 
+            ORDER BY c.ticket_num ASC
+            """
+
+            parameters = [
+                {"name": "@value", "value": value}
+            ]
+
+            results = list(container.query_items(
+                query=query,
+                parameters=parameters,
+                enable_cross_partition_query=True
+            ))
 
             tickets = []
-            for row in results:
+            for item in results:
                 tickets.append({
-                    'ticket_number': row[0],
-                    'datetime': row[1],
-                    'status': row[2]
+                    'ticket_number': item['ticket_num'],
+                    'datetime': item['datetime'],
+                    'status': item['status']
                 })
             return tickets
+
         except Exception as e:
             print(f"Error fetching tickets: {e}")
             return []
