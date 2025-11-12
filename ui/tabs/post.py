@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QWidget
 from ui.tabs.base import BaseTab
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_generation import RevenueGeneration
+from ui.core import format_phone
 
 
 class PostTab(BaseTab):
@@ -88,9 +89,7 @@ class PostTab(BaseTab):
 
         # Phone Number
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
-        self.phone_input = QLineEdit()
-        self.phone_input.setPlaceholderText("12 INTS")
-        self.phone_input.setMaxLength(12)
+        self.phone_input = format_phone.PhoneNumField()
         self.phone_input.setFixedWidth(150)
         vendor_section_row_1.addWidget(self.phone_input)
 
