@@ -13,4 +13,4 @@ class DatabaseService:
         """
         self.connection = db.DatabaseConnection()
         self.connection.establish_connection(container_name=container_name)
-        return self.connection
+        return self.connection.container
