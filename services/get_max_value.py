@@ -1,28 +1,34 @@
 from services.database_service import DatabaseService
 
-def get_max_value(table_name, column_name):
+
+def get_max_value(container_name, property_name):
     """
-    :purpose: returns the max value of a column in a table
-    :return(s): the max value of a column in a table
+    :purpose: gets the max value of a property
+    :param container_name: name of the container
+    :param property_name: name of the property
+    :return: max value of a property
     :author(s): Joe Lee
     """
     try:
         db_service = DatabaseService()
-        db_service.connect()
+        container = db_service.connect(container_name)
     except Exception as e:
         print(e)
         return -1
 
     try:
-        cursor = db_service.connection.create_cursor()
-        query = f"SELECT MAX({column_name}) FROM {table_name}"
-        cursor.execute(query)
-        result = cursor.fetchone()
+        query = f"SELECT VALUE MAX(c.{property_name}) FROM c"
 
-        if result[0] is not None:
-            return result[0]
+        items = list(container.query_items(
+            query=query,
+            parameters=[],
+            enable_cross_partition_query=True,
+        ))
+
+        if items and items[0] is not None:
+            return items[0]
         else:
             return 0
-    finally:
-        if db_service.connection:
-            db_service.connection.close_connection()
+    except Exception as e:
+        print(e)
+        return -1
