@@ -426,7 +426,7 @@ class PostTab(BaseTab):
                 return -1
         
             # Post to database
-            record_id = self._post_to_database(record_data)
+            record_id = self._post_vendor_database(record_data)
         
             if record_id != -1:
                 self.status_label.setText(f"Record created successfully! ID: {record_id}")
@@ -441,13 +441,12 @@ class PostTab(BaseTab):
             print(f"Database error: {e}")
             return -1
 
-    def _gather_record_data(self):
+    def _gather_vendor_data(self):
         """
-        :author(s): Alexander Bubienko
-        :purpose: Gather all field data and convert empty strings to NULL
+        :author(s): Alexander Bubienko, Joe Lee
+        :purpose: Gather all vendor data and convert empty strings to NULL
         :return: Dictionary containing vendor data, products data, and revenue data
         """
-        # Vendor information
         vendor_data = {
             'ticket_number': self.ticket_input.text().strip() or "NULL",
             'vendor_id': self.vendor_id_input.text().strip() or "NULL",
@@ -460,8 +459,14 @@ class PostTab(BaseTab):
             'city': self.city_input.text().strip() or "NULL",
             'state': self.state_input.text().strip() or "NULL"
         }
-    
-        # Product information
+        return {'vendor': vendor_data}
+
+    def _gather_products_data(self):
+        """
+        :author(s): Alexander Bubienko, Joe Lee
+        :purpose: Gather all products data and convert empty strings to NULL
+        :return: Dictionary containing vendor data, products data, and revenue data
+        """
         products_data = []
         for i, product_section in enumerate(self.product_sections):
             product_data = {
@@ -472,15 +477,11 @@ class PostTab(BaseTab):
                 'quantity': product_section['quantity'].text().strip() or "NULL"
             }
             products_data.append(product_data)
-    
-        # Revenue sharing data
+        return {'products': products_data}
+
+    def _gather_revenue_data(self):
         revenue_data = self.revenue_generation.get_revenue_data()
-    
-        return {
-            'vendor': vendor_data,
-            'products': products_data,
-            'revenue': revenue_data
-        }
+        return {'revenue': revenue_data}
 
     def _validate_required_fields(self, record_data):
         """
@@ -504,103 +505,72 @@ class PostTab(BaseTab):
             
         return True
 
-    def _post_to_database(self, record_data):
+    def _post_vendor_database(self, record_data):
         """
-        :author(s): Alexander Bubienko
-        :purpose: Convert product ID to be within 0-9999 range for the CHECK constraint
-        :return: Valid product ID as integer, or None if invalid
+        :author(s): Alexander Bubienko, Joe Lee
+        :purpose: Insert vendor and product data into Cosmos DB
+        :return: Vendor ID if successful, -1 if failed
         """
+        from services.connect_database import DatabaseConnection
         try:
-            # Import and use DatabaseConnection
-            from services.connectDB import DatabaseConnection
-            
             db_connection = DatabaseConnection()
-            
-            # Establish connection
-            result = db_connection.establish_connection()
-            if result == -1:
-                self.status_label.setText("Error: Failed to establish database connection")
-                return -1
-            
-            cursor = db_connection.create_cursor()
-            if not cursor:
-                self.status_label.setText("Error: Failed to create database cursor")
-                return -1
-            
+            container = db_connection.establish_connection("Entities")
+            # Prepare vendor document
+            vendor_doc = {
+                'id': str(record_data['vendor']['vendor_id']) if record_data['vendor'][
+                                                                     'vendor_id'] != "NULL" else None,
+                'type': 'vendor',
+                'vendor_id': self._convert_null(record_data['vendor']['vendor_id']),
+                'phone_number': self._convert_null(record_data['vendor']['phone']),
+                'first_name': self._convert_null(record_data['vendor']['first_name']),
+                'middle_name': self._convert_null(record_data['vendor']['middle_name']),
+                'last_name': self._convert_null(record_data['vendor']['last_name']),
+                'address': self._convert_null(record_data['vendor']['address']),
+                'city': self._convert_null(record_data['vendor']['city']),
+                'state': self._convert_null(record_data['vendor']['state']),
+                'zip_code': self._convert_null(record_data['vendor']['zip_code'])
+            }
+
+            print("Inserting vendor document...")
+            container.create_item(body=vendor_doc)
+            print(f"Vendor inserted with ID: {vendor_doc['id']}")
+
+        except Exception as e:
+            print(f"Database operation failed: {e}")
+            raise e
+
             try:
-                # Start transaction
-                cursor.execute("BEGIN TRANSACTION")
-                
-                # Insert vendor record into existing Vendors table
-                vendor_sql = """
-                INSERT INTO Vendors (vendor_id, phone_number, first_name, middle_name, last_name, address, city, state, zip_code)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """
-                
-                vendor_values = (
-                    int(record_data['vendor']['vendor_id']) if record_data['vendor']['vendor_id'] != "NULL" else None,
-                    self._convert_null(record_data['vendor']['phone']),
-                    self._convert_null(record_data['vendor']['first_name']),
-                    self._convert_null(record_data['vendor']['middle_name']),
-                    self._convert_null(record_data['vendor']['last_name']),
-                    self._convert_null(record_data['vendor']['address']),
-                    self._convert_null(record_data['vendor']['city']),
-                    self._convert_null(record_data['vendor']['state']),
-                    95819  # Default zip code
-                )
-                
-                print("Executing vendor insert...")
-                cursor.execute(vendor_sql, vendor_values)
-                
-                # Get the vendor_id
-                vendor_id = int(record_data['vendor']['vendor_id'])
-                
-                print(f"Vendor inserted with ID: {vendor_id}")
-                
-                # Insert product records into existing Products table
+                container = db_connection.establish_connection("Consignments")
+                # Insert product documents
                 for i, product in enumerate(record_data['products']):
                     if self._has_product_data(product):
                         # Convert product_id to be within 0-9999 range
                         product_id = self._convert_product_id(product['product_id'])
                         if product_id is None:
-                            print(f"Skipping product {i+1} - invalid product ID")
+                            print(f"Skipping product {i + 1} - invalid product ID")
                             continue
-                            
-                        product_sql = """
-                        INSERT INTO Products (product_id, product_name, notes, price, quantity)
-                        VALUES (?, ?, ?, ?, ?)
-                        """
-                        
-                        product_values = (
-                            product_id,
-                            self._convert_null(product['product_name']),
-                            self._convert_null(product['notes']),
-                            self._convert_null(product['price']),
-                            # Use validated quantity
-                            self._convert_quantity(product['quantity'])
-                        )
-                        
-                        print(f"Inserting product {i+1} with ID: {product_id}...")
-                        cursor.execute(product_sql, product_values)
-                
-                # Commit transaction
-                db_connection.db_connection.commit()
-                print("Transaction committed successfully!")
-                return vendor_id
-                
-            except Exception as e:
-                # Rollback on error
-                db_connection.db_connection.rollback()
-                print(f"Database operation failed: {e}")
-                raise e
-                
-            finally:
-                cursor.close()
-                db_connection.close_connection()
-                
+
+                        product_doc = {
+                            'id': f"product_{product_id}_{vendor_doc['id']}",
+                            'type': 'product',
+                            'product_id': product_id,
+                            'vendor_id': vendor_doc['id'],  # Reference to vendor
+                            'product_name': self._convert_null(product['product_name']),
+                            'notes': self._convert_null(product['notes']),
+                            'price': self._convert_null(product['price']),
+                            'quantity': self._convert_quantity(product['quantity'])
+                        }
+
+                        print(f"Inserting product {i + 1} with ID: {product_id}...")
+                        container.create_item(body=product_doc)
+
+                print("All documents inserted successfully!")
+                return vendor_doc['id']
+
         except Exception as e:
             print(f"Database insertion error: {e}")
             return -1
+
     def _convert_product_id(self, product_id_str):
         """
         :author(s): Alexander Bubienko
