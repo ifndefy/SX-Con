@@ -22,7 +22,7 @@ def delete_attribute(table_name: str, attr: str, key: str ) -> int:
             """)
         pk_result = cursor.fetchone()
         pk_column = pk_result[0]
-        cursor.execute("UPDATE " + table_name + " SET " + attr + " = NULL WHERE " + pk_column + " = " + key); """hoping this works"""
+        cursor.execute("UPDATE " + table_name + " SET " + attr + " = NULL WHERE " + pk_column + " = " + key)
         cursor.connection.commit()
     except Exception as e:
         print("Error: failed to delete an attribute " + str(e))
