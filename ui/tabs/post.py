@@ -489,23 +489,24 @@ class PostTab(BaseTab):
         :return: True if all required fields are valid, False otherwise
         """
         vendor = record_data['vendor']
+        products = record_data['products']
         
         if not vendor['vendor_id'] or vendor['vendor_id'] == "NULL":
             self.status_label.setText("Error: Vendor ID is required")
             return False
 
-        if not vendor['product_id'] or vendor['product_id'] == "NULL":
-            self.status_label.setText("Error: Product ID is required")
+        has_valid_product = False
+        for product in products:
+            if (product['product_id'] and product['product_id'] != "NULL" and
+                    product['price'] and product['price'] != "NULL" and
+                    product['quantity'] and product['quantity'] != "NULL"):
+                has_valid_product = True
+                break
+
+        if not has_valid_product:
+            self.status_label.setText("Error: At least one product requires Product ID, Price, and Quantity")
             return False
 
-        if not vendor['price'] or vendor['price'] == "NULL":
-            self.status_label.setText("Error: Price is required")
-            return False
-
-        if not vendor['quantity'] or vendor['quantity'] == "NULL":
-            self.status_label.setText("Error: Quantity is required")
-            return False
-            
         return True
 
     def _post_to_database(self, record_data):
