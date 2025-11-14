@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="Black">
-    <option name="pathToExecutable" value="/Library/Frameworks/Python.framework/Versions/3.13/bin/black" />
-  </component>
-</project>
