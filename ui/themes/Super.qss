@@ -16,6 +16,7 @@ QTabWidget QStackedWidget {
     background-color: #8A6A52;
 }
 
+
 QTabBar::tab {
     background-color: #0862C8;
     color: #000000;
@@ -25,6 +26,14 @@ QTabBar::tab {
     padding: 8px 16px;
     margin: 0px;
     min-width: 80px;
+}
+
+QTabWidget#main_tabs QTabBar::tab:last {
+    background-color: #691601;
+}
+
+QTabWidget#subtabs QTabBar::tab {
+    background-color: #691601;
 }
 
 QTabBar::tab:selected {
@@ -59,6 +68,10 @@ QPushButton {
     font-weight: bold;
 }
 
+QPushButton#red_btn {
+    background-color: #691601;
+}
+
 QPushButton:hover {
     background-color: #F5D8A7;
 }
@@ -67,6 +80,12 @@ QPushButton:hover {
 QLabel {
     background-color: transparent;
     font-size: 15px;
+    font-weight: bold;
+}
+
+QLabel#post_title {
+    background-color: transparent;
+    font-size: 18px;
     font-weight: bold;
 }
 
@@ -81,7 +100,7 @@ QComboBox {
 }
 
 QComboBox:hover {
-    background-color: #F5D8A7;
+    background-color: #691601;
 }
 
 QComboBox::drop-down {
@@ -203,19 +222,6 @@ LoginScreen QLabel#rev_label {
     font-style: italic;
 }
 
-LoginScreen QLineEdit {
-    background-color: #E5C59B;
-    color: #000000;
-    font-size: 16px;
-    font-weight: normal;
-}
-
-LoginScreen QPushButton {
-    background-color: #E5C59B;
-    color: #000000;
-    font-size: 16px;
-    font-weight: bold;
-}
 
 /* forgot_pw screen styles */
 ForgotPasswordScreen {
@@ -287,11 +293,4 @@ ForgotPasswordScreen QComboBox QAbstractItemView::item:hover {
 ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
     background-color: #E5C59B;
     color: #000000;
-}
-
-ForgotPasswordScreen QPushButton {
-    background-color: #E5C59B;
-    color: #000000;
-    font-size: 16px;
-    font-weight: bold;
 }

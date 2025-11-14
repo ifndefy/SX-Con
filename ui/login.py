@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import Qt
 
-from src.SPOT import APP_VERSION
+from src import SPOT
 from ui.forgot_pw import ForgotPasswordScreen
 
 
@@ -47,7 +47,7 @@ class LoginScreen(QDialog):
         layout.addWidget(title)
 
         # Revision
-        rev = QLabel(APP_VERSION)
+        rev = QLabel(SPOT.APP_VERSION)
         rev.setAlignment(Qt.AlignmentFlag.AlignCenter)
         rev.setObjectName("rev_label")
         layout.addWidget(rev)
@@ -79,6 +79,7 @@ class LoginScreen(QDialog):
 
         # Forgot Password button
         forgot_pw_btn = QPushButton("Forgot Password")
+        forgot_pw_btn.setObjectName("red_btn")
         forgot_pw_btn.clicked.connect(self.show_forgot_password_screen)
         layout.addWidget(forgot_pw_btn)
 
