@@ -31,9 +31,9 @@ class PhoneNumField(QLineEdit):
         #Do we have some valid input for the field
         if parsed_string != "" and self.masked == False:    
             #Enforce mask
-            self.setInputMask("(999)999-9999")
+            self.setInputMask("999-999-9999")
             #Push cursor to offset mask characters
-            new_cursor_pos =  re.search(" |$", self.displayText()).start()
+            new_cursor_pos =  re.search(r" |$", self.displayText()).start()
             self.setCursorPosition(new_cursor_pos)
             self.masked = True
         elif parsed_string == "":
