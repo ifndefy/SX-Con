@@ -7,6 +7,13 @@ from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
+from PyQt6.QtGui import QIntValidator
+from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
+from PyQt6.QtCore import QRegularExpression
+from services.connectDB import DatabaseConnection
+
 
 from ui.tabs.base import BaseTab
 from ui.core.autogen_ticket_num import autogen_ticket_num
@@ -84,7 +91,6 @@ class PostTab(BaseTab):
         self.vendor_id_input.setPlaceholderText("4 INTS")
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
-        from PyQt6.QtGui import QIntValidator
         self.vendor_id_input.setValidator(QIntValidator(0,9999, self))
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
@@ -117,8 +123,6 @@ class PostTab(BaseTab):
         self.first_name_input.setPlaceholderText("30 chars")
         self.first_name_input.setMaxLength(30)
         self.first_name_input.setMinimumWidth(263)
-        from PyQt6.QtGui import QRegularExpressionValidator
-        from PyQt6.QtCore import QRegularExpression
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
         self.first_name_input.setValidator(alpha_validator)
         vendor_section_row_2.addWidget(self.first_name_input)
@@ -326,8 +330,6 @@ class PostTab(BaseTab):
         product_id_input.setPlaceholderText("10 INTS")
         product_id_input.setMaxLength(10)
         product_id_input.setFixedWidth(120)
-        from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
-        from PyQt6.QtCore import QRegularExpression
         product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
         product_id_input.setValidator(product_id_validator)
         line1_layout.addWidget(product_id_input)
@@ -533,9 +535,7 @@ class PostTab(BaseTab):
         :return: Valid product ID as integer, or None if invalid
         """
         try:
-            # Import and use DatabaseConnection
-            from services.connectDB import DatabaseConnection
-            
+            # Import and use DatabaseConnection            
             db_connection = DatabaseConnection()
             
             # Establish connection
