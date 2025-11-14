@@ -680,7 +680,7 @@ class PostTab(BaseTab):
         """
         :purpose: clears all input fields, resets the product lines to 2
         :return: None
-        :author(s): Joe Lee
+        :author(s): Joe Lee, Colin Henderson
         """
         self.ticket_input.clear()
         self.vendor_id_input.clear()
@@ -691,6 +691,7 @@ class PostTab(BaseTab):
         self.address_input.clear()
         self.city_input.clear()
         self.state_input.clear()
+        self.zip_input.clear()
 
         # Clear all product fields
         while self.products_layout.count():
