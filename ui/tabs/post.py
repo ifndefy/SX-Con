@@ -10,8 +10,6 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
-from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
-from PyQt6.QtCore import QRegularExpression
 from services.connectDB import DatabaseConnection
 
 
