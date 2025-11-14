@@ -484,7 +484,7 @@ class PostTab(BaseTab):
 
     def _validate_required_fields(self, record_data):
         """
-        :author(s): Alexander Bubienko
+        :author(s): Alexander Bubienko, Colin Henderson
         :purpose: Validate that required fields are filled
         :return: True if all required fields are valid, False otherwise
         """
@@ -493,13 +493,17 @@ class PostTab(BaseTab):
         if not vendor['vendor_id'] or vendor['vendor_id'] == "NULL":
             self.status_label.setText("Error: Vendor ID is required")
             return False
-            
-        if not vendor['first_name'] or vendor['first_name'] == "NULL":
-            self.status_label.setText("Error: First Name is required")
+
+        if not vendor['product_id'] or vendor['product_id'] == "NULL":
+            self.status_label.setText("Error: Product ID is required")
             return False
-            
-        if not vendor['last_name'] or vendor['last_name'] == "NULL":
-            self.status_label.setText("Error: Last Name is required")
+
+        if not vendor['price'] or vendor['price'] == "NULL":
+            self.status_label.setText("Error: Price is required")
+            return False
+
+        if not vendor['quantity'] or vendor['quantity'] == "NULL":
+            self.status_label.setText("Error: Quantity is required")
             return False
             
         return True
