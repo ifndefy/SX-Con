@@ -2,15 +2,21 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
+from PyQt6.QtGui import QIntValidator
+from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtCore import QRegularExpression
+from services.connectDB import DatabaseConnection
 
 from ui.tabs.base import BaseTab
-from ui.core.revenue_generation import RevenueGeneration
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
+from ui.core.revenue_generation import RevenueGeneration
+from ui.core import format_phone
 
 
 class PostTab(BaseTab):
@@ -84,22 +90,21 @@ class PostTab(BaseTab):
         self.vendor_id_input.setPlaceholderText("4 INTS")
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
+        self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         # Phone Number
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
-        self.phone_input = QLineEdit()
-        self.phone_input.setPlaceholderText("12 INTS")
-        self.phone_input.setMaxLength(12)
+        self.phone_input = format_phone.PhoneNumField()
         self.phone_input.setFixedWidth(150)
+        self.phone_input.setValidator(QIntValidator(0, 2147483647, self))
         vendor_section_row_1.addWidget(self.phone_input)
 
         # Date and Time - Read-only
         vendor_section_row_1.addWidget(QLabel("Date and Time:"))
         self.datetime_input = QLineEdit()
         self.datetime_input.setObjectName("READ_ONLY")
-        _dt = generate_host_datetime()  # format: MM:DD:YY--HH:MM
-        self.datetime_input.setText(_dt if _dt != -1 else "") # todo: SXC-21
+        self.update_datetime()
         self.datetime_input.setReadOnly(True)
         vendor_section_row_1.addWidget(self.datetime_input)
 
@@ -115,6 +120,8 @@ class PostTab(BaseTab):
         self.first_name_input.setPlaceholderText("30 chars")
         self.first_name_input.setMaxLength(30)
         self.first_name_input.setMinimumWidth(263)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.first_name_input.setValidator(alpha_validator)
         vendor_section_row_2.addWidget(self.first_name_input)
 
         # Middle Name
@@ -123,6 +130,7 @@ class PostTab(BaseTab):
         self.middle_name_input.setPlaceholderText("10 chars")
         self.middle_name_input.setMaxLength(10)
         self.middle_name_input.setMinimumWidth(103)
+        self.middle_name_input.setValidator(alpha_validator)
         vendor_section_row_2.addWidget(self.middle_name_input)
 
         # Last Name
@@ -131,6 +139,7 @@ class PostTab(BaseTab):
         self.last_name_input.setPlaceholderText("30 chars")
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setMinimumWidth(263)
+        self.last_name_input.setValidator(alpha_validator)
         vendor_section_row_2.addWidget(self.last_name_input)
 
         # End creation and adds vendor_section_row_2 to the window
@@ -144,6 +153,8 @@ class PostTab(BaseTab):
         self.address_input = QLineEdit()
         self.address_input.setPlaceholderText("Street address")
         self.address_input.setMaxLength(255)
+        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 .,#-]+"))
+        self.address_input.setValidator(address_validator)
         vendor_section_row_3.addWidget(self.address_input)
 
         # City
@@ -151,6 +162,7 @@ class PostTab(BaseTab):
         self.city_input = QLineEdit()
         self.city_input.setPlaceholderText("City")
         self.city_input.setMaxLength(30)
+        self.city_input.setValidator(alpha_validator)
         vendor_section_row_3.addWidget(self.city_input)
 
         # State
@@ -159,6 +171,7 @@ class PostTab(BaseTab):
         self.state_input.setPlaceholderText("ST")
         self.state_input.setMaxLength(2)
         self.state_input.setFixedWidth(50)
+        self.state_input.setValidator(alpha_validator)
         vendor_section_row_3.addWidget(self.state_input)
 
         # Zip Code
@@ -167,6 +180,8 @@ class PostTab(BaseTab):
         self.zip_input.setPlaceholderText("XXXXX")
         self.zip_input.setMaxLength(5)
         self.zip_input.setFixedWidth(70)
+        zip_validator = QIntValidator(0, 99999, self)
+        self.zip_input.setValidator(zip_validator)
         vendor_section_row_3.addWidget(self.zip_input)
 
         # End creation and adds vendor_section_row_3 to the window
@@ -185,6 +200,8 @@ class PostTab(BaseTab):
         product_title.setObjectName("post_title")
         product_section_row_0.addWidget(product_title)
 
+        product_section_row_0.addStretch()
+
         # End creation and adds product_section_row_0 to the window
         layout.addLayout(product_section_row_0)
 
@@ -199,11 +216,6 @@ class PostTab(BaseTab):
 
         # Product Line Management buttons
         product_section_row_2 = QHBoxLayout()
-
-        # Remove Product Line button
-        # todo: remove from here, add inline at self.products_layout
-        self.remove_product_btn = QPushButton("Remove Product Line")
-        product_section_row_2.addWidget(self.remove_product_btn)
 
         # Add Product Line button
         self.add_product_btn = QPushButton("Add Product Line")
@@ -315,6 +327,8 @@ class PostTab(BaseTab):
         product_id_input.setPlaceholderText("10 INTS")
         product_id_input.setMaxLength(10)
         product_id_input.setFixedWidth(120)
+        product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
+        product_id_input.setValidator(product_id_validator)
         line1_layout.addWidget(product_id_input)
         product_section['product_id'] = product_id_input
 
@@ -322,8 +336,16 @@ class PostTab(BaseTab):
         line1_layout.addWidget(QLabel("Product Name:"))
         product_name_input = QLineEdit()
         product_name_input.setPlaceholderText("Product name")
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        product_name_input.setValidator(alpha_validator)
         line1_layout.addWidget(product_name_input)
         product_section['product_name'] = product_name_input
+
+        # Add removal button for this specific line
+        remove_btn = QPushButton("Remove Product Line")
+        remove_btn.setObjectName("red_btn")
+        remove_btn.clicked.connect(self.create_removal_handler(section_widget, product_section))
+        line1_layout.addWidget(remove_btn)
 
         section_layout.addLayout(line1_layout)
 
@@ -350,6 +372,7 @@ class PostTab(BaseTab):
         quantity_input = QLineEdit()
         quantity_input.setPlaceholderText("0")
         quantity_input.setFixedWidth(100)
+        quantity_input.setValidator(QIntValidator(0, 9999, self))
         line2_layout.addWidget(quantity_input)
         product_section['quantity'] = quantity_input
 
@@ -360,25 +383,44 @@ class PostTab(BaseTab):
         self.product_sections.append(product_section)
         self.product_counter += 1
 
-    def remove_product_line(self):
+    def create_removal_handler(self, widget, product_section):
+        def removal_handler():
+            if self.show_remove_product_warning(product_section):
+                self.remove_product_line(widget, product_section)
+
+        return removal_handler
+
+    def remove_product_line(self, widget, product_section):
         """
-        :purpose: removes a product line the button is aligned with
+        :purpose: removes a specific product line
+        :param widget: the widget to remove
+        :param product_section: the product section data to remove
         :return: None
         :author(s): Joe Lee
         """
-        if len(self.product_sections) > 2:
-            self.product_sections.pop()
-            last_widget = self.products_layout.itemAt(self.products_layout.count() - 1).widget()
+        if product_section in self.product_sections:
+            self.product_sections.remove(product_section)
 
-            self.products_layout.removeWidget(last_widget)
-            last_widget.deleteLater()
+        self.products_layout.removeWidget(widget)
+        widget.deleteLater()
 
-            self.product_counter -= 1
+        self.product_counter -= 1
+        self.status_label.setText(f"Removed product line. Total: {len(self.product_sections)}")
 
-            # Update status
-            self.status_label.setText(f"Removed product line. Total: {len(self.product_sections)}")
-        else:
-            self.status_label.setText("Cannot remove the last 2 product lines")
+    def show_remove_product_warning(self, product_section):
+        product_id = product_section['product_id'].text().strip()
+        product_name = product_section['product_name'].text().strip()
+
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Warning - Product Line Removal")
+        msg_box.setText(f"Are you sure you want to remove this product line?\n{product_id} - {product_name}")
+        confirm_btn = msg_box.addButton("Confirm", QMessageBox.ButtonRole.AcceptRole)
+        cancel_btn = msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+
+        msg_box.setDefaultButton(confirm_btn)
+
+        msg_box.exec()
+        return msg_box.clickedButton() == confirm_btn
 
     def setup_button_connections(self):
         """
@@ -389,9 +431,7 @@ class PostTab(BaseTab):
         self.create_btn.clicked.connect(self.create_record)
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
-        self.remove_product_btn.clicked.connect(self.remove_product_line)
         # self.calc_btn.clicked.connect(self.update_revenue_fields) # todo: SXC-96
-        self.calc_btn.clicked.connect(self.update_revenue_fields)
 
         # wire up Clear Form
         self.clear_btn.clicked.connect(self.clear_form)
@@ -405,14 +445,14 @@ class PostTab(BaseTab):
         try:
             # Get record data using existing method
             record_data = self._gather_record_data()
-        
+
             # Validate required fields
             if not self._validate_required_fields(record_data):
                 return -1
-        
+
             # Post to database
             record_id = self._post_to_database(record_data)
-        
+
             if record_id != -1:
                 self.status_label.setText(f"Record created successfully! ID: {record_id}")
                 self.clear_form()
@@ -420,7 +460,7 @@ class PostTab(BaseTab):
             else:
                 self.status_label.setText("Failed to create record")
                 return -1
-            
+
         except Exception as e:
             self.status_label.setText(f"Error creating record: {str(e)}")
             print(f"Database error: {e}")
@@ -445,7 +485,7 @@ class PostTab(BaseTab):
             'city': self.city_input.text().strip() or "NULL",
             'state': self.state_input.text().strip() or "NULL"
         }
-    
+
         # Product information
         products_data = []
         for i, product_section in enumerate(self.product_sections):
@@ -457,10 +497,10 @@ class PostTab(BaseTab):
                 'quantity': product_section['quantity'].text().strip() or "NULL"
             }
             products_data.append(product_data)
-    
+
         # Revenue sharing data
         revenue_data = self.revenue_generation.get_revenue_data()
-    
+
         return {
             'vendor': vendor_data,
             'products': products_data,
@@ -474,19 +514,19 @@ class PostTab(BaseTab):
         :return: True if all required fields are valid, False otherwise
         """
         vendor = record_data['vendor']
-        
+
         if not vendor['vendor_id'] or vendor['vendor_id'] == "NULL":
             self.status_label.setText("Error: Vendor ID is required")
             return False
-            
+
         if not vendor['first_name'] or vendor['first_name'] == "NULL":
             self.status_label.setText("Error: First Name is required")
             return False
-            
+
         if not vendor['last_name'] or vendor['last_name'] == "NULL":
             self.status_label.setText("Error: Last Name is required")
             return False
-            
+
         return True
 
     def _post_to_database(self, record_data):
@@ -497,31 +537,29 @@ class PostTab(BaseTab):
         """
         try:
             # Import and use DatabaseConnection
-            from services.connectDB import DatabaseConnection
-            
             db_connection = DatabaseConnection()
-            
+
             # Establish connection
             result = db_connection.establish_connection()
             if result == -1:
                 self.status_label.setText("Error: Failed to establish database connection")
                 return -1
-            
+
             cursor = db_connection.create_cursor()
             if not cursor:
                 self.status_label.setText("Error: Failed to create database cursor")
                 return -1
-            
+
             try:
                 # Start transaction
                 cursor.execute("BEGIN TRANSACTION")
-                
+
                 # Insert vendor record into existing Vendors table
                 vendor_sql = """
                 INSERT INTO Vendors (vendor_id, phone_number, first_name, middle_name, last_name, address, city, state, zip_code)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """
-                
+
                 vendor_values = (
                     int(record_data['vendor']['vendor_id']) if record_data['vendor']['vendor_id'] != "NULL" else None,
                     self._convert_null(record_data['vendor']['phone']),
@@ -533,29 +571,29 @@ class PostTab(BaseTab):
                     self._convert_null(record_data['vendor']['state']),
                     95819  # Default zip code
                 )
-                
+
                 print("Executing vendor insert...")
                 cursor.execute(vendor_sql, vendor_values)
-                
+
                 # Get the vendor_id
                 vendor_id = int(record_data['vendor']['vendor_id'])
-                
+
                 print(f"Vendor inserted with ID: {vendor_id}")
-                
+
                 # Insert product records into existing Products table
                 for i, product in enumerate(record_data['products']):
                     if self._has_product_data(product):
                         # Convert product_id to be within 0-9999 range
                         product_id = self._convert_product_id(product['product_id'])
                         if product_id is None:
-                            print(f"Skipping product {i+1} - invalid product ID")
+                            print(f"Skipping product {i + 1} - invalid product ID")
                             continue
-                            
+
                         product_sql = """
                         INSERT INTO Products (product_id, product_name, notes, price, quantity)
                         VALUES (?, ?, ?, ?, ?)
                         """
-                        
+
                         product_values = (
                             product_id,
                             self._convert_null(product['product_name']),
@@ -564,28 +602,29 @@ class PostTab(BaseTab):
                             # Use validated quantity
                             self._convert_quantity(product['quantity'])
                         )
-                        
-                        print(f"Inserting product {i+1} with ID: {product_id}...")
+
+                        print(f"Inserting product {i + 1} with ID: {product_id}...")
                         cursor.execute(product_sql, product_values)
-                
+
                 # Commit transaction
                 db_connection.db_connection.commit()
                 print("Transaction committed successfully!")
                 return vendor_id
-                
+
             except Exception as e:
                 # Rollback on error
                 db_connection.db_connection.rollback()
                 print(f"Database operation failed: {e}")
                 raise e
-                
+
             finally:
                 cursor.close()
                 db_connection.close_connection()
-                
+
         except Exception as e:
             print(f"Database insertion error: {e}")
             return -1
+
     def _convert_product_id(self, product_id_str):
         """
         :author(s): Alexander Bubienko
@@ -594,7 +633,7 @@ class PostTab(BaseTab):
         """
         if product_id_str == "NULL" or not product_id_str:
             return None
-        
+
         try:
             product_id = int(product_id_str)
             # Ensure it's within the CHECK constraint range (0-9999)
@@ -615,7 +654,7 @@ class PostTab(BaseTab):
         """
         if quantity_str == "NULL" or not quantity_str:
             return None
-        
+
         try:
             quantity = int(quantity_str)
             # Ensure it's within the CHECK constraint range (0-9999)
@@ -627,7 +666,7 @@ class PostTab(BaseTab):
         except (ValueError, TypeError):
             print(f"Invalid quantity: {quantity_str}")
             return None
-    
+
     def _convert_null(self, value):
         """
         :author(s): Alexander Bubienko
@@ -661,9 +700,18 @@ class PostTab(BaseTab):
         ticket_num = str(autogen_ticket_num())
         self.ticket_input.setText(ticket_num)
 
+    def update_datetime(self):
+        """
+        :purpose: updates datetime
+        :return: None
+        :author(s): Kyle Valdez
+        """
+        datetime = str(generate_host_datetime())
+        self.datetime_input.setText(datetime)
+
     def clear_form(self):
         """
-        :purpose: clears all input fields
+        :purpose: clears all input fields, resets the product lines to 2
         :return: None
         :author(s): Joe Lee
         """
@@ -678,12 +726,16 @@ class PostTab(BaseTab):
         self.state_input.clear()
 
         # Clear all product fields
-        for product_section in self.product_sections:
-            product_section['product_id'].clear()
-            product_section['product_name'].clear()
-            product_section['notes'].clear()
-            product_section['price'].clear()
-            product_section['quantity'].clear()
+        while self.products_layout.count():
+            child = self.products_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        self.product_sections.clear()
+        self.product_counter = 1
+
+        self.add_product_section()
+        self.add_product_section()
 
         self.revenue_generation.clear_revenue_data()
 
@@ -691,15 +743,6 @@ class PostTab(BaseTab):
 
         # Autopopulate again after clear fields (method calls)
         self.update_ticket_number()
-        # todo: SXC-21
-
-        dt_val = generate_host_datetime()
-        if dt_val != -1:
-            self.datetime_input.setText(dt_val)
-        else:
-            self.datetime_input.clear()
+        self.update_datetime()
 
         self.status_label.setText("Form cleared")
-
-
-
