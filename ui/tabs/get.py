@@ -7,14 +7,14 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from services.database_service import DatabaseService
 from ui.tabs.base import BaseTab
 
 class GetTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, db_connection):
         self.ticket_counter = None
         self.tickets_layout = None
         self.tickets_section = []
+        self.db_connection = db_connection
 
         super().__init__(api_handler, "get")
 
@@ -315,18 +315,17 @@ class GetTab(BaseTab):
         :author(s): Joe Lee
         """
         try:
-            db = DatabaseService()
-            container = db.connect("Consignments")
+            container = self.db_connection.connect("Consignments")
 
             query = """
-                    SELECT c.ticket_num, c.datetime, c.status
+                    SELECT c.ticket_number, c.datetime, c.vendor_id
                     FROM c
                     WHERE c.vendor_id = @vendor_id
-                    ORDER BY c.ticket_num DESC \
+                    ORDER BY c.ticket_number DESC
                     """
 
             parameters = [
-                {"name": "@vendor_id", "value": int(vendor_id_input)}
+                {"name": "@vendor_id", "value": vendor_id_input}
             ]
 
             results = list(container.query_items(
@@ -338,9 +337,9 @@ class GetTab(BaseTab):
             tickets = []
             for item in results:
                 tickets.append({
-                    'ticket_number': item['ticket_num'],
+                    'ticket_number': item['ticket_number'],
                     'datetime': item['datetime'],
-                    'status': item['status']
+                    'vendor_id': item['vendor_id']
                 })
             return tickets
 
