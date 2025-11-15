@@ -1,7 +1,7 @@
-from services.database_service import DatabaseService
+from services.connect_database import DatabaseConnection
 
 
-def insert_record(container_name: str, item_data: dict, entity_type: str):
+def insert_item(container_name: str, entity_type: str, item_data: dict):
     """
     :purpose: inserts any record into the database
     :param: container_name: name of the container
@@ -10,7 +10,7 @@ def insert_record(container_name: str, item_data: dict, entity_type: str):
     :author(s): Joe Lee
     """
     try:
-        db_service = DatabaseService()
+        db_service = DatabaseConnection()
         container = db_service.connect(container_name)
 
         entity_id = item_data.get(f"{entity_type}_id")
@@ -31,5 +31,5 @@ def insert_record(container_name: str, item_data: dict, entity_type: str):
         return 0
 
     except Exception as e:
-        print(f"Error in insert_record: {e}")
+        print(f"Error in insert_item: {e}")
         return "-1"

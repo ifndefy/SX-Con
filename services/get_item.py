@@ -1,7 +1,7 @@
 from typing import Union
-from services.database_service import DatabaseService
+from services.connect_database import DatabaseConnection
 
-def get_record(container_name: str, id: str, entity_type: str) -> Union[dict, str]:
+def get_record(container_name: str, entity_type: str, id: str) -> Union[dict, str]:
     """
     :purpose: Gets an entire document by ID and entity type
     :param: container_name: the Cosmos DB container to query
@@ -11,7 +11,7 @@ def get_record(container_name: str, id: str, entity_type: str) -> Union[dict, st
     :author(s): Alexander Bubienko, Joe Lee
     """
     try:
-        db_service = DatabaseService()
+        db_service = DatabaseConnection()
         container = db_service.connect(container_name)
 
         item_id = f"{entity_type}_{id}"
@@ -25,5 +25,5 @@ def get_record(container_name: str, id: str, entity_type: str) -> Union[dict, st
             return "-1"
 
     except Exception as e:
-        print(f"Error in get_record: {e}")
+        print(f"Error in get_item: {e}")
         return "-1"
