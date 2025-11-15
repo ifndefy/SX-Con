@@ -7,10 +7,15 @@ from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QCompleter
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
+
+import SXC
+from services.debug_database_service import DatabaseService as testdb
 from services.connectDB import DatabaseConnection
+from services.getRecordMethod import get_record
 
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
@@ -329,6 +334,10 @@ class PostTab(BaseTab):
         product_id_input.setFixedWidth(120)
         product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
         product_id_input.setValidator(product_id_validator)
+
+        # Attach autocomplete to product id input fields
+        self.addAutoFill(product_id_input, 'product_id')
+
         line1_layout.addWidget(product_id_input)
         product_section['product_id'] = product_id_input
 
@@ -834,3 +843,36 @@ class PostTab(BaseTab):
             self.status_label.setText(f"Error calculating revenues: {e}")
             return -1
 
+    def addAutoFill(self, line: QLineEdit, table: str):
+
+        """
+        SXC-136 action:
+        - autofill product_id and product_name when product_id exists
+        in the Products table
+        note - attempting formatting for further use
+        return: none
+        author: Tyler Slagboom
+        """
+
+        word_bank = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100']
+        completer = QCompleter(word_bank)
+        completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        line.setCompleter(completer)
+
+
+        try:
+            """
+            for section in self.product_sections:
+                id = section['product_id'].text()
+                if get_record('Products', id) is not None:
+                    section['product_id'] = get_record('Products', id).get('product_id')
+                    section['product_name'] = get_record('Products', id).get('product_name')
+                    return 0
+
+        except Exception as e:
+            self.status_label.setText("Error: Product not found")
+            return -1
+        """
+            return 0
+        finally:
+            return -1
