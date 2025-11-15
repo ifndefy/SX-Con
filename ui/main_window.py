@@ -64,6 +64,7 @@ class MainWindow(QWidget):
 
     def setup_tabs(self):
         self.tabs = QTabWidget()
+        self.tabs.setObjectName("main_tabs")
 
         self.post_tab = PostTab(self.api_handler)
         self.get_tab = GetTab(self.api_handler)

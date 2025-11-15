@@ -1,23 +1,86 @@
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QVBoxLayout, QTabWidget
+from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtWidgets import QScrollArea
+from PyQt6.QtWidgets import QWidget
+
 from ui.tabs.base import BaseTab
+from ui.tabs.subtabs.Records import RecordsTab
+from ui.tabs.subtabs.users import UsersTab
+from ui.tabs.subtabs.vendors import VendorsTab
+from ui.tabs.subtabs.products import ProductsTab
+
 
 class AdminTab(BaseTab):
     def __init__(self, api_handler):
         super().__init__(api_handler, "admin")
 
     def setup_ui(self):
-        layout = QVBoxLayout(self)
-        self.label = QLabel("ADMIN SETTINGS tab")
-        self.button = QPushButton("Do Something")
-        layout.addWidget(self.label)
-        layout.addWidget(self.button)
+        """
+        :purpose: initializes the "Create New Record" tab
+        :return: None
+        :author(s): Joe Lee
+        """
+        # Enable scrolling for when the content exceeds the height of the window
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        sub_layout = QVBoxLayout(self)
 
-    def btn_actions(self):
-        self.button.clicked.connect(self.on_button_clicked)
+        # Setup tabs
+        self.setup_subtabs()
+        sub_layout.addWidget(self.tabs)
 
-    def on_button_clicked(self):
-        super().on_button_clicked()
-        result = self.api_handler.process_action("ADMIN SETTINGS")
-        self.label.setText(result)
+        # Set up the scroll area
+        scroll.setWidget(scroll_content)
+        sub_layout = QVBoxLayout(self)
+        sub_layout.addWidget(scroll)
+
+        # HR Line to separate buttons at the bottom
+        hr3 = QLabel()
+        hr3.setObjectName("hr")
+        sub_layout.addWidget(hr3)
+
+        # Status Section
+        status_container = QWidget()
+        status_container.setObjectName("status_container")
+        status_section = QHBoxLayout(status_container)
+
+        # Align to center
+        status_section.addStretch()
+        self.status_label = QLabel("Temporary")
+        status_section.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        status_section.addStretch()
+
+        sub_layout.addWidget(status_container)
+
+        self.setup_button_connections()
+
+    def setup_subtabs(self):
+        self.tabs = QTabWidget()
+        self.tabs.setObjectName("subtabs")
+
+        self.users_tab = UsersTab(self.api_handler)
+        self.vendors_tab = VendorsTab(self.api_handler)
+        self.products_tab = ProductsTab(self.api_handler)
+        self.records_tab = RecordsTab(self.api_handler)
+
+        self.tabs.addTab(self.users_tab, "Users")
+        self.tabs.addTab(self.vendors_tab, "Vendors")
+        self.tabs.addTab(self.products_tab, "Products")
+        self.tabs.addTab(self.records_tab, "Records")
+
+        self.tabs.currentChanged.connect(self.on_tab_changed)
+
+    def on_tab_changed(self, index):
+        print(f"{self.tabs.tabText(index)} tab clicked")
+
+    def setup_button_connections(self):
+        """
+        :purpose: links buttons with methods
+        :return: None
+        :author(s): Joe Lee
+        """

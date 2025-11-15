@@ -15,6 +15,12 @@ def disconnect(
     - Else if `commit` is True (and autocommit is False), commit before closing.
     Returns 0 on success, -1 on error.
     """
+
+    """
+        :author(s): Kyle Valdez
+        :purpose: disconnects db connection
+        :return: none
+    """
     try:
         # Close cursor first (safe even if already closed)
         if cursor is not None:
