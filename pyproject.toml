@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "sx-con"
+version = "0.0.2"
+description = "Consignment Keeper"
+authors = ["ifndefy <lee.sjoe.3@gmail.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+azure-cosmos = "4.14.2"
+bcrypt = "5.0.0"
+pyqt6 = "6.10.0"
+reportlab = "4.4.0"
+azure-core = "1.36.0"
+chardet = "5.2.0"
+pillow = "12.0.0"
+pyqt6-qt6 = "6.10.0"
+pyqt6-sip = "13.10.2"
+typing-extensions = "4.15.0"
+requests = "2.32.5"
+charset-normalizer = "3.4.4"
+idna = "3.11"
+urllib3 = "2.5.0"
+certifi = "2025.11.12"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
