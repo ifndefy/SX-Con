@@ -1,4 +1,4 @@
-from services.database_service import DatabaseService
+from services.connect_database import db_connection
 
 
 def get_max_value(container_name, property_name):
@@ -10,10 +10,10 @@ def get_max_value(container_name, property_name):
     :author(s): Joe Lee
     """
     try:
-        db_service = DatabaseService()
-        container = db_service.connect(container_name)
+        # Use the global connection directly
+        container = db_connection.connect(container_name)
     except Exception as e:
-        print(e)
+        print(f"Error connecting to container {container_name}: {e}")
         return -1
 
     try:
@@ -21,8 +21,7 @@ def get_max_value(container_name, property_name):
 
         items = list(container.query_items(
             query=query,
-            parameters=[],
-            enable_cross_partition_query=True,
+            enable_cross_partition_query=True
         ))
 
         if items and items[0] is not None:
@@ -30,5 +29,5 @@ def get_max_value(container_name, property_name):
         else:
             return 0
     except Exception as e:
-        print(e)
+        print(f"Error querying max value: {e}")
         return -1
