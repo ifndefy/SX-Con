@@ -325,7 +325,7 @@ class GetTab(BaseTab):
                     """
 
             parameters = [
-                {"name": "@vendor_id", "value": vendor_id_input}
+                {"name": "@vendor_id", "value": int(vendor_id_input)}  # SEARCH AS INTEGER
             ]
 
             results = list(container.query_items(
