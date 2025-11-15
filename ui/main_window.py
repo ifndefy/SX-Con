@@ -12,6 +12,7 @@ from ui.tabs.get import GetTab
 from ui.tabs.view import ViewTab
 from ui.tabs.settings import SettingsTab
 from ui.tabs.admin import AdminTab
+from services.connect_database import db_connection
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -27,6 +28,7 @@ class MainWindow(QWidget):
 
         self.api_handler = APIHandler()
         self.theme_manager = ThemeManager()
+        self.db_connection = db_connection
         self.setup_window()
         self.theme_manager.apply_default_theme(self)
         self.setup_ui()
@@ -35,15 +37,12 @@ class MainWindow(QWidget):
         self.setWindowTitle("SX-Con")
         self.setGeometry(0, 0, 1100, 762)
         self.setMinimumSize(1100, 762)
-        # todo: Resize height to fit Super X logo when delivered to developers
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
 
         # Logo + Program title + Revision info
         title_layout = QHBoxLayout()
-
-        # todo: Insert Super X image logo
 
         # Program title
         program_name = QLabel("SX-Con")
@@ -58,7 +57,6 @@ class MainWindow(QWidget):
         title_layout.addStretch()  # Push to left
         layout.addLayout(title_layout)
 
-        # Setup tabs
         self.setup_tabs()
         layout.addWidget(self.tabs)
 
@@ -66,11 +64,11 @@ class MainWindow(QWidget):
         self.tabs = QTabWidget()
         self.tabs.setObjectName("main_tabs")
 
-        self.post_tab = PostTab(self.api_handler)
-        self.get_tab = GetTab(self.api_handler)
-        self.view_tab = ViewTab(self.api_handler)
+        self.post_tab = PostTab(self.api_handler, self.db_connection)
+        self.get_tab = GetTab(self.api_handler, self.db_connection)
+        self.view_tab = ViewTab(self.api_handler, self.db_connection)
         self.settings_tab = SettingsTab(self.api_handler)
-        self.admin_tab = AdminTab(self.api_handler)
+        self.admin_tab = AdminTab(self.api_handler, self.db_connection)
 
         self.tabs.addTab(self.post_tab, "Create New Record")
         self.tabs.addTab(self.get_tab, "Fetch from Database")
