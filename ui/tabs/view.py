@@ -7,14 +7,14 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from services.database_service import DatabaseService
 from ui.tabs.base import BaseTab
 
 class ViewTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, db_connection):
         self.ticket_counter = None
         self.tickets_layout = None
         self.tickets_section = []
+        self.db_connection = db_connection
 
         super().__init__(api_handler, "view")
 
@@ -181,46 +181,40 @@ class ViewTab(BaseTab):
         :author(s): Joe Lee
         """
         self.remove_ticket_section()
-        tickets = self.fetch("status", "OPEN")
+        tickets = self.fetch("OPEN")
         if not tickets:
             self.status_label.setText(f"No tickets found for Status: OPEN")
         else:
             for ticket in tickets:
                 self.add_ticket_section()
 
-    def fetch(self, key, value):
+    def fetch(self, status_value):
         """
-        :purpose: fetches all tickets with dynamic key=value from Consignments container
+        :purpose: fetches all tickets with status from Consignments container
         :return: list of tickets
         :author(s): Joe Lee
         """
         try:
-            db = DatabaseService()
-            container = db.connect("Consignments")
+            container = self.db_connection.connect("Consignments")
 
-            query = f"""
-            SELECT c.ticket_num, c.datetime, c.status 
-            FROM c 
-            WHERE c.{key} = @value 
-            ORDER BY c.ticket_num ASC
+            query = """
+            SELECT c.ticket_number, c.datetime, c.vendor_id
+            FROM c
+            WHERE c.type = 'consignment'
+            ORDER BY c.ticket_number ASC
             """
-
-            parameters = [
-                {"name": "@value", "value": value}
-            ]
 
             results = list(container.query_items(
                 query=query,
-                parameters=parameters,
                 enable_cross_partition_query=True
             ))
 
             tickets = []
             for item in results:
                 tickets.append({
-                    'ticket_number': item['ticket_num'],
+                    'ticket_number': item['ticket_number'],
                     'datetime': item['datetime'],
-                    'status': item['status']
+                    'vendor_id': item['vendor_id']
                 })
             return tickets
 
