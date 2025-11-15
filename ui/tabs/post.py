@@ -10,8 +10,8 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
-from services.connectDB import DatabaseConnection
 
+from services.connect_database import DatabaseConnection
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
