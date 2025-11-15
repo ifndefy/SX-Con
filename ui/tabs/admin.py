@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
-from ui.tabs.subtabs.Records import RecordsTab
+from ui.tabs.subtabs.tickets import RecordsTab
 from ui.tabs.subtabs.users import UsersTab
 from ui.tabs.subtabs.vendors import VendorsTab
 from ui.tabs.subtabs.products import ProductsTab
