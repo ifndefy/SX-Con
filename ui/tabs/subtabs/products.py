@@ -7,12 +7,13 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from services.database_service import DatabaseService
+from services.connect_database import db_connection
 from ui.tabs.base import BaseTab
 
 class ProductsTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, db_connection):
         self.tickets_section = []
+        self.db_connection = db_connection
         super().__init__(api_handler, "products")
 
     def setup_ui(self):
@@ -212,43 +213,44 @@ class ProductsTab(BaseTab):
         :author(s): Joe Lee
         """
         self.remove_ticket_section()
-        tickets = self.fetch()
-        if not tickets:
-            self.status_label.setText(f"Found no tickets")
+        products = self.fetch()
+        if not products:
+            self.status_label.setText("No products found")
         else:
-            for ticket in tickets:
+            for product in products:
                 self.add_user_section()
 
     def fetch(self):
         """
-        :purpose: fetches all tickets with status=="OPEN" from Consignments table
-        :return: list of tickets
+        :purpose: fetches all products from Entities container
+        :return: list of products
         :author(s): Joe Lee
         """
         try:
-            db = DatabaseService()
-            conn = db.connect()
-            cursor = conn.create_cursor()
+            container = self.db_connection.connect("Entities")
 
-            query = f"""
-                    SELECT *
-                    FROM Products
-                    ORDER BY product_id ASC
-                    """
-            cursor.execute(query)
-            results = cursor.fetchall()
-            print(results)
+            query = """
+            SELECT c.id, c.product_id, c.product_name, c.notes
+            FROM c
+            WHERE c.type = 'product'
+            ORDER BY c.product_id ASC
+            """
 
-            tickets = []
-            for row in results:
-                tickets.append({
-                    'user_id': row[0],
-                    'first_name': row[1],
-                    'last_name': row[2]
+            results = list(container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+
+            products = []
+            for item in results:
+                products.append({
+                    'product_id': item.get('product_id', ''),
+                    'product_name': item.get('product_name', ''),
                 })
-            return tickets
+            return products
+
         except Exception as e:
-            print(f"Error fetching tickets: {e}")
+            print(f"Error fetching products: {e}")
             return []
 
     def setup_button_connections(self):
