@@ -1,5 +1,5 @@
 from typing import Union
-from services.connect_database import DatabaseConnection
+from services.connect_database import db_connection
 
 def get_record(container_name: str, entity_type: str, id: str) -> Union[dict, str]:
     """
@@ -11,8 +11,7 @@ def get_record(container_name: str, entity_type: str, id: str) -> Union[dict, st
     :author(s): Alexander Bubienko, Joe Lee
     """
     try:
-        db_service = DatabaseConnection()
-        container = db_service.connect(container_name)
+        container = db_connection.connect(container_name)
 
         item_id = f"{entity_type}_{id}"
         partition_key = item_id

@@ -3,7 +3,7 @@ How to use:
     delete_property("Entities", "vendor", "1", "email")
 """
 
-from connect_database import DatabaseConnection
+from connect_database import db_connection
 
 
 def delete_property(container_name: str, type: str, id: str, attribute_name: str) -> int:
@@ -18,8 +18,7 @@ def delete_property(container_name: str, type: str, id: str, attribute_name: str
     """
     try:
         print(f"deleting attribute '{attribute_name}' from record")
-        db_service = DatabaseConnection()
-        container = db_service.connect(container_name)
+        container = db_connection.connect(container_name)
 
         item_id = f"{type}_{id}"
         partition_key = item_id

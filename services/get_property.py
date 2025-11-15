@@ -1,4 +1,4 @@
-from services.connect_database import DatabaseConnection
+from services.connect_database import db_connection
 
 def get_property(container_name: str, attribute: str, entity_type: str, id_value: str) -> str:
     """
@@ -12,8 +12,7 @@ def get_property(container_name: str, attribute: str, entity_type: str, id_value
     :author(s): Alexander Bubienko, Joe Lee
     """
     try:
-        db = DatabaseConnection()
-        container = db.connect(container_name)
+        container = db_connection.connect(container_name)
 
         item_id = f"{entity_type}_{id_value}"
         partition_key = item_id

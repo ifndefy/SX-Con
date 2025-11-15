@@ -10,7 +10,6 @@ def get_max_value(container_name, property_name):
     :author(s): Joe Lee
     """
     try:
-        # Use the global connection directly
         container = db_connection.connect(container_name)
     except Exception as e:
         print(f"Error connecting to container {container_name}: {e}")
