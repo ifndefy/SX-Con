@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout, QApplication
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
@@ -442,6 +442,10 @@ class PostTab(BaseTab):
         :return: record ID on success, -1 on error
         """
         try:
+            self.update_revenue_fields()
+            self.repaint()
+            QApplication.processEvents()
+
             # Get record data using existing method
             record_data = self._gather_record_data()
 
@@ -555,7 +559,7 @@ class PostTab(BaseTab):
             vendor_document = {
                 'id': f"vendor_{vendor_id}",
                 'type': 'vendor',
-                'vendor_id': vendor_id,
+                'vendor_id': int(vendor_id),
                 'phone': record_data['vendor']['phone'],
                 'first_name': record_data['vendor']['first_name'],
                 'middle_name': record_data['vendor']['middle_name'],
@@ -596,7 +600,7 @@ class PostTab(BaseTab):
                     print(f"Creating product document: product_{product_id}")
                     try:
                         product_response = entities_container.upsert_item(body=product_doc)
-                        product_ids.append(product_id)
+                        product_ids.append(int(product_id))
                         print(f"Product document created: {product_id}")
                     except Exception as e:
                         print(f"Error creating product document {product_id}: {e}")
@@ -611,14 +615,15 @@ class PostTab(BaseTab):
             consignment_document = {
                 'id': str(ticket_number),
                 'type': 'consignment',
-                'ticket_number': ticket_number,
-                'vendor_id': vendor_id,
+                'ticket_number': int(ticket_number),
+                'vendor_id': int(vendor_id),
                 'product_ids': product_ids,
                 'datetime': record_data['vendor']['datetime'],
+                'status': "OPEN",
                 'price_data': {
                     'products': [
                         {
-                            'product_id': product['product_id'],
+                            'product_id': int(product['product_id']),
                             'price': self._convert_null(product['price']),
                             'quantity': self._convert_quantity(product['quantity'])
                         }

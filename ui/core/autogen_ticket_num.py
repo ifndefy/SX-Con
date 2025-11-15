@@ -3,18 +3,16 @@ from services.connect_database import db_connection
 
 def autogen_ticket_num():
     """
-    :purpose: returns the max value of ticket_number in Consignments container
-    :return(s): string of 1 + max ticket_number from Cosmos DB container "Consignments"
-    :author(s): Joe Lee
+    Returns the next ticket_num for the Consignments container.
     """
     try:
         container = db_connection.connect("Consignments")
 
         query = """
-                SELECT VALUE MAX(c.ticket_number)
-                FROM c
-                WHERE c.type = 'consignment' \
-                """
+            SELECT VALUE MAX(c.ticket_number)
+            FROM c
+            WHERE c.type = 'consignment'
+        """
 
         items = list(container.query_items(
             query=query,

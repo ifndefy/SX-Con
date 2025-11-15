@@ -188,24 +188,23 @@ class ViewTab(BaseTab):
             for ticket in tickets:
                 self.add_ticket_section()
 
-    def fetch(self, status_value):
-        """
-        :purpose: fetches all tickets with status from Consignments container
-        :return: list of tickets
-        :author(s): Joe Lee
-        """
+    def fetch(self, status):
         try:
             container = self.db_connection.connect("Consignments")
 
             query = """
-            SELECT c.ticket_number, c.datetime, c.vendor_id
-            FROM c
-            WHERE c.type = 'consignment'
-            ORDER BY c.ticket_number ASC
-            """
+                    SELECT c.ticket_number, c.datetime, c.status
+                    FROM c
+                    WHERE c.type = 'consignment'
+                      AND c.status = @status
+                    ORDER BY c.ticket_num DESC \
+                    """
+
+            parameters = [{"name": "@status", "value": status}]
 
             results = list(container.query_items(
                 query=query,
+                parameters=parameters,
                 enable_cross_partition_query=True
             ))
 
@@ -214,8 +213,9 @@ class ViewTab(BaseTab):
                 tickets.append({
                     'ticket_number': item['ticket_number'],
                     'datetime': item['datetime'],
-                    'vendor_id': item['vendor_id']
+                    'status': item.get('status', 'UNKNOWN')
                 })
+
             return tickets
 
         except Exception as e:
