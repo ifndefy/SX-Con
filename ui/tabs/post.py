@@ -513,6 +513,7 @@ class PostTab(BaseTab):
         :return: True if all required fields are valid, False otherwise
         """
         vendor = record_data['vendor']
+        products = record_data['products']
 
         if not vendor['vendor_id'] or vendor['vendor_id'] == "NULL":
             self.status_label.setText("Error: Vendor ID is required")
