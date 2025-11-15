@@ -558,6 +558,7 @@ class PostTab(BaseTab):
             # Create vendor document
             vendor_document = {
                 'id': f"vendor_{vendor_id}",
+                'partitionKey': f"vendor_{vendor_id}",
                 'type': 'vendor',
                 'vendor_id': int(vendor_id),
                 'phone': record_data['vendor']['phone'],
@@ -592,10 +593,10 @@ class PostTab(BaseTab):
 
                     product_doc = {
                         'id': f"product_{product_id}",
+                        'partitionKey': f"product_{product_id}",
                         'type': 'product',
                         'product_id': self._convert_product_id(product_id),
                         'product_name': self._convert_null(product['product_name']),
-                        'notes': self._convert_null(product['notes'])
                     }
                     print(f"Creating product document: product_{product_id}")
                     try:
@@ -604,7 +605,6 @@ class PostTab(BaseTab):
                         print(f"Product document created: {product_id}")
                     except Exception as e:
                         print(f"Error creating product document {product_id}: {e}")
-                        # Continue with other products even if one fails
 
             ticket_number = record_data['vendor']['ticket_number']
             if not ticket_number or ticket_number == "NULL":
@@ -613,7 +613,8 @@ class PostTab(BaseTab):
                 return -1
 
             consignment_document = {
-                'id': str(ticket_number),
+                'id': f"consignment_{str(ticket_number)}",
+                'partitionKey': f"consignment_{str(ticket_number)}",
                 'type': 'consignment',
                 'ticket_number': int(ticket_number),
                 'vendor_id': int(vendor_id),
