@@ -1,19 +1,27 @@
+import os
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
 
 def create_supermarket_ticket():
-    c = canvas.Canvas("ticket_test_trial.pdf", pagesize=letter)
+    current_file = __file__
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+    tickets_dir = os.path.join(project_root, "utils", "tickets")
+    os.makedirs(tickets_dir, exist_ok=True)
+    pdf_filename = os.path.join(tickets_dir, "ticket_test_trial.pdf")
+
+    c = canvas.Canvas(pdf_filename, pagesize=letter)
     width, height = letter
 
     def draw_ticket_content(start_y):
         y = start_y
 
-        # TEMP LOGO
+        logo_path = os.path.join(project_root, "src", "imgs", "logo.jpg")
+        logo = ImageReader(logo_path)
+
         c.setFont("Helvetica-Bold", 24)
-        logo_path = ImageReader("../imgs/logo.jpg")
-        c.drawImage(logo_path, 20, y - 50, width=365, height=71)
+        c.drawImage(logo, 20, y - 50, width=365, height=71)
 
         c.setFont("Helvetica-Bold", 16)
         c.drawString(400, y, "Consignment Ticket")
@@ -29,11 +37,9 @@ def create_supermarket_ticket():
         c.drawString(500 + 4, y, "vendor_id")
         y -= 20
 
-        # line break
         c.line(30, y, width - 30, y)
         y -= 20
 
-        # Product section
         num_prods = 5
         for prod in range(num_prods):
             c.setFont("Helvetica-Bold", 10)
@@ -51,7 +57,6 @@ def create_supermarket_ticket():
             c.drawString(488 + 3, y + 1, "12345")
             y -= 20
 
-        # line break
         c.line(30, y + 5, width - 30, y + 5)
         y -= 15
 
@@ -76,7 +81,6 @@ def create_supermarket_ticket():
             c.rect(500 - 3, y - 3, 60, 15)
             y -= 18
 
-        # Vendor and Employee sections
         c.setFont("Helvetica-Bold", 10)
         c.drawString(30, y, "Vendor Name:")
         c.rect(100, y - 3, 173, 15)
@@ -89,15 +93,9 @@ def create_supermarket_ticket():
         c.drawString(112 + 3, y + 1, "123456789012345678901234567890")
         c.drawString(300, y, "Employee Signature: _________________________")
 
-    # Draw first ticket on top half
     draw_ticket_content(height - 30)
-
-    # Add separator line between tickets
     c.line(30, height / 2, width - 30, height / 2)
-
-    # Draw second ticket on bottom half
     draw_ticket_content(height / 2 - 30)
-
     c.save()
 
 
