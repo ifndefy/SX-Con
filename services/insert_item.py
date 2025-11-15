@@ -1,4 +1,4 @@
-from services.connect_database import DatabaseConnection
+from services.connect_database import db_connection
 
 
 def insert_item(container_name: str, entity_type: str, item_data: dict):
@@ -10,8 +10,7 @@ def insert_item(container_name: str, entity_type: str, item_data: dict):
     :author(s): Joe Lee
     """
     try:
-        db_service = DatabaseConnection()
-        container = db_service.connect(container_name)
+        container = db_connection.connect(container_name)
 
         entity_id = item_data.get(f"{entity_type}_id")
         if not entity_id:

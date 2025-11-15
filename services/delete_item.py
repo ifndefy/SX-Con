@@ -3,7 +3,7 @@ How to use:
     delete_item("Entities", "vendor", "1")
 """
 
-from connect_database import DatabaseConnection
+from connect_database import db_connection
 
 
 def delete_item(container_name: str, type: str, id: str) -> int:
@@ -17,8 +17,7 @@ def delete_item(container_name: str, type: str, id: str) -> int:
     """
     try:
         print("deleting a record")
-        db_service = DatabaseConnection()
-        container = db_service.connect(container_name)
+        container = db_connection.connect(container_name)
 
         arg = f"{type}_{id}"
 
