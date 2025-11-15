@@ -482,7 +482,8 @@ class PostTab(BaseTab):
             'last_name': self.last_name_input.text().strip() or "NULL",
             'address': self.address_input.text().strip() or "NULL",
             'city': self.city_input.text().strip() or "NULL",
-            'state': self.state_input.text().strip() or "NULL"
+            'state': self.state_input.text().strip() or "NULL",
+            'zip': self.zip_input.text().strip() or "NULL"
         }
 
         # Product information
@@ -562,7 +563,7 @@ class PostTab(BaseTab):
                 'address': record_data['vendor']['address'],
                 'city': record_data['vendor']['city'],
                 'state': record_data['vendor']['state'],
-                'zip_code': record_data['vendor']['zip_code']
+                'zip': record_data['vendor']['zip']
             }
 
             print(f"Creating vendor document with ID: vendor_{vendor_id}")
