@@ -7,14 +7,14 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from services.database_service import DatabaseService
 from ui.tabs.base import BaseTab
 
 class GetTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, db_connection):
         self.ticket_counter = None
         self.tickets_layout = None
         self.tickets_section = []
+        self.db_connection = db_connection
 
         super().__init__(api_handler, "get")
 
@@ -310,33 +310,39 @@ class GetTab(BaseTab):
 
     def fetch(self, vendor_id_input):
         """
-        :purpose: fetches all tickets with vendor_id_input from Consignments table
+        :purpose: fetches all tickets with vendor_id_input from Consignments container
         :return: list of tickets
         :author(s): Joe Lee
         """
         try:
-            db = DatabaseService()
-            conn = db.connect()
-            cursor = conn.create_cursor()
+            container = self.db_connection.connect("Consignments")
 
-            query = f"""
-                    SELECT ticket_num, datetime, status
-                    FROM Consignments
-                    WHERE vendor_id = {vendor_id_input}
-                    ORDER BY ticket_num DESC \
+            query = """
+                    SELECT c.ticket_number, c.datetime, c.vendor_id
+                    FROM c
+                    WHERE c.vendor_id = @vendor_id
+                    ORDER BY c.ticket_number DESC
                     """
-            cursor.execute(query)
-            results = cursor.fetchall()
-            print(results)
+
+            parameters = [
+                {"name": "@vendor_id", "value": int(vendor_id_input)}  # SEARCH AS INTEGER
+            ]
+
+            results = list(container.query_items(
+                query=query,
+                parameters=parameters,
+                enable_cross_partition_query=True
+            ))
 
             tickets = []
-            for row in results:
+            for item in results:
                 tickets.append({
-                    'ticket_number': row[0],
-                    'datetime': row[1],
-                    'status': row[2]
+                    'ticket_number': item['ticket_number'],
+                    'datetime': item['datetime'],
+                    'vendor_id': item['vendor_id']
                 })
             return tickets
+
         except Exception as e:
             print(f"Error fetching tickets: {e}")
             return []

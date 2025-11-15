@@ -1,34 +1,35 @@
 from services.database_service import DatabaseService
 
 
-def insert_record(table_name: str, attribute_pairs: dict, unused: str = ""):
+def insert_record(container_name: str, item_data: dict, entity_type: str):
     """
     :purpose: inserts any record into the database
-    :param: table_name: name of the table
-    :param: attribute_pairs: dictionary of attribute names and values
-    :param: unused: optional unused value
+    :param: container_name: name of the container
+    :param: document_data: dictionary of document properties
+    :param: entity_type: "user", "vendor", or "product" (required)
     :author(s): Joe Lee
     """
-
     try:
         db_service = DatabaseService()
-        conn = db_service.connect()
-        cursor = conn.create_cursor()
+        container = db_service.connect(container_name)
 
-        columns = ", ".join(attribute_pairs.keys())
-        num_vals = ", ".join(['?'] * len(attribute_pairs))
+        entity_id = item_data.get(f"{entity_type}_id")
+        if not entity_id:
+            return "-1"
 
-        # converts to string then creates a tuple with them
-        values = tuple(str(v) for v in attribute_pairs.values())
+        item_id = f"{entity_type}_{entity_id}"
 
-        query = f"INSERT INTO {table_name} ({columns}) VALUES ({num_vals})"
+        document = {
+            "id": item_id,
+            "partitionKey": item_id,
+            "entity_type": entity_type,
+            **item_data
+        }
 
-        cursor.execute(query, values)
-        cursor.commit()
+        container.create_item(body=document)
+        print(f"Successfully inserted {item_id} into {container_name}")
+        return 0
 
     except Exception as e:
         print(f"Error in insert_record: {e}")
         return "-1"
-    finally:
-        if conn:
-            conn.close_connection()

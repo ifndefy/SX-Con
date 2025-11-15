@@ -7,9 +7,7 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
-from poetry.console.commands import self
 
-from src import SPOT
 from ui.core.theme_manager import ThemeManager
 from ui.tabs.base import BaseTab
 

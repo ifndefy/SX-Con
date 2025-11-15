@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout, QApplication
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
@@ -10,7 +10,6 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
-from services.connectDB import DatabaseConnection
 
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
@@ -20,7 +19,7 @@ from ui.core import format_phone
 
 
 class PostTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, db_connection):
         self.ticket_input = None
         self.vendor_id_input = None
         self.phone_input = None
@@ -41,6 +40,7 @@ class PostTab(BaseTab):
 
         self.product_sections = []
         self.product_counter = 1
+        self.db_connection = db_connection
 
         super().__init__(api_handler, "post")
 
@@ -90,7 +90,7 @@ class PostTab(BaseTab):
         self.vendor_id_input.setPlaceholderText("4 INTS")
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
-        self.vendor_id_input.setValidator(QIntValidator(0,9999, self))
+        self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         # Phone Number
@@ -430,7 +430,7 @@ class PostTab(BaseTab):
         self.create_btn.clicked.connect(self.create_record)
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
-        self.calc_btn.clicked.connect(self.update_revenue_fields)# todo: SXC-96
+        self.calc_btn.clicked.connect(self.update_revenue_fields)
 
         # wire up Clear Form
         self.clear_btn.clicked.connect(self.clear_form)
@@ -442,6 +442,10 @@ class PostTab(BaseTab):
         :return: record ID on success, -1 on error
         """
         try:
+            self.update_revenue_fields()
+            self.repaint()
+            QApplication.processEvents()
+
             # Get record data using existing method
             record_data = self._gather_record_data()
 
@@ -482,7 +486,8 @@ class PostTab(BaseTab):
             'last_name': self.last_name_input.text().strip() or "NULL",
             'address': self.address_input.text().strip() or "NULL",
             'city': self.city_input.text().strip() or "NULL",
-            'state': self.state_input.text().strip() or "NULL"
+            'state': self.state_input.text().strip() or "NULL",
+            'zip': self.zip_input.text().strip() or "NULL"
         }
 
         # Product information
@@ -535,98 +540,120 @@ class PostTab(BaseTab):
 
     def _post_to_database(self, record_data):
         """
-        :author(s): Alexander Bubienko
-        :purpose: Convert product ID to be within 0-9999 range for the CHECK constraint
-        :return: Valid product ID as integer, or None if invalid
+        :author(s): Alexander Bubienko, Joe Lee
+        :purpose: Create documents in both Entities and Consignments containers
+        :return: document ID on success, -1 on error
         """
         try:
-            # Import and use DatabaseConnection            
-            db_connection = DatabaseConnection()
+            entities_container = self.db_connection.connect('Entities')
+            consignments_container = self.db_connection.connect('Consignments')
 
-            # Establish connection
-            result = db_connection.establish_connection()
-            if result == -1:
-                self.status_label.setText("Error: Failed to establish database connection")
+            # Validate vendor_id exists
+            vendor_id = record_data['vendor']['vendor_id']
+            if not vendor_id or vendor_id == "NULL":
+                print("Error: No vendor ID provided")
+                self.status_label.setText("Error: Vendor ID is required")
                 return -1
 
-            cursor = db_connection.create_cursor()
-            if not cursor:
-                self.status_label.setText("Error: Failed to create database cursor")
-                return -1
+            # Create vendor document
+            vendor_document = {
+                'id': f"vendor_{vendor_id}",
+                'type': 'vendor',
+                'vendor_id': int(vendor_id),
+                'phone': record_data['vendor']['phone'],
+                'first_name': record_data['vendor']['first_name'],
+                'middle_name': record_data['vendor']['middle_name'],
+                'last_name': record_data['vendor']['last_name'],
+                'address': record_data['vendor']['address'],
+                'city': record_data['vendor']['city'],
+                'state': record_data['vendor']['state'],
+                'zip': record_data['vendor']['zip']
+            }
 
+            print(f"Creating vendor document with ID: vendor_{vendor_id}")
+
+            # todo: need a ticket to check if vendor_id already exists
             try:
-                # Start transaction
-                cursor.execute("BEGIN TRANSACTION")
-
-                # Insert vendor record into existing Vendors table
-                vendor_sql = """
-                INSERT INTO Vendors (vendor_id, phone_number, first_name, middle_name, last_name, address, city, state, zip_code)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """
-
-                vendor_values = (
-                    int(record_data['vendor']['vendor_id']) if record_data['vendor']['vendor_id'] != "NULL" else None,
-                    self._convert_null(record_data['vendor']['phone']),
-                    self._convert_null(record_data['vendor']['first_name']),
-                    self._convert_null(record_data['vendor']['middle_name']),
-                    self._convert_null(record_data['vendor']['last_name']),
-                    self._convert_null(record_data['vendor']['address']),
-                    self._convert_null(record_data['vendor']['city']),
-                    self._convert_null(record_data['vendor']['state']),
-                    95819  # Default zip code
-                )
-
-                print("Executing vendor insert...")
-                cursor.execute(vendor_sql, vendor_values)
-
-                # Get the vendor_id
-                vendor_id = int(record_data['vendor']['vendor_id'])
-
-                print(f"Vendor inserted with ID: {vendor_id}")
-
-                # Insert product records into existing Products table
-                for i, product in enumerate(record_data['products']):
-                    if self._has_product_data(product):
-                        # Convert product_id to be within 0-9999 range
-                        product_id = self._convert_product_id(product['product_id'])
-                        if product_id is None:
-                            print(f"Skipping product {i + 1} - invalid product ID")
-                            continue
-
-                        product_sql = """
-                        INSERT INTO Products (product_id, product_name, notes, price, quantity)
-                        VALUES (?, ?, ?, ?, ?)
-                        """
-
-                        product_values = (
-                            product_id,
-                            self._convert_null(product['product_name']),
-                            self._convert_null(product['notes']),
-                            self._convert_null(product['price']),
-                            # Use validated quantity
-                            self._convert_quantity(product['quantity'])
-                        )
-
-                        print(f"Inserting product {i + 1} with ID: {product_id}...")
-                        cursor.execute(product_sql, product_values)
-
-                # Commit transaction
-                db_connection.db_connection.commit()
-                print("Transaction committed successfully!")
-                return vendor_id
-
+                vendor_response = entities_container.upsert_item(body=vendor_document)
+                print("Vendor document created successfully")
             except Exception as e:
-                # Rollback on error
-                db_connection.db_connection.rollback()
-                print(f"Database operation failed: {e}")
-                raise e
+                print(f"Error creating vendor document: {e}")
+                self.status_label.setText(f"Error creating vendor: {str(e)}")
+                return -1
 
-            finally:
-                cursor.close()
-                db_connection.close_connection()
+            # todo: need a ticket to check if product_id already exists
+            product_ids = []
+            for i, product in enumerate(record_data['products']):
+                if self._has_product_data(product):
+                    product_id = product['product_id']
+                    if not product_id or product_id == "NULL":
+                        print(f"Skipping product {i} - no product ID")
+                        continue
+
+                    product_doc = {
+                        'id': f"product_{product_id}",
+                        'type': 'product',
+                        'product_id': self._convert_product_id(product_id),
+                        'product_name': self._convert_null(product['product_name']),
+                        'notes': self._convert_null(product['notes'])
+                    }
+                    print(f"Creating product document: product_{product_id}")
+                    try:
+                        product_response = entities_container.upsert_item(body=product_doc)
+                        product_ids.append(int(product_id))
+                        print(f"Product document created: {product_id}")
+                    except Exception as e:
+                        print(f"Error creating product document {product_id}: {e}")
+                        # Continue with other products even if one fails
+
+            ticket_number = record_data['vendor']['ticket_number']
+            if not ticket_number or ticket_number == "NULL":
+                print("Error: No ticket number provided")
+                self.status_label.setText("Error: Ticket number is required")
+                return -1
+
+            consignment_document = {
+                'id': str(ticket_number),
+                'type': 'consignment',
+                'ticket_number': int(ticket_number),
+                'vendor_id': int(vendor_id),
+                'product_ids': product_ids,
+                'datetime': record_data['vendor']['datetime'],
+                'status': "OPEN",
+                'price_data': {
+                    'products': [
+                        {
+                            'product_id': int(product['product_id']),
+                            'price': self._convert_null(product['price']),
+                            'quantity': self._convert_quantity(product['quantity'])
+                        }
+                        for product in record_data['products']
+                        if self._has_product_data(product)
+                    ]
+                },
+                'revenue_sharing': record_data['revenue']
+            }
+
+            print(f"Creating consignment document with ID: {ticket_number}")
+            try:
+                consignment_response = consignments_container.create_item(body=consignment_document)
+                print("Consignment document created successfully")
+            except Exception as e:
+                print(f"Error creating consignment document: {e}")
+                self.status_label.setText(f"Error creating consignment: {str(e)}")
+                return -1
+
+            success_msg = f"Record created successfully! Ticket: {ticket_number}"
+            print(success_msg)
+            self.status_label.setText(success_msg)
+            return ticket_number
 
         except Exception as e:
-            print(f"Database insertion error: {e}")
+            error_msg = f"Cosmos DB insertion error: {e}"
+            print(error_msg)
+            import traceback
+            traceback.print_exc()
+            self.status_label.setText(f"Error creating record: {str(e)}")
             return -1
 
     def _convert_product_id(self, product_id_str):
@@ -641,7 +668,7 @@ class PostTab(BaseTab):
         try:
             product_id = int(product_id_str)
             # Ensure it's within the CHECK constraint range (0-9999)
-            if 0 <= product_id <= 9999:
+            if 0 <= product_id <= 99999:
                 return product_id
             else:
                 print(f"Product ID {product_id} is outside valid range")
@@ -662,10 +689,10 @@ class PostTab(BaseTab):
         try:
             quantity = int(quantity_str)
             # Ensure it's within the CHECK constraint range (0-9999)
-            if 0 <= quantity <= 9999:
+            if 0 <= quantity:
                 return quantity
             else:
-                print(f"Quantity {quantity} is outside valid range (0-9999)")
+                print(f"Quantity {quantity} must be at least 1")
                 return None
         except (ValueError, TypeError):
             print(f"Invalid quantity: {quantity_str}")
@@ -748,7 +775,6 @@ class PostTab(BaseTab):
 
         # Autopopulate again after clear fields (method calls)
         self.update_ticket_number()
-        # todo: SXC-21
 
     def _parse_money(self, s: str) -> float:
         """Parse '$1,234.56' / '1234.56' / '' -> float (empty -> 0.0). Raises ValueError if bad."""
@@ -833,4 +859,3 @@ class PostTab(BaseTab):
         except Exception as e:
             self.status_label.setText(f"Error calculating revenues: {e}")
             return -1
-

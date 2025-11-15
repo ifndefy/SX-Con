@@ -7,12 +7,13 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from services.database_service import DatabaseService
+from services.connect_database import db_connection
 from ui.tabs.base import BaseTab
 
 class RecordsTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, db_connection):
         self.tickets_section = []
+        self.db_connection = db_connection
         super().__init__(api_handler, "records")
 
     def setup_ui(self):
@@ -185,39 +186,41 @@ class RecordsTab(BaseTab):
         self.remove_ticket_section()
         tickets = self.fetch()
         if not tickets:
-            self.status_label.setText(f"Found no tickets")
+            self.status_label.setText("No tickets found")
         else:
             for ticket in tickets:
                 self.add_ticket_section()
 
     def fetch(self):
         """
-        :purpose: fetches all tickets with status=="OPEN" from Consignments table
+        :purpose: fetches all consignments from Consignments container
         :return: list of tickets
         :author(s): Joe Lee
         """
         try:
-            db = DatabaseService()
-            conn = db.connect()
-            cursor = conn.create_cursor()
+            container = self.db_connection.connect("Consignments")
 
-            query = f"""
-                    SELECT *
-                    FROM Consignments
-                    ORDER BY ticket_num ASC
-                    """
-            cursor.execute(query)
-            results = cursor.fetchall()
-            print(results)
+            query = """
+            SELECT c.id, c.ticket_number, c.datetime, c.vendor_id
+            FROM c
+            WHERE c.type = 'consignment'
+            ORDER BY c.ticket_number ASC
+            """
+
+            results = list(container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
 
             tickets = []
-            for row in results:
+            for item in results:
                 tickets.append({
-                    'ticket_number': row[0],
-                    'datetime': row[1],
-                    'status': row[2]
+                    'ticket_number': item['ticket_number'],
+                    'datetime': item['datetime'],
+                    'vendor_id': item['vendor_id']
                 })
             return tickets
+
         except Exception as e:
             print(f"Error fetching tickets: {e}")
             return []

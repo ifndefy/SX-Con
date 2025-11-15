@@ -7,12 +7,13 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from services.database_service import DatabaseService
+from services.connect_database import db_connection
 from ui.tabs.base import BaseTab
 
 class UsersTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, db_connection):
         self.tickets_section = []
+        self.db_connection = db_connection
         super().__init__(api_handler, "users")
 
     def setup_ui(self):
@@ -213,43 +214,46 @@ class UsersTab(BaseTab):
         :author(s): Joe Lee
         """
         self.remove_ticket_section()
-        tickets = self.fetch()
-        if not tickets:
-            self.status_label.setText(f"Found no tickets")
+        users = self.fetch()
+        if not users:
+            self.status_label.setText("No users found")
         else:
-            for ticket in tickets:
+            for user in users:
                 self.add_user_section()
 
     def fetch(self):
         """
-        :purpose: fetches all tickets with status=="OPEN" from Consignments table
-        :return: list of tickets
+        :purpose: fetches all users from Entities container
+        :return: list of users
         :author(s): Joe Lee
         """
         try:
-            db = DatabaseService()
-            conn = db.connect()
-            cursor = conn.create_cursor()
+            container = self.db_connection.connect("Entities")
 
-            query = f"""
-                    SELECT *
-                    FROM Users
-                    ORDER BY user_id ASC
-                    """
-            cursor.execute(query)
-            results = cursor.fetchall()
-            print(results)
+            query = """
+            SELECT c.id, c.username, c.first_name, c.last_name
+            FROM c
+            WHERE c.type = 'user'
+            ORDER BY c.username ASC
+            """
 
-            tickets = []
-            for row in results:
-                tickets.append({
-                    'user_id': row[0],
-                    'first_name': row[1],
-                    'last_name': row[2]
+            results = list(container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+
+            users = []
+            for item in results:
+                users.append({
+                    'user_id': item['id'],
+                    'username': item.get('username', ''),
+                    'first_name': item.get('first_name', ''),
+                    'last_name': item.get('last_name', '')
                 })
-            return tickets
+            return users
+
         except Exception as e:
-            print(f"Error fetching tickets: {e}")
+            print(f"Error fetching users: {e}")
             return []
 
     def setup_button_connections(self):

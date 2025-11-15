@@ -2,20 +2,19 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QVBoxLayout, QTabWidget
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
-from ui.tabs.subtabs.Records import RecordsTab
+from ui.tabs.subtabs.tickets import RecordsTab
 from ui.tabs.subtabs.users import UsersTab
 from ui.tabs.subtabs.vendors import VendorsTab
 from ui.tabs.subtabs.products import ProductsTab
 
 
 class AdminTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, db_connection):
+        self.db_connection = db_connection
         super().__init__(api_handler, "admin")
 
     def setup_ui(self):
@@ -57,16 +56,15 @@ class AdminTab(BaseTab):
 
         sub_layout.addWidget(status_container)
 
-        self.setup_button_connections()
-
     def setup_subtabs(self):
         self.tabs = QTabWidget()
         self.tabs.setObjectName("subtabs")
 
-        self.users_tab = UsersTab(self.api_handler)
-        self.vendors_tab = VendorsTab(self.api_handler)
-        self.products_tab = ProductsTab(self.api_handler)
-        self.records_tab = RecordsTab(self.api_handler)
+        # Pass the database connection to all subtabs
+        self.users_tab = UsersTab(self.api_handler, self.db_connection)
+        self.vendors_tab = VendorsTab(self.api_handler, self.db_connection)
+        self.products_tab = ProductsTab(self.api_handler, self.db_connection)
+        self.records_tab = RecordsTab(self.api_handler, self.db_connection)
 
         self.tabs.addTab(self.users_tab, "Users")
         self.tabs.addTab(self.vendors_tab, "Vendors")
@@ -77,10 +75,3 @@ class AdminTab(BaseTab):
 
     def on_tab_changed(self, index):
         print(f"{self.tabs.tabText(index)} tab clicked")
-
-    def setup_button_connections(self):
-        """
-        :purpose: links buttons with methods
-        :return: None
-        :author(s): Joe Lee
-        """
