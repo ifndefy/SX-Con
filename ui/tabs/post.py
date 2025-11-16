@@ -868,21 +868,6 @@ class PostTab(BaseTab):
             self.status_label.setText(f"Error calculating revenues: {e}")
             return -1
 
-    def addAutoFill(self, line: QLineEdit, table: str):
-        """
-        LEGACY CODE FROM SXC-136
-        MAY RETURN TO PURSUE CHANGING
-        OF AUTOCOMPLETE TO QCOMPLETE
-        DROPDOWN METHOD
-        """
-
-        #word_bank = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100']
-        #completer = QCompleter(word_bank)
-        #completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        #line.setCompleter(completer)
-
-        return 0
-
     def auto_pop_prod(self, prod_id: str):
         """
         SXC-136 action:
@@ -890,19 +875,17 @@ class PostTab(BaseTab):
         in the Products table
         note - attempting formatting for further use
         return: none
-        author: Tyler Slagboom
+        author: Tyler Slagboom, Joe Lee
         """
+        try:
+            item = get_record("Entities", "product", prod_id)
 
-        #try:
-        item = get_record("Entities", "product", prod_id)
-        if item and "product_name" in item:
             for product_section in self.product_sections:
-                 if product_section['product_id'].hasFocus():
-                    product_section['product_name'].setText(item["product_name"])
+                if product_section['product_id'].hasFocus():
+                    if item and "product_name" in item:
+                        product_section['product_name'].setText(item["product_name"])
+                    else:
+                        product_section['product_name'].setText("")
                     break
-
-        #except Exception:
-        #    for product_section in self.product_sections:
-        #        if product_section['product_id'].hasFocus():
-        #            product_section['product_name'].setText("")
-        #            break
+        except Exception as e:
+            print(f"Failed to fetch record: {e}")
