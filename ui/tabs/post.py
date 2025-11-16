@@ -12,6 +12,7 @@ from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 
+from services.get_item import get_record
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
@@ -332,7 +333,8 @@ class PostTab(BaseTab):
         product_id_input.setValidator(product_id_validator)
 
         # Attach completer to product_id_input line
-        self.addAutoFill(product_id_input, 'product_id')
+        product_id_input.textChanged.connect(self.auto_pop_prod)
+        #self.addAutoFill(product_id_input, 'product_id')
 
         line1_layout.addWidget(product_id_input)
         product_section['product_id'] = product_id_input
@@ -868,6 +870,21 @@ class PostTab(BaseTab):
 
     def addAutoFill(self, line: QLineEdit, table: str):
         """
+        LEGACY CODE FROM SXC-136
+        MAY RETURN TO PURSUE CHANGING
+        OF AUTOCOMPLETE TO QCOMPLETE
+        DROPDOWN METHOD
+        """
+
+        #word_bank = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100']
+        #completer = QCompleter(word_bank)
+        #completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        #line.setCompleter(completer)
+
+        return 0
+
+    def auto_pop_prod(self, prod_id: str):
+        """
         SXC-136 action:
         - autofill product_id and product_name when product_id exists
         in the Products table
@@ -876,9 +893,16 @@ class PostTab(BaseTab):
         author: Tyler Slagboom
         """
 
-        word_bank = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100']
-        completer = QCompleter(word_bank)
-        completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        line.setCompleter(completer)
+        #try:
+        item = get_record("Entities", "product", prod_id)
+        if item and "product_name" in item:
+            for product_section in self.product_sections:
+                 if product_section['product_id'].hasFocus():
+                    product_section['product_name'].setText(item["product_name"])
+                    break
 
-        return 0
+        #except Exception:
+        #    for product_section in self.product_sections:
+        #        if product_section['product_id'].hasFocus():
+        #            product_section['product_name'].setText("")
+        #            break
