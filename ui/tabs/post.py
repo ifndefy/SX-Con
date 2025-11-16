@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QApplication
+from PyQt6.QtWidgets import QVBoxLayout, QApplication, QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
@@ -87,7 +87,7 @@ class PostTab(BaseTab):
         vendor_section_row_1 = QHBoxLayout()
 
         # Vendor ID
-        vendor_section_row_1.addWidget(QLabel("Vendor ID:"))
+        vendor_section_row_1.addWidget(QLabel("ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setPlaceholderText("4 INTS")
         self.vendor_id_input.setMaxLength(4)
@@ -103,7 +103,7 @@ class PostTab(BaseTab):
         vendor_section_row_1.addWidget(self.phone_input)
 
         # Date and Time - Read-only
-        vendor_section_row_1.addWidget(QLabel("Date and Time:"))
+        vendor_section_row_1.addWidget(QLabel("DateTime:"))
         self.datetime_input = QLineEdit()
         self.datetime_input.setObjectName("READ_ONLY")
         self.update_datetime()
@@ -324,7 +324,7 @@ class PostTab(BaseTab):
         line1_layout = QHBoxLayout()
 
         # Product ID - Fixed width for 10 integers
-        line1_layout.addWidget(QLabel("Product ID:"))
+        line1_layout.addWidget(QLabel("ID:"))
         product_id_input = QLineEdit()
         product_id_input.setPlaceholderText("10 INTS")
         product_id_input.setMaxLength(10)
@@ -339,8 +339,18 @@ class PostTab(BaseTab):
         line1_layout.addWidget(product_id_input)
         product_section['product_id'] = product_id_input
 
+        product_type_label = QLabel("Type:")
+        line1_layout.addWidget(product_type_label)
+
+        product_type_input = QComboBox()
+        product_types = ["Hot Food", "General Item", "Produce"]
+        product_type_input.addItems(product_types)
+        product_type_input.setCurrentText(product_types[1])
+        line1_layout.addWidget(product_type_input)
+        product_section['product_type'] = product_type_input
+
         # Product Name - Takes up remaining space
-        line1_layout.addWidget(QLabel("Product Name:"))
+        line1_layout.addWidget(QLabel("Name:"))
         product_name_input = QLineEdit()
         product_name_input.setPlaceholderText("Product name")
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
@@ -375,7 +385,7 @@ class PostTab(BaseTab):
         product_section['price'] = price_input
 
         # Quantity - Fixed width (same as price)
-        line2_layout.addWidget(QLabel("Quantity:"))
+        line2_layout.addWidget(QLabel("Qty:"))
         quantity_input = QLineEdit()
         quantity_input.setPlaceholderText("0")
         quantity_input.setFixedWidth(100)
@@ -502,6 +512,7 @@ class PostTab(BaseTab):
         for i, product_section in enumerate(self.product_sections):
             product_data = {
                 'product_id': product_section['product_id'].text().strip() or "NULL",
+                'product_type': product_section['product_type'].currentText().strip() or "NULL",
                 'product_name': product_section['product_name'].text().strip() or "NULL",
                 'notes': product_section['notes'].text().strip() or "NULL",
                 'price': product_section['price'].text().strip() or "NULL",
@@ -604,6 +615,7 @@ class PostTab(BaseTab):
                         'type': 'product',
                         'product_id': self._convert_product_id(product_id),
                         'product_name': self._convert_null(product['product_name']),
+                        'product_type': self._convert_null(product['product_type']),
                     }
                     print(f"Creating product document: product_{product_id}")
                     try:
@@ -631,7 +643,9 @@ class PostTab(BaseTab):
                 'price_data': {
                     'products': [
                         {
-                            'product_id': int(product['product_id']),
+                            'product_id': product['product_id'],
+                            'product_type': product['product_type'],
+                            'notes': product['notes'],
                             'price': self._convert_null(product['price']),
                             'quantity': self._convert_quantity(product['quantity'])
                         }
