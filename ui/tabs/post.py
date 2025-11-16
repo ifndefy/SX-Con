@@ -12,7 +12,7 @@ from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 
-from services.get_item import get_record
+from services.get_item import get_item
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
@@ -878,7 +878,7 @@ class PostTab(BaseTab):
         author: Tyler Slagboom, Joe Lee
         """
         try:
-            item = get_record("Entities", "product", prod_id)
+            item = get_item("Entities", "product", prod_id)
 
             for product_section in self.product_sections:
                 if product_section['product_id'].hasFocus():
