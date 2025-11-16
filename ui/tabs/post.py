@@ -780,6 +780,7 @@ class PostTab(BaseTab):
         self.city_input.clear()
         self.state_input.clear()
         self.zip_input.clear()
+        self.auto_pop_vend()
 
         # Clear all product fields
         while self.products_layout.count():
