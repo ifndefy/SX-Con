@@ -7,11 +7,11 @@ from PyQt6.QtWidgets import QLabel
 from handlers.api_handler import APIHandler
 from src import SPOT
 from ui.core.theme_manager import ThemeManager
-from ui.tabs.post import PostTab
-from ui.tabs.get import GetTab
-from ui.tabs.view import ViewTab
+from ui.tabs.create_new import PostTab
+from ui.tabs.vendor_tickets import GetTab
+from ui.tabs.open_tickets import ViewTab
 from ui.tabs.settings import SettingsTab
-from ui.tabs.admin import AdminTab
+from ui.tabs.admin_settings import AdminTab
 from services.connect_database import db_connection
 
 class MainWindow(QWidget):
@@ -70,9 +70,9 @@ class MainWindow(QWidget):
         self.settings_tab = SettingsTab(self.api_handler)
         self.admin_tab = AdminTab(self.api_handler, self.db_connection)
 
-        self.tabs.addTab(self.post_tab, "Create New Record")
-        self.tabs.addTab(self.get_tab, "Fetch from Database")
-        self.tabs.addTab(self.view_tab, "View Open Tickets")
+        self.tabs.addTab(self.post_tab, "Create New")
+        self.tabs.addTab(self.get_tab, "Vendor Tickets")
+        self.tabs.addTab(self.view_tab, "Open Tickets")
         self.tabs.addTab(self.settings_tab, "Settings")
         self.tabs.addTab(self.admin_tab, "Admin Settings")
 
