@@ -1,7 +1,10 @@
-from typing import Union
+from typing import Any
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
+
 from services.connect_database import db_connection
 
-def get_item(container_name: str, entity_type: str, id: str) -> Union[dict, str]:
+
+def get_item(container_name: str, entity_type: str, id: str) -> Any | None:
     """
     :purpose: Gets an entire document by ID and entity type
     :param: container_name: the Cosmos DB container to query
@@ -18,11 +21,14 @@ def get_item(container_name: str, entity_type: str, id: str) -> Union[dict, str]
 
         try:
             document = container.read_item(item=item_id, partition_key=partition_key)
+            print(f"Cosmos DB Container {container_name} found ID: {item_id} ID: {partition_key}")
             return document
+        except CosmosResourceNotFoundError:
+            print(f"Cosmos DB container {container_name} not found ID: {item_id} ID: {partition_key}")
+            return None
         except Exception as e:
             print(f"Error reading document: {e}")
-            return "-1"
-
+            return None
     except Exception as e:
         print(f"Error in get_item: {e}")
-        return "-1"
+        return None

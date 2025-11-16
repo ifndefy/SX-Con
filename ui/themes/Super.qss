@@ -99,6 +99,15 @@ QComboBox {
     min-width: 120px;
 }
 
+QComboBox#READ_ONLY {
+    background-color: #B0B0B0;
+    color: #000000;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 120px;
+}
+
 QComboBox:hover {
     background-color: #691601;
 }
