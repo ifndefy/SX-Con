@@ -928,12 +928,11 @@ class PostTab(BaseTab):
 
     def auto_pop_prod_by_name(self, product_name: str):
         try:
-            item = get_item_by_property("Entities", "product", product_name)
+            item = get_item_by_property("Entities", "product", "product_name", product_name)
 
             for product_section in self.product_sections:
                 if product_section['product_name'].hasFocus():
                     if item:
-                        # Product exists - populate product_id and lock
                         if "product_id" in item:
                             product_section['product_id'].setText(str(item["product_id"]))
                             product_section['product_id'].setObjectName("READ_ONLY")
@@ -950,7 +949,6 @@ class PostTab(BaseTab):
                             product_section['product_type'].style().unpolish(product_section['product_type'])
                             product_section['product_type'].style().polish(product_section['product_type'])
                     else:
-                        # Product doesn't exist - unlock product_id
                         product_section['product_id'].setObjectName("")
                         product_section['product_id'].setReadOnly(False)
                         product_section['product_id'].style().unpolish(product_section['product_id'])
