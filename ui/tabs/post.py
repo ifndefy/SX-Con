@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtWidgets import QCompleter
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
@@ -93,11 +92,14 @@ class PostTab(BaseTab):
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
+
+        self.vendor_id_input.textEdited.connect(self.auto_pop_vend)
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         # Phone Number
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
         self.phone_input = format_phone.PhoneNumField()
+        self.phone_input.setObjectName("DEFAULT")
         self.phone_input.setFixedWidth(150)
         self.phone_input.setValidator(QIntValidator(0, 2147483647, self))
         vendor_section_row_1.addWidget(self.phone_input)
@@ -332,9 +334,7 @@ class PostTab(BaseTab):
         product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
         product_id_input.setValidator(product_id_validator)
 
-        # Attach completer to product_id_input line
         product_id_input.textChanged.connect(self.auto_pop_prod)
-        #self.addAutoFill(product_id_input, 'product_id')
 
         line1_layout.addWidget(product_id_input)
         product_section['product_id'] = product_id_input
@@ -343,9 +343,9 @@ class PostTab(BaseTab):
         line1_layout.addWidget(product_type_label)
 
         product_type_input = QComboBox()
-        product_types = ["Hot Food", "General Item", "Produce"]
+        product_types = ["SELECT", "Hot Food", "General Item", "Produce"]
         product_type_input.addItems(product_types)
-        product_type_input.setCurrentText(product_types[1])
+        product_type_input.setCurrentText(product_types[0])
         line1_layout.addWidget(product_type_input)
         product_section['product_type'] = product_type_input
 
@@ -520,6 +520,7 @@ class PostTab(BaseTab):
             }
             products_data.append(product_data)
 
+
         # Revenue sharing data
         revenue_data = self.revenue_generation.get_revenue_data()
 
@@ -545,13 +546,14 @@ class PostTab(BaseTab):
         has_valid_product = False
         for product in products:
             if (product['product_id'] and product['product_id'] != "NULL" and
+                    product['product_type'] and product['product_type'] != "SELECT" and
                     product['price'] and product['price'] != "NULL" and
                     product['quantity'] and product['quantity'] != "NULL"):
                 has_valid_product = True
                 break
 
         if not has_valid_product:
-            self.status_label.setText("Error: At least one product requires Product ID, Price, and Quantity")
+            self.status_label.setText("Error: At least one product requires Product ID, Product Type, Price, and Quantity")
             return False
 
         return True
@@ -896,10 +898,74 @@ class PostTab(BaseTab):
 
             for product_section in self.product_sections:
                 if product_section['product_id'].hasFocus():
-                    if item and "product_name" in item:
-                        product_section['product_name'].setText(item["product_name"])
+                    if item:
+                        # Product exists - populate and lock
+                        if "product_name" in item:
+                            product_section['product_name'].setText(item["product_name"])
+                            product_section['product_name'].setObjectName("READ_ONLY")
+                            product_section['product_name'].setReadOnly(True)
+                            product_section['product_name'].style().unpolish(product_section['product_name'])
+                            product_section['product_name'].style().polish(product_section['product_name'])
+                        if "product_type" in item:
+                            index = product_section['product_type'].findText(item["product_type"])
+                            if index >= 0:
+                                product_section['product_type'].setCurrentIndex(index)
+                            product_section['product_type'].setObjectName("READ_ONLY")
+                            product_section['product_type'].setEnabled(False)
+                            product_section['product_type'].style().unpolish(product_section['product_type'])
+                            product_section['product_type'].style().polish(product_section['product_type'])
                     else:
+                        # Product doesn't exist - clear and unlock
                         product_section['product_name'].setText("")
+                        product_section['product_name'].setObjectName("")
+                        product_section['product_name'].setReadOnly(False)
+                        product_section['product_name'].style().unpolish(product_section['product_name'])
+                        product_section['product_name'].style().polish(product_section['product_name'])
+
+                        product_section['product_type'].setObjectName("")
+                        product_section['product_type'].setEnabled(True)
+                        product_section['product_type'].style().unpolish(product_section['product_type'])
+                        product_section['product_type'].style().polish(product_section['product_type'])
                     break
         except Exception as e:
             print(f"Failed to fetch record: {e}")
+
+    def auto_pop_vend(self):
+        try:
+            field_mapping = {
+                'phone': self.phone_input,
+                'first_name': self.first_name_input,
+                'middle_name': self.middle_name_input,
+                'last_name': self.last_name_input,
+                'address': self.address_input,
+                'city': self.city_input,
+                'state': self.state_input,
+                'zip': self.zip_input
+            }
+            vend_id = self.vendor_id_input.text().strip()
+
+            if vend_id:
+                item = get_item("Entities", "vendor", vend_id)
+                if item is not None:
+                    for field_name, input_field in field_mapping.items():
+                        if field_name in item:
+                            input_field.setText(item[field_name])
+                            input_field.setObjectName("READ_ONLY")
+                            input_field.setReadOnly(True)
+                else:
+                    for input_field in field_mapping.values():
+                        input_field.setText("")
+                        input_field.setObjectName("")
+                        input_field.setReadOnly(False)
+            else:
+                for input_field in field_mapping.values():
+                    input_field.setText("")
+                    input_field.setObjectName("")
+                    input_field.setReadOnly(False)
+
+            for input_field in field_mapping.values():
+                input_field.style().unpolish(input_field)
+                input_field.style().polish(input_field)
+
+        except Exception as e:
+            print(f"Failed to fetch vendor: {e}")
