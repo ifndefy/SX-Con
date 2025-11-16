@@ -1,7 +1,7 @@
 from typing import Union
 from services.connect_database import db_connection
 
-def get_record(container_name: str, entity_type: str, id: str) -> Union[dict, str]:
+def get_item(container_name: str, entity_type: str, id: str) -> Union[dict, str]:
     """
     :purpose: Gets an entire document by ID and entity type
     :param: container_name: the Cosmos DB container to query
