@@ -12,6 +12,7 @@ from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 
 from services.get_item import get_item
+from services.get_item_by_property import get_item_by_property
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
@@ -102,6 +103,8 @@ class PostTab(BaseTab):
         self.phone_input.setObjectName("DEFAULT")
         self.phone_input.setFixedWidth(150)
         self.phone_input.setValidator(QIntValidator(0, 2147483647, self))
+
+        self.phone_input.textEdited.connect(self.auto_pop_vend_by_phone)
         vendor_section_row_1.addWidget(self.phone_input)
 
         # Date and Time - Read-only
@@ -355,6 +358,9 @@ class PostTab(BaseTab):
         product_name_input.setPlaceholderText("Product name")
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
         product_name_input.setValidator(alpha_validator)
+
+        product_name_input.textChanged.connect(self.auto_pop_prod_by_name)
+
         line1_layout.addWidget(product_name_input)
         product_section['product_name'] = product_name_input
 
@@ -932,6 +938,50 @@ class PostTab(BaseTab):
         except Exception as e:
             print(f"Failed to fetch record: {e}")
 
+    def auto_pop_prod_by_name(self, product_name: str):
+        """
+        SXC-136 inverse action:
+        - autofill product_id when product_name exists in the Products table
+        """
+        try:
+            # You'll need a new function to search by product name
+            item = get_item_by_property("Entities", "product", product_name)
+
+            for product_section in self.product_sections:
+                if product_section['product_name'].hasFocus():
+                    if item:
+                        # Product exists - populate product_id and lock
+                        if "product_id" in item:
+                            product_section['product_id'].setText(str(item["product_id"]))
+                            product_section['product_id'].setObjectName("READ_ONLY")
+                            product_section['product_id'].setReadOnly(True)
+                            product_section['product_id'].style().unpolish(product_section['product_id'])
+                            product_section['product_id'].style().polish(product_section['product_id'])
+
+                        if "product_type" in item:
+                            index = product_section['product_type'].findText(item["product_type"])
+                            if index >= 0:
+                                product_section['product_type'].setCurrentIndex(index)
+                            product_section['product_type'].setObjectName("READ_ONLY")
+                            product_section['product_type'].setEnabled(False)
+                            product_section['product_type'].style().unpolish(product_section['product_type'])
+                            product_section['product_type'].style().polish(product_section['product_type'])
+                    else:
+                        # Product doesn't exist - unlock product_id
+                        product_section['product_id'].setObjectName("")
+                        product_section['product_id'].setReadOnly(False)
+                        product_section['product_id'].style().unpolish(product_section['product_id'])
+                        product_section['product_id'].style().polish(product_section['product_id'])
+
+                        product_section['product_type'].setCurrentText("SELECT")
+                        product_section['product_type'].setObjectName("")
+                        product_section['product_type'].setEnabled(True)
+                        product_section['product_type'].style().unpolish(product_section['product_type'])
+                        product_section['product_type'].style().polish(product_section['product_type'])
+                    break
+        except Exception as e:
+            print(f"Failed to fetch record by name: {e}")
+
     def auto_pop_vend(self):
         try:
             field_mapping = {
@@ -971,3 +1021,43 @@ class PostTab(BaseTab):
 
         except Exception as e:
             print(f"Failed to fetch vendor: {e}")
+
+    def auto_pop_vend_by_phone(self):
+        try:
+            field_mapping = {
+                'vendor_id': self.vendor_id_input,
+                'first_name': self.first_name_input,
+                'middle_name': self.middle_name_input,
+                'last_name': self.last_name_input,
+                'address': self.address_input,
+                'city': self.city_input,
+                'state': self.state_input,
+                'zip': self.zip_input
+            }
+            phone = self.phone_input.text().strip()
+
+            if phone:
+                item = get_item_by_property("Entities", "vendor", "phone", phone)
+                if item is not None:
+                    for field_name, input_field in field_mapping.items():
+                        if field_name in item:
+                            input_field.setText(str(item[field_name]))
+                            input_field.setObjectName("READ_ONLY")
+                            input_field.setReadOnly(True)
+                else:
+                    for input_field in field_mapping.values():
+                        input_field.setText("")
+                        input_field.setObjectName("")
+                        input_field.setReadOnly(False)
+            else:
+                for input_field in field_mapping.values():
+                    input_field.setText("")
+                    input_field.setObjectName("")
+                    input_field.setReadOnly(False)
+
+            for input_field in field_mapping.values():
+                input_field.style().unpolish(input_field)
+                input_field.style().polish(input_field)
+
+        except Exception as e:
+            print(f"Failed to fetch vendor by phone: {e}")
