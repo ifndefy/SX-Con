@@ -1,4 +1,5 @@
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -7,6 +8,9 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
+from services.get_item import get_item
+from services.get_item_by_property import get_item_by_property
+from ui.core import format_phone
 from ui.tabs.base import BaseTab
 
 class GetTab(BaseTab):
@@ -51,17 +55,17 @@ class GetTab(BaseTab):
         vendor_section_row_1.addWidget(QLabel("Vendor ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setPlaceholderText("4 INTS")
-        self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
+        self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
+        self.vendor_id_input.textEdited.connect(self.auto_pop_vend)
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         # Phone Number
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
-        self.phone_input = QLineEdit()
-        self.phone_input.setObjectName("READ_ONLY")
-        self.phone_input.setPlaceholderText("READ_ONLY_FROM_DB")
-        self.phone_input.setReadOnly(True)
+        self.phone_input = format_phone.PhoneNumField()
         self.phone_input.setFixedWidth(150)
+        self.phone_input.setValidator(QIntValidator(0, 2147483647, self))
+        self.phone_input.textEdited.connect(self.auto_pop_vend_by_phone)
         vendor_section_row_1.addWidget(self.phone_input)
 
         vendor_section_row_1.addStretch()
@@ -226,10 +230,8 @@ class GetTab(BaseTab):
         line1_layout.addWidget(QLabel("Ticket Number:"))
         ticket_num_input = QLineEdit()
         ticket_num_input.setObjectName("READ_ONLY")
-        ticket_num_input.setPlaceholderText("XXXX")
         ticket_num_input.setReadOnly(True)
-        ticket_num_input.setMaxLength(4)
-        ticket_num_input.setFixedWidth(60)
+        ticket_num_input.setFixedWidth(80)
         line1_layout.addWidget(ticket_num_input)
         tickets_section['ticket_num'] = ticket_num_input
 
@@ -237,9 +239,8 @@ class GetTab(BaseTab):
         line1_layout.addWidget(QLabel("Date and Time:"))
         datetime_input = QLineEdit()
         datetime_input.setObjectName("READ_ONLY")
-        datetime_input.setPlaceholderText("10/29/2025--04:48:00")
         datetime_input.setReadOnly(True)
-        datetime_input.setFixedWidth(250)
+        datetime_input.setFixedWidth(175)
         line1_layout.addWidget(datetime_input)
         tickets_section['datetime'] = datetime_input
 
@@ -249,7 +250,7 @@ class GetTab(BaseTab):
         status_input.setObjectName("READ_ONLY")
         status_input.setPlaceholderText("CLOSED")
         status_input.setReadOnly(True)
-        status_input.setFixedWidth(80)
+        status_input.setFixedWidth(70)
         line1_layout.addWidget(status_input)
         tickets_section['status'] = status_input
 
@@ -264,6 +265,9 @@ class GetTab(BaseTab):
         line1_layout.addWidget(self.pdf_btn)
         self.print_btn = QPushButton("Print")
         line1_layout.addWidget(self.print_btn)
+        self.close_btn = QPushButton("Close")
+        self.close_btn.setObjectName("red_btn")
+        line1_layout.addWidget(self.close_btn)
 
         section_layout.addLayout(line1_layout)
 
@@ -290,6 +294,18 @@ class GetTab(BaseTab):
         # Update status
         self.status_label.setText("All tickets cleared")
 
+    def setup_button_connections(self):
+        """
+        :purpose: links buttons with methods
+        :return: None
+        :author(s): Joe Lee
+        """
+        self.fetch_btn.clicked.connect(self.on_fetch_clicked)
+        # self.view_btn.clicked.connect(self.on_view_clicked)
+        # self.excel_btn.clicked.connect()
+        # self.pdf_btn.clicked.connect()
+        # self.print_btn.clicked.connect()
+
     def on_fetch_clicked(self):
         """
         :purpose: calls fetch method and adds ticket sections
@@ -305,6 +321,10 @@ class GetTab(BaseTab):
             else:
                 for ticket in tickets:
                     self.add_ticket_section()
+                    last_section = self.tickets_section[-1]
+                    last_section['ticket_num'].setText(str(ticket['ticket_number']))
+                    last_section['datetime'].setText(str(ticket['datetime']))
+                    last_section['status'].setText(ticket['status'])
         else:
             self.status_label.setText("Please enter a Vendor ID")
 
@@ -318,14 +338,14 @@ class GetTab(BaseTab):
             container = self.db_connection.connect("Consignments")
 
             query = """
-                    SELECT c.ticket_number, c.datetime, c.vendor_id
+                    SELECT c.ticket_number, c.datetime, c.status
                     FROM c
                     WHERE c.vendor_id = @vendor_id
                     ORDER BY c.ticket_number DESC
                     """
 
             parameters = [
-                {"name": "@vendor_id", "value": int(vendor_id_input)}  # SEARCH AS INTEGER
+                {"name": "@vendor_id", "value": int(vendor_id_input)}
             ]
 
             results = list(container.query_items(
@@ -339,7 +359,7 @@ class GetTab(BaseTab):
                 tickets.append({
                     'ticket_number': item['ticket_number'],
                     'datetime': item['datetime'],
-                    'vendor_id': item['vendor_id']
+                    'status': item['status']
                 })
             return tickets
 
@@ -347,14 +367,82 @@ class GetTab(BaseTab):
             print(f"Error fetching tickets: {e}")
             return []
 
-    def setup_button_connections(self):
-        """
-        :purpose: links buttons with methods
-        :return: None
-        :author(s): Joe Lee
-        """
-        self.fetch_btn.clicked.connect(self.on_fetch_clicked)
-        # self.view_btn.clicked.connect()
-        # self.excel_btn.clicked.connect()
-        # self.pdf_btn.clicked.connect()
-        # self.print_btn.clicked.connect()
+    def auto_pop_vend(self):
+        try:
+            field_mapping = {
+                'phone': self.phone_input,
+                'first_name': self.first_name_input,
+                'middle_name': self.middle_name_input,
+                'last_name': self.last_name_input,
+                'address': self.address_input,
+                'city': self.city_input,
+                'state': self.state_input,
+                'zip': self.zip_input
+            }
+            vend_id = self.vendor_id_input.text().strip()
+
+            if vend_id:
+                item = get_item("Entities", "vendor", vend_id)
+                if item is not None:
+                    for field_name, input_field in field_mapping.items():
+                        if field_name in item:
+                            input_field.setText(item[field_name])
+                            input_field.setObjectName("READ_ONLY")
+                            input_field.setReadOnly(True)
+                else:
+                    for input_field in field_mapping.values():
+                        input_field.setText("")
+                        input_field.setObjectName("")
+                        input_field.setReadOnly(False)
+            else:
+                for input_field in field_mapping.values():
+                    input_field.setText("")
+                    input_field.setObjectName("")
+                    input_field.setReadOnly(False)
+
+            for input_field in field_mapping.values():
+                input_field.style().unpolish(input_field)
+                input_field.style().polish(input_field)
+
+        except Exception as e:
+            print(f"Failed to fetch vendor: {e}")
+
+    def auto_pop_vend_by_phone(self):
+        try:
+            field_mapping = {
+                'vendor_id': self.vendor_id_input,
+                'first_name': self.first_name_input,
+                'middle_name': self.middle_name_input,
+                'last_name': self.last_name_input,
+                'address': self.address_input,
+                'city': self.city_input,
+                'state': self.state_input,
+                'zip': self.zip_input
+            }
+            phone = self.phone_input.text().strip()
+
+            if phone:
+                item = get_item_by_property("Entities", "vendor", "phone", phone)
+                if item is not None:
+                    for field_name, input_field in field_mapping.items():
+                        if field_name in item:
+                            input_field.setText(str(item[field_name]))
+                            input_field.setObjectName("READ_ONLY")
+                            input_field.setReadOnly(True)
+                else:
+                    for input_field in field_mapping.values():
+                        input_field.setText("")
+                        input_field.setObjectName("")
+                        input_field.setReadOnly(False)
+            else:
+                for input_field in field_mapping.values():
+                    input_field.setText("")
+                    input_field.setObjectName("")
+                    input_field.setReadOnly(False)
+
+            for input_field in field_mapping.values():
+                input_field.style().unpolish(input_field)
+                input_field.style().polish(input_field)
+
+        except Exception as e:
+            print(f"Failed to fetch vendor by phone: {e}")
