@@ -20,7 +20,7 @@ from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone
 
 
-class PostTab(BaseTab):
+class CreateNewTab(BaseTab):
     def __init__(self, api_handler, db_connection):
         self.ticket_input = None
         self.vendor_id_input = None
@@ -44,7 +44,7 @@ class PostTab(BaseTab):
         self.product_counter = 1
         self.db_connection = db_connection
 
-        super().__init__(api_handler, "post")
+        super().__init__(api_handler, "create_new")
 
         self.setup_button_connections()
 
@@ -655,7 +655,8 @@ class PostTab(BaseTab):
                             'product_type': product['product_type'],
                             'notes': product['notes'],
                             'price': self._convert_null(product['price']),
-                            'quantity': self._convert_quantity(product['quantity'])
+                            'quantity': self._convert_quantity(product['quantity']),
+                            'sold': 0,
                         }
                         for product in record_data['products']
                         if self._has_product_data(product)

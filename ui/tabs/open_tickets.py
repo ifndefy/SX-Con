@@ -7,16 +7,18 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
+from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
 
-class ViewTab(BaseTab):
+
+class OpenTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
         self.ticket_counter = None
         self.tickets_layout = None
         self.tickets_section = []
         self.db_connection = db_connection
 
-        super().__init__(api_handler, "view")
+        super().__init__(api_handler, "open_tickets")
 
     def setup_ui(self):
         """
@@ -89,8 +91,7 @@ class ViewTab(BaseTab):
 
         self.setup_button_connections()
 
-
-    def add_ticket_section(self):
+    def add_ticket_section(self, ticket_data=None):
         """
         :purpose: adds ticket lines
         :return: None
@@ -114,6 +115,11 @@ class ViewTab(BaseTab):
         ticket_num_input.setReadOnly(True)
         ticket_num_input.setMaxLength(4)
         ticket_num_input.setFixedWidth(60)
+
+        # Set ticket number if provided
+        if ticket_data:
+            ticket_num_input.setText(str(ticket_data.get('ticket_number', '')))
+
         line1_layout.addWidget(ticket_num_input)
         tickets_section['ticket_num'] = ticket_num_input
 
@@ -124,6 +130,11 @@ class ViewTab(BaseTab):
         datetime_input.setPlaceholderText("10/29/2025--04:48:00")
         datetime_input.setReadOnly(True)
         datetime_input.setFixedWidth(250)
+
+        # Set datetime if provided
+        if ticket_data:
+            datetime_input.setText(str(ticket_data.get('datetime', '')))
+
         line1_layout.addWidget(datetime_input)
         tickets_section['datetime'] = datetime_input
 
@@ -134,26 +145,64 @@ class ViewTab(BaseTab):
         status_input.setPlaceholderText("OPEN")
         status_input.setReadOnly(True)
         status_input.setFixedWidth(80)
+
+        # Set status if provided
+        if ticket_data:
+            status_input.setText(str(ticket_data.get('status', '')))
+
         line1_layout.addWidget(status_input)
         tickets_section['status'] = status_input
 
         line1_layout.addStretch()
 
         # btns
-        self.view_btn = QPushButton("View")
-        line1_layout.addWidget(self.view_btn)
-        self.excel_btn = QPushButton("Excel")
-        line1_layout.addWidget(self.excel_btn)
-        self.pdf_btn = QPushButton("PDF")
-        line1_layout.addWidget(self.pdf_btn)
-        self.print_btn = QPushButton("Print")
-        line1_layout.addWidget(self.print_btn)
+        view_btn = QPushButton("View")
+        line1_layout.addWidget(view_btn)
+        tickets_section['view_btn'] = view_btn
+
+        excel_btn = QPushButton("Excel")
+        line1_layout.addWidget(excel_btn)
+        tickets_section['excel_btn'] = excel_btn
+
+        pdf_btn = QPushButton("PDF")
+        line1_layout.addWidget(pdf_btn)
+        tickets_section['pdf_btn'] = pdf_btn
+
+        print_btn = QPushButton("Print")
+        line1_layout.addWidget(print_btn)
+        tickets_section['print_btn'] = print_btn
 
         section_layout.addLayout(line1_layout)
 
+        # Create details container (initially hidden)
+        details_container = QWidget()
+        details_container.setObjectName("view_bg")
+        details_container.setVisible(False)
+        details_layout = QVBoxLayout(details_container)
+        details_layout.setContentsMargins(20, 10, 10, 10)
+
+        product_details_layout = QVBoxLayout()
+        tickets_section['product_details_layout'] = product_details_layout
+        details_layout.addLayout(product_details_layout)
+
+        section_layout.addWidget(details_container)
+        tickets_section['details_container'] = details_container
+
         # Add to container
         self.tickets_layout.addWidget(section_widget)
+
+        # Store the index and connect the view button
+        ticket_index = len(self.tickets_section)
+        tickets_section['index'] = ticket_index
+        view_btn.clicked.connect(self.make_view_handler(ticket_index))
+
         self.tickets_section.append(tickets_section)
+
+    def make_view_handler(self, ticket_index):
+        def handler():
+            self.on_view_clicked(ticket_index)
+
+        return handler
 
     def remove_ticket_section(self):
         """
@@ -186,7 +235,7 @@ class ViewTab(BaseTab):
             self.status_label.setText(f"No tickets found for Status: OPEN")
         else:
             for ticket in tickets:
-                self.add_ticket_section()
+                self.add_ticket_section(ticket)  # Pass ticket data to populate fields
 
     def fetch(self, status):
         try:
@@ -197,7 +246,7 @@ class ViewTab(BaseTab):
                     FROM c
                     WHERE c.type = 'consignment'
                       AND c.status = @status
-                    ORDER BY c.ticket_num DESC \
+                    ORDER BY c.ticket_number DESC
                     """
 
             parameters = [{"name": "@status", "value": status}]
@@ -229,7 +278,97 @@ class ViewTab(BaseTab):
         :author(s): Joe Lee
         """
         self.update_btn.clicked.connect(self.fetch_on_clicked)
-        # self.view_btn.clicked.connect()
-        # self.excel_btn.clicked.connect()
-        # self.pdf_btn.clicked.connect()
-        # self.print_btn.clicked.connect()
+        # Individual button connections are handled in add_ticket_section
+
+    def on_view_clicked(self, ticket_index):
+        try:
+            if ticket_index >= len(self.tickets_section):
+                self.status_label.setText("Invalid ticket index")
+                return
+
+            ticket_section = self.tickets_section[ticket_index]
+            ticket_number = ticket_section['ticket_num'].text().strip()
+
+            if not ticket_number:
+                self.status_label.setText("No ticket number available")
+                return
+
+            details_container = ticket_section['details_container']
+            is_visible = details_container.isVisible()
+
+            if not is_visible:
+                ticket_details = self.view(ticket_number)
+                if ticket_details:
+                    ViewTicket.view_ticket_details(ticket_section, ticket_details)
+                    details_container.setVisible(True)
+                    ticket_section['view_btn'].setText("Hide")
+                    self.status_label.setText(f"Displaying details for ticket {ticket_number}")
+                else:
+                    self.status_label.setText(f"No details found for ticket {ticket_number}")
+            else:
+                details_container.setVisible(False)
+                ticket_section['view_btn'].setText("View")
+                self.status_label.setText(f"Hidden details for ticket {ticket_number}")
+
+        except Exception as e:
+            print(f"Error in on_view_clicked: {e}")
+            self.status_label.setText("Error loading ticket details")
+
+    def view(self, ticket_number):
+        try:
+            consignments_container = self.db_connection.connect("Consignments")
+
+            query = "SELECT * FROM c WHERE c.ticket_number = @ticket_number"
+
+            parameters = [
+                {"name": "@ticket_number", "value": int(ticket_number)}
+            ]
+
+            ticket_results = list(consignments_container.query_items(
+                query=query,
+                parameters=parameters,
+                enable_cross_partition_query=True
+            ))
+
+            if not ticket_results:
+                return None
+
+            ticket_data = ticket_results[0]
+
+            product_ids = ticket_data.get('product_ids', [])
+            products = []
+
+            if product_ids:
+                entities_container = self.db_connection.connect("Entities")
+
+                for product_id in product_ids:
+                    product_query = "SELECT * FROM c WHERE c.id = @product_id AND c.type = 'product'"
+
+                    product_parameters = [
+                        {"name": "@product_id", "value": product_id}
+                    ]
+
+                    product_results = list(entities_container.query_items(
+                        query=product_query,
+                        parameters=product_parameters,
+                        enable_cross_partition_query=True
+                    ))
+
+                    if product_results:
+                        product_data = product_results[0]
+                        products.append({
+                            'product_id': product_id,
+                            'product_name': product_data.get('product_name', 'N/A'),
+                            'description': product_data.get('description', ''),
+                            'price': product_data.get('price', 0),
+                            'quantity': product_data.get('quantity', 0)
+                        })
+
+            return {
+                'ticket_data': ticket_data,
+                'products': products
+            }
+
+        except Exception as e:
+            print(f"Error fetching ticket details: {e}")
+            return None

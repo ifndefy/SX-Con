@@ -6,6 +6,15 @@ QWidget {
     font-size: 14px;
 }
 
+QWidget#view_bg {
+    background-color: #8A6A52;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    color: #000000;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
 /* TAB WIDGET */
 QTabWidget::pane {
     border: 1px solid #5C4033;
