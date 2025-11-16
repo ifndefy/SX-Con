@@ -923,6 +923,7 @@ class PostTab(BaseTab):
                         product_section['product_name'].style().unpolish(product_section['product_name'])
                         product_section['product_name'].style().polish(product_section['product_name'])
 
+                        product_section['product_type'].setCurrentText("SELECT")
                         product_section['product_type'].setObjectName("")
                         product_section['product_type'].setEnabled(True)
                         product_section['product_type'].style().unpolish(product_section['product_type'])
