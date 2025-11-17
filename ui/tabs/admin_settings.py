@@ -12,10 +12,10 @@ from ui.tabs.subtabs.vendors import VendorsTab
 from ui.tabs.subtabs.products import ProductsTab
 
 
-class AdminTab(BaseTab):
+class AdminSettingsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
         self.db_connection = db_connection
-        super().__init__(api_handler, "admin")
+        super().__init__(api_handler, "admin_settings")
 
     def setup_ui(self):
         """

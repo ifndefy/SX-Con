@@ -7,11 +7,11 @@ from PyQt6.QtWidgets import QLabel
 from handlers.api_handler import APIHandler
 from src import SPOT
 from ui.core.theme_manager import ThemeManager
-from ui.tabs.create_new import PostTab
-from ui.tabs.vendor_tickets import GetTab
-from ui.tabs.open_tickets import ViewTab
+from ui.tabs.create_new import CreateNewTab
+from ui.tabs.vendor_tickets import VendorTicketsTab
+from ui.tabs.open_tickets import OpenTicketsTab
 from ui.tabs.settings import SettingsTab
-from ui.tabs.admin_settings import AdminTab
+from ui.tabs.admin_settings import AdminSettingsTab
 from services.connect_database import db_connection
 
 class MainWindow(QWidget):
@@ -20,11 +20,11 @@ class MainWindow(QWidget):
         self.revision_label = None
         self.theme_dropdown_menu = None
         self.tabs = None
-        self.post_tab = None
-        self.get_tab = None
-        self.view_tab = None
+        self.create_new_tab = None
+        self.vendor_tickets_tab = None
+        self.open_tickets_tab = None
         self.settings_tab = None
-        self.admin_tab = None
+        self.admin_settings_tab = None
 
         self.api_handler = APIHandler()
         self.theme_manager = ThemeManager()
@@ -64,17 +64,17 @@ class MainWindow(QWidget):
         self.tabs = QTabWidget()
         self.tabs.setObjectName("main_tabs")
 
-        self.post_tab = PostTab(self.api_handler, self.db_connection)
-        self.get_tab = GetTab(self.api_handler, self.db_connection)
-        self.view_tab = ViewTab(self.api_handler, self.db_connection)
+        self.create_new_tab = CreateNewTab(self.api_handler, self.db_connection)
+        self.vendor_tickets_tab = VendorTicketsTab(self.api_handler, self.db_connection)
+        self.open_tickets_tab = OpenTicketsTab(self.api_handler, self.db_connection)
         self.settings_tab = SettingsTab(self.api_handler)
-        self.admin_tab = AdminTab(self.api_handler, self.db_connection)
+        self.admin_settings_tab = AdminSettingsTab(self.api_handler, self.db_connection)
 
-        self.tabs.addTab(self.post_tab, "Create New")
-        self.tabs.addTab(self.get_tab, "Vendor Tickets")
-        self.tabs.addTab(self.view_tab, "Open Tickets")
+        self.tabs.addTab(self.create_new_tab, "Create New")
+        self.tabs.addTab(self.vendor_tickets_tab, "Vendor Tickets")
+        self.tabs.addTab(self.open_tickets_tab, "Open Tickets")
         self.tabs.addTab(self.settings_tab, "Settings")
-        self.tabs.addTab(self.admin_tab, "Admin Settings")
+        self.tabs.addTab(self.admin_settings_tab, "Admin Settings")
 
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
