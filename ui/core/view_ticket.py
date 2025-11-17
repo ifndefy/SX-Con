@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget, QLineEdit, QComboBox, QPushButton
 from services.get_item import get_item
+from services.update_property import update_property
 from ui.core.revenue_generation import RevenueGeneration
 
 
@@ -17,19 +18,22 @@ class ViewTicket:
                 child.widget().deleteLater()
 
         ticket_data = ticket_details['ticket_data']
+        ticket_id = ticket_data.get('id', '')
         products = ticket_data.get('price_data', {}).get('products', [])
         revenue_sharing = ticket_data.get('revenue_sharing', [])
 
         # Products section
         valid_products = [p for p in products if p.get('product_id') and p.get('product_id') != 'NULL']
 
-        for product in valid_products:
+        for index, product in enumerate(valid_products):
+            product_id = product.get('product_id')
+
             # Line 1: Product ID and Product Name
             line1_layout = QHBoxLayout()
 
             # Product ID
             line1_layout.addWidget(QLabel("ID:"))
-            product_id_input = QLineEdit(product.get('product_id', ''))
+            product_id_input = QLineEdit(product_id)
             product_id_input.setFixedWidth(120)
             product_id_input.setObjectName("READ_ONLY")
             product_id_input.setReadOnly(True)
@@ -52,7 +56,6 @@ class ViewTicket:
             # Product Name
             line1_layout.addWidget(QLabel("Name:"))
             product_name = product.get('product_type', 'Unknown Product')
-            product_id = product.get('product_id')
             if product_id and product_id != 'NULL':
                 product_entity = get_item('Entities', 'product', product_id)
                 if product_entity:
@@ -63,6 +66,11 @@ class ViewTicket:
             line1_layout.addWidget(product_name_input)
 
             line1_layout.addStretch()
+
+            line1_layout.addWidget(QLabel("Sold:"))
+            sold_input = QLineEdit(str(product.get('sold', 0)))
+            sold_input.setFixedWidth(100)
+            line1_layout.addWidget(sold_input)
 
             update_btn = QPushButton("Update")
             line1_layout.addWidget(update_btn)
@@ -96,11 +104,31 @@ class ViewTicket:
             line2_layout.addWidget(quantity_input)
 
             line2_layout.addStretch()
+
             product_layout.addLayout(line2_layout)
+
+            def make_update_handler(product_index, sold_widget):
+                def handler():
+                    sold_value = sold_widget.text()
+                    try:
+                        sold_int = int(sold_value)
+                        result = update_property("Consignments", "consignment", "100000",
+                                                 f"price_data.products[{product_index}].sold", sold_int)
+                        if result == 0:
+                            print(f"Successfully updated sold quantity to {sold_int}")
+                        else:
+                            print(f"Failed to update sold quantity")
+                    except ValueError:
+                        print(f"Invalid sold value: {sold_value}. Please enter a valid number.")
+
+                return handler
+
+            update_btn.clicked.connect(make_update_handler(index, sold_input))
 
         # Revenue Sharing section
         if revenue_sharing:
             revenue_container_layout = QHBoxLayout()
+            revenue_container_layout.setObjectName("view_bg")
             revenue_container_layout.addStretch(1)
             revenue_widget = RevenueGeneration()
             revenue_widget.set_revenue_data(revenue_sharing)

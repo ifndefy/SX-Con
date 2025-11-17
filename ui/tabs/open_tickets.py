@@ -109,27 +109,25 @@ class OpenTicketsTab(BaseTab):
 
         # ticket_num
         line1_layout.addWidget(QLabel("Ticket Number:"))
-        ticket_num_input = QLineEdit()
-        ticket_num_input.setObjectName("READ_ONLY")
-        ticket_num_input.setPlaceholderText("XXXX")
-        ticket_num_input.setReadOnly(True)
-        ticket_num_input.setMaxLength(4)
-        ticket_num_input.setFixedWidth(60)
+        ticket_number_input = QLineEdit()
+        ticket_number_input.setObjectName("READ_ONLY")
+        ticket_number_input.setPlaceholderText("XXXX")
+        ticket_number_input.setReadOnly(True)
+        ticket_number_input.setFixedWidth(80)
 
         # Set ticket number if provided
         if ticket_data:
-            ticket_num_input.setText(str(ticket_data.get('ticket_number', '')))
+            ticket_number_input.setText(str(ticket_data.get('ticket_number', '')))
 
-        line1_layout.addWidget(ticket_num_input)
-        tickets_section['ticket_num'] = ticket_num_input
+        line1_layout.addWidget(ticket_number_input)
+        tickets_section['ticket_num'] = ticket_number_input
 
         # datetime
         line1_layout.addWidget(QLabel("Date and Time:"))
         datetime_input = QLineEdit()
         datetime_input.setObjectName("READ_ONLY")
-        datetime_input.setPlaceholderText("10/29/2025--04:48:00")
         datetime_input.setReadOnly(True)
-        datetime_input.setFixedWidth(250)
+        datetime_input.setFixedWidth(175)
 
         # Set datetime if provided
         if ticket_data:
@@ -144,7 +142,7 @@ class OpenTicketsTab(BaseTab):
         status_input.setObjectName("READ_ONLY")
         status_input.setPlaceholderText("OPEN")
         status_input.setReadOnly(True)
-        status_input.setFixedWidth(80)
+        status_input.setFixedWidth(70)
 
         # Set status if provided
         if ticket_data:
@@ -223,6 +221,15 @@ class OpenTicketsTab(BaseTab):
         # Update status
         self.status_label.setText("All tickets cleared")
 
+
+    def setup_button_connections(self):
+        """
+        :purpose: links buttons with methods
+        :return: None
+        :author(s): Joe Lee
+        """
+        self.update_btn.clicked.connect(self.fetch_on_clicked)
+
     def fetch_on_clicked(self):
         """
         :purpose: calls fetch method and adds ticket sections
@@ -271,21 +278,8 @@ class OpenTicketsTab(BaseTab):
             print(f"Error fetching tickets: {e}")
             return []
 
-    def setup_button_connections(self):
-        """
-        :purpose: links buttons with methods
-        :return: None
-        :author(s): Joe Lee
-        """
-        self.update_btn.clicked.connect(self.fetch_on_clicked)
-        # Individual button connections are handled in add_ticket_section
-
     def on_view_clicked(self, ticket_index):
         try:
-            if ticket_index >= len(self.tickets_section):
-                self.status_label.setText("Invalid ticket index")
-                return
-
             ticket_section = self.tickets_section[ticket_index]
             ticket_number = ticket_section['ticket_num'].text().strip()
 
@@ -299,7 +293,7 @@ class OpenTicketsTab(BaseTab):
             if not is_visible:
                 ticket_details = self.view(ticket_number)
                 if ticket_details:
-                    ViewTicket.view_ticket_details(ticket_section, ticket_details)
+                    self.view_ticket_details(ticket_section, ticket_details)
                     details_container.setVisible(True)
                     ticket_section['view_btn'].setText("Hide")
                     self.status_label.setText(f"Displaying details for ticket {ticket_number}")
@@ -372,3 +366,6 @@ class OpenTicketsTab(BaseTab):
         except Exception as e:
             print(f"Error fetching ticket details: {e}")
             return None
+
+    def view_ticket_details(self, ticket_section, ticket_details):
+        ViewTicket.view_ticket_details(ticket_section, ticket_details)

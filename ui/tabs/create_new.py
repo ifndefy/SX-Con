@@ -346,9 +346,10 @@ class CreateNewTab(BaseTab):
         line1_layout.addWidget(product_type_label)
 
         product_type_input = QComboBox()
-        product_types = ["SELECT", "Hot Food", "General Item", "Produce"]
+        product_types = ["Hot Food", "General Item", "Produce"]
         product_type_input.addItems(product_types)
-        product_type_input.setCurrentText(product_types[0])
+        product_type_input.setCurrentIndex(-1)
+        product_type_input.setPlaceholderText("SELECT")
         line1_layout.addWidget(product_type_input)
         product_section['product_type'] = product_type_input
 
@@ -385,7 +386,7 @@ class CreateNewTab(BaseTab):
         # Price - Fixed width
         line2_layout.addWidget(QLabel("Price:"))
         price_input = QLineEdit()
-        price_input.setPlaceholderText("$0.00")
+        price_input.setPlaceholderText(f"$0.00")
         price_input.setFixedWidth(100)
         line2_layout.addWidget(price_input)
         product_section['price'] = price_input

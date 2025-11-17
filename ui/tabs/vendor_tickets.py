@@ -189,12 +189,12 @@ class VendorTicketsTab(BaseTab):
         line1_layout = QHBoxLayout()
 
         line1_layout.addWidget(QLabel("Ticket Number:"))
-        ticket_num_input = QLineEdit()
-        ticket_num_input.setObjectName("READ_ONLY")
-        ticket_num_input.setReadOnly(True)
-        ticket_num_input.setFixedWidth(80)
-        line1_layout.addWidget(ticket_num_input)
-        tickets_section['ticket_num'] = ticket_num_input
+        ticket_number_input = QLineEdit()
+        ticket_number_input.setObjectName("READ_ONLY")
+        ticket_number_input.setReadOnly(True)
+        ticket_number_input.setFixedWidth(80)
+        line1_layout.addWidget(ticket_number_input)
+        tickets_section['ticket_num'] = ticket_number_input
 
         line1_layout.addWidget(QLabel("Date and Time:"))
         datetime_input = QLineEdit()
