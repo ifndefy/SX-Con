@@ -14,27 +14,13 @@ A comprehensive application for managing vendor records, products, and revenue s
   </p>
   
 <!-- Badges -->
-<p>
-  <a href="https://github.com/ifndefy/SX-Con/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/ifndefy/SX-Con" alt="contributors" />
-  </a>
-  <a href="">
-    <img src="https://img.shields.io/github/last-commit/ifndefy/SX-Con" alt="last update" />
-  </a>
-  <a href="https://github.com/ifndefy/SX-Con/network/members">
-    <img src="https://img.shields.io/github/forks/ifndefy/SX-Con" alt="forks" />
-  </a>
-  <a href="https://github.com/ifndefy/SX-Con/stargazers">
-    <img src="https://img.shields.io/github/stars/ifndefy/SX-Con" alt="stars" />
-  </a>
-  <a href="https://github.com/ifndefy/SX-Con/issues/">
-    <img src="https://img.shields.io/github/issues/ifndefy/SX-Con" alt="open issues" />
-  </a>
-  <a href="https://github.com/ifndefy/SX-Con/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/ifndefy/SX-Con.svg" alt="license" />
-  </a>
-</p>
-   
+[![Contributers](https://img.shields.io/github/contributors/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/graphs/contributors)
+[![Last Update](https://img.shields.io/github/last-commit/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/commits/integration/)
+[![Forks](https://img.shields.io/github/forks/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/network/members)
+[![Stars](https://img.shields.io/github/stars/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/stargazers)
+[![Open Issues](https://img.shields.io/github/issues/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/issues/)
+[![License](https://img.shields.io/github/license/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/blob/integration/LICENSE)
+
 <h4>
     <a href="https://github.com/ifndefy/SX-Con/">View Demo</a>
   <span> · </span>
@@ -156,7 +142,7 @@ The application provides a user-friendly interface for creating, viewing, and ma
 - **Revenue Sharing**: Calculate and manage revenue distribution
     - <!-- Add feature description for calculation (Kyle Valdez) -->
 - **Azure Cosmos NoSQL Integration**: Secure cloud database connectivity
-    - <!-- Add feature description for DB Connection (Maksym Komarov) -->
+    - Cosmos NoSQL allows for minimal upkeep/scaling costs, ease of use and improved database connection latency. Secure access is guaranteed thorugh either key-based authentication.  
 - **Azure Cosmos NoSQL Actions**: 
     - <!-- Add feature description for DB interactions (Tim Liu) -->
 - **Auto-generated Fields**: Automatic ticket numbers and timestamps
