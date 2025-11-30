@@ -131,7 +131,7 @@ The application provides a user-friendly interface for creating, viewing, and ma
 <!-- Features -->
 ### Features
 
-- **Multi-tab Interface**: Separate tabs for Create New, Vendor Tickets, Open Tickets, Settings, and Admin Settings\ 
+- **Multi-tab Interface**: Separate tabs for Create New, Vendor Tickets, Open Tickets, Settings, and Admin Settings/
 -- User Interface is reduced, cleaned, and modernized using tabs to quickly move through options
 - **Login Authentication**: login credentials are hashed and stored
 <!-- Add feature description for hashing (Colin Henderson) -->
