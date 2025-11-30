@@ -174,13 +174,7 @@ container_name = your-container\
 <!-- Insert the flow chart from the slide here -->
 
 <!-- Contact -->
-
 ### Contact
-    - Joe Lee, joeslee@csus.edu
-    - <!-- Put your name and email here -->
-    - 
-    - 
-    - 
-    - 
-    - 
-    - 
+
+Joe Lee, joeslee@csus.edu
+<!-- Put your name and email here -->
