@@ -75,16 +75,16 @@ SX-Con is a desktop application built with PyQt6 for managing vendor information
 
 <div align="center"> 
   <h4>Create New Ticket</h4>
-  <img src="src/imgs/Create New.png" width="600" />
+  <img src="src/imgs/create-new.png" width="600" />
   
   <h4>Open Tickets</h4>
-  <img src="src/imgs/Open Tickets.png" width="600" />
+  <img src="src/imgs/open-tickets.png" width="600" />
   
   <h4>Settings</h4>
-  <img src="src/imgs/Settings.png" width="400" />
+  <img src="src/imgs/settings.png" width="400" />
 
   <h4>Vendor Tickets</h4>
-  <img src="src/imgs/Vendor Tickets.png" width="400" />
+  <img src="src/imgs/vendor-tickets.png" width="400" />
 </div>
 
 <!-- TechStack -->
