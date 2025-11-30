@@ -176,6 +176,11 @@ container_name = your-container\
 <!-- Contact -->
 
 ### Contact
-
-Joe Lee, joeslee@csus.edu
-<!-- Put your name and email here -->
+    - Joe Lee, joeslee@csus.edu
+    - <!-- Put your name and email here -->
+    - 
+    - 
+    - 
+    - 
+    - 
+    - 
