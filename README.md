@@ -120,7 +120,7 @@ The application provides a user-friendly interface for creating, viewing, and ma
 - **Multi-tab Interface**: Separate tabs for Create New, Vendor Tickets, Open Tickets, Settings, and Admin Settings
     - User Interface is reduced, cleaned, and modernized using tabs to quickly move through options
 - **Login Authentication**: login credentials are hashed and stored
-    - <!-- Add feature description for hashing (Colin Henderson) -->
+    - Passwords are hashed using bcrypt algorithm and stored along with usernames in Azure database to protect user information
 - **Content Management**: Create and manage records with comprehensive information
     - User input data is stored in Azure Cosmos NoSQL Database. Additional features such as Cosmos actions, autogeneration, and validation are combined to manage the content.
 - **Input Validation**: Robust input restrictions matching database constraints
@@ -162,7 +162,7 @@ container_name = your-container
 <!-- Contact -->
 ### Contact
 
-Joe Lee, joeslee@csus.edu
-
-Maksym Komarov, mkomarov@csus.edu
+- Joe Lee, joeslee@csus.edu
+- Maksym Komarov, mkomarov@csus.edu
+- Colin Henderson, colinrhenderson@csus.edu
 <!-- Put your name and email here -->
