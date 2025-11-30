@@ -53,17 +53,14 @@ A comprehensive application for managing vendor records, products, and revenue s
   * [Screenshots](#screenshots)
   * [Tech Stack](#tech-stack)
   * [Features](#features)
-  * [Environment Variables](#environment-variables)
+  * [Configs](#configs)
 - [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
   * [Installation](#installation)
-  * [Run Locally](#run-locally)
 - [Usage](#usage)
 - [Roadmap](#roadmap)
-- [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
-- [Acknowledgements](#acknowledgements)
 
 <!-- About the Project -->
 ## About the Project
@@ -73,7 +70,8 @@ The application provides a user-friendly interface for creating, viewing, and ma
 
 <!-- Screenshots -->
 <div align="center">
-### Screenshots
+
+### Settings
 
 ## Create New Ticket
 ![Create New Ticket](src/imgs/create_new.PNG)
@@ -92,7 +90,10 @@ The application provides a user-friendly interface for creating, viewing, and ma
 
 </div>
 <!-- TechStack -->
+
 ### Tech Stack
+
+<!-- Update the tech stack, it should list what's on the slideshow -->
 
 <details>
   <summary>Client</summary><! -- REMOVE THIS COMMENT || The info in the following block is not correct -->
@@ -150,13 +151,31 @@ The application provides a user-friendly interface for creating, viewing, and ma
 <!-- Add feature description for ptinting (Colin Heinselman) -->
 
 <!-- Config Files -->
-### Config Files
+### Configs
 
 The connection method will look for the config.ini in services directory
 Create `services/config.ini` with the following structure:
-```ini
+
+"""
 [Cosmos Connection Parameters]
 endpoint = your-cosmos-endpoint
 key = your-cosmos-key
 database_name = your-database
 container_name = your-container
+"""
+
+<!-- Usage -->
+
+### Usage
+<!-- explain how to use this step by step -->
+
+<!-- Roadmap -->
+### Roadmap
+<!-- Insert the flow chart from the slide here -->
+
+<!-- Contact -->
+
+### Contact
+
+Joe Lee, joeslee@csus.edu
+<!-- Put your name and email here -->
