@@ -76,13 +76,13 @@ The application provides a user-friendly interface for creating, viewing, and ma
 ### Screenshots
 
 ## Create New Ticket
-![Create New Ticket](src/imgs/create-new.PNG)
+![Create New Ticket](src/imgs/create_new.PNG)
 
 ## Vendor Tickets
-![Vendor Tickets](src/imgs/vendor-tickets.PNG)
+![Vendor Tickets](src/imgs/vendor_tickets.PNG)
 
 ## Open Tickets  
-![Open Tickets](src/imgs/open-tickets.PNG)
+![Open Tickets](src/imgs/open_tickets.PNG)
 
 ## Settings
 ![Settings](src/imgs/settings.PNG)
