@@ -156,8 +156,8 @@ The application provides a user-friendly interface for creating, viewing, and ma
 The connection method will look for the config.ini in services directory
 Create `services/config.ini` with the following structure:
 
-"""
-[Cosmos Connection Parameters]
+"""\
+[Cosmos Connection Parameters]\
 endpoint = your-cosmos-endpoint\
 key = your-cosmos-key\
 database_name = your-database\
