@@ -176,7 +176,7 @@ container_name = your-container
 <!-- Contact -->
 ### Contact
 
-Joe Lee, joeslee@csus.edu
-Maksym Komarov, mkomarov@csus.edu
-Colin Henderson, colinrhenderson@csus.edu
+- Joe Lee, joeslee@csus.edu
+- Maksym Komarov, mkomarov@csus.edu
+- Colin Henderson, colinrhenderson@csus.edu
 <!-- Put your name and email here -->
