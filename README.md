@@ -132,22 +132,22 @@ The application provides a user-friendly interface for creating, viewing, and ma
 ### Features
 
 - **Multi-tab Interface**: Separate tabs for Create New, Vendor Tickets, Open Tickets, Settings, and Admin Settings\
-User Interface is reduced, cleaned, and modernized using tabs to quickly move through options\
-- **Login Authentication**: login credentials are hashed and stored\
+User Interface is reduced, cleaned, and modernized using tabs to quickly move through options
+- **Login Authentication**: login credentials are hashed and stored
 <!-- Add feature description for hashing (Colin Henderson) -->
-- **Content Management**: Create and manage records with comprehensive information\
+- **Content Management**: Create and manage records with comprehensive information
 User input data is stored in Azure Cosmos NoSQL Database. Additional features such as Cosmos actions, autogeneration, and validation are combined to manage the content.\
-- **Input Validation**: Robust input restrictions matching database constraints\
+- **Input Validation**: Robust input restrictions matching database constraints
 <!-- Add feature description for validation (Alexander Bubienko) -->
-- **Revenue Sharing**: Calculate and manage revenue distribution\
+- **Revenue Sharing**: Calculate and manage revenue distribution
 <!-- Add feature description for calculation (Kyle Valdez) -->
-- **Azure Cosmos NoSQL Integration**: Secure cloud database connectivity\
+- **Azure Cosmos NoSQL Integration**: Secure cloud database connectivity
 <!-- Add feature description for DB Connection (Maksym Komarov) -->
-- **Azure Cosmos NoSQL Actions**: \
+- **Azure Cosmos NoSQL Actions**: 
 <!-- Add feature description for DB interactions (Tim Liu) -->
-- **Auto-generated Fields**: Automatic ticket numbers and timestamps\
+- **Auto-generated Fields**: Automatic ticket numbers and timestamps
 <!-- Add feature description for autopopulations (Tyler Slagboom) -->
-- **Printing**: Ticket/Traveler printing\
+- **Printing**: Ticket/Traveler printing
 <!-- Add feature description for ptinting (Colin Heinselman) -->
 
 <!-- Config Files -->
