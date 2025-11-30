@@ -71,7 +71,7 @@ The application provides a user-friendly interface for creating, viewing, and ma
 <!-- Screenshots -->
 <div align="center">
 
-### Settings
+# Screenshots
 
 ## Create New Ticket
 ![Create New Ticket](src/imgs/create_new.PNG)
@@ -158,10 +158,10 @@ Create `services/config.ini` with the following structure:
 
 """
 [Cosmos Connection Parameters]
-endpoint = your-cosmos-endpoint
-key = your-cosmos-key
-database_name = your-database
-container_name = your-container
+endpoint = your-cosmos-endpoint\
+key = your-cosmos-key\
+database_name = your-database\
+container_name = your-container\
 """
 
 <!-- Usage -->
