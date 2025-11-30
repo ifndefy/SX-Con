@@ -53,17 +53,14 @@ A comprehensive application for managing vendor records, products, and revenue s
   * [Screenshots](#screenshots)
   * [Tech Stack](#tech-stack)
   * [Features](#features)
-  * [Environment Variables](#environment-variables)
+  * [Configs](#configs)
 - [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
   * [Installation](#installation)
-  * [Run Locally](#run-locally)
 - [Usage](#usage)
 - [Roadmap](#roadmap)
-- [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
-- [Acknowledgements](#acknowledgements)
 
 <!-- About the Project -->
 ## About the Project
@@ -72,27 +69,31 @@ SX-Con is a desktop application built with PyQt6 for managing Consignment data.
 The application provides a user-friendly interface for creating, viewing, and managing consignment records with robust input validation and Azure Cosmos database integration.
 
 <!-- Screenshots -->
-### Screenshots
+<div align="center">
 
-<div align="center"> 
-    <h4>Create New Ticket</h4>
-    <img src="src/imgs/create-new.PNG" width="600" />
+# Screenshots
 
-    <h4>Vendor Tickets</h4>
-    <img src="src/imgs/vendor-tickets.PNG" width="400" />
-  
-    <h4>Open Tickets</h4>
-    <img src="src/imgs/open-tickets.PNG" width="600" />
-  
-    <h4>Settings</h4>
-    <img src="src/imgs/settings.PNG" width="400" />
+## Create New Ticket
+![Create New Ticket](src/imgs/create_new.PNG)
 
-    <h4>Admin</h4>
-    <img src="src/imgs/admin.PNG" width="400" />
+## Vendor Tickets
+![Vendor Tickets](src/imgs/vendor_tickets.PNG)
+
+## Open Tickets  
+![Open Tickets](src/imgs/open_tickets.PNG)
+
+## Settings
+![Settings](src/imgs/settings.PNG)
+
+## Admin
+![Admin](src/imgs/admin.PNG)
+
 </div>
-
 <!-- TechStack -->
+
 ### Tech Stack
+
+<!-- Update the tech stack, it should list what's on the slideshow -->
 
 <details>
   <summary>Client</summary><! -- REMOVE THIS COMMENT || The info in the following block is not correct -->
@@ -150,13 +151,31 @@ The application provides a user-friendly interface for creating, viewing, and ma
 <!-- Add feature description for ptinting (Colin Heinselman) -->
 
 <!-- Config Files -->
-### Config Files
+### Configs
 
 The connection method will look for the config.ini in services directory
 Create `services/config.ini` with the following structure:
-```ini
-[Cosmos Connection Parameters]
-endpoint = your-cosmos-endpoint
-key = your-cosmos-key
-database_name = your-database
-container_name = your-container
+
+"""\
+[Cosmos Connection Parameters]\
+endpoint = your-cosmos-endpoint\
+key = your-cosmos-key\
+database_name = your-database\
+container_name = your-container\
+"""
+
+<!-- Usage -->
+
+### Usage
+<!-- explain how to use this step by step -->
+
+<!-- Roadmap -->
+### Roadmap
+<!-- Insert the flow chart from the slide here -->
+
+<!-- Contact -->
+
+### Contact
+
+Joe Lee, joeslee@csus.edu
+<!-- Put your name and email here -->
