@@ -93,6 +93,20 @@ The application provides a user-friendly interface for creating, viewing, and ma
 
 ### Tech Stack
 
+- **Language:**
+  - Python v3.11.9
+- **Version Control:**
+  - git
+  - github
+- **IDE and Tools:**
+  - Atlassian Confluence
+  - Jetbrains Pycharm Professional
+  - Poetry
+- **Frontend:**
+  - Python PyQt6
+- **Backend:**
+  - Azure Cosmos DB SDK
+  - Python bcrypt
 <!-- Update the tech stack, it should list what's on the slideshow -->
 
 <details>
