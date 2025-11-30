@@ -5,12 +5,12 @@ A comprehensive application for managing vendor records, products, and revenue s
 
 <div align="center">
 
-  <img src="src/imgs/logo.jpg" width="200" height="auto" />
+  <img src="src/imgs/logo.jpg" width="400" height="auto" />
   
   <h1>SX-Con</h1>
   
   <p>
-    Vendor Management System for tracking products and revenue sharing with Azure SQL integration
+    Content Management System to streamline and automate our client's Consignment process.
   </p>
   
 <!-- Badges -->
@@ -68,30 +68,34 @@ A comprehensive application for managing vendor records, products, and revenue s
 <!-- About the Project -->
 ## About the Project
 
-SX-Con is a desktop application built with PyQt6 for managing vendor information, product inventory, and revenue sharing calculations. The application provides a user-friendly interface for creating, viewing, and managing vendor records with robust input validation and Azure SQL database integration.
+SX-Con is a desktop application built with PyQt6 for managing Consignment data.
+The application provides a user-friendly interface for creating, viewing, and managing consignment records with robust input validation and Azure Cosmos database integration.
 
 <!-- Screenshots -->
 ### Screenshots
 
 <div align="center"> 
-  <h4>Create New Ticket</h4>
-  <img src="src/imgs/create-new.PNG" width="600" />
-  
-  <h4>Open Tickets</h4>
-  <img src="src/imgs/open-tickets.PNG" width="600" />
-  
-  <h4>Settings</h4>
-  <img src="src/imgs/settings.PNG" width="400" />
+    <h4>Create New Ticket</h4>
+    <img src="src/imgs/create-new.PNG" width="600" />
 
-  <h4>Vendor Tickets</h4>
-  <img src="src/imgs/vendor-tickets.PNG" width="400" />
+    <h4>Vendor Tickets</h4>
+    <img src="src/imgs/vendor-tickets.PNG" width="400" />
+  
+    <h4>Open Tickets</h4>
+    <img src="src/imgs/open-tickets.PNG" width="600" />
+  
+    <h4>Settings</h4>
+    <img src="src/imgs/settings.PNG" width="400" />
+
+    <h4>Admin</h4>
+    <img src="src/imgs/admin.PNG" width="400" />
 </div>
 
 <!-- TechStack -->
 ### Tech Stack
 
 <details>
-  <summary>Client</summary>
+  <summary>Client</summary><! -- REMOVE THIS COMMENT || The info in the following block is not correct -->
   <ul>
     <li><a href="https://www.python.org/">Python</a></li>
     <li><a href="https://www.riverbankcomputing.com/software/pyqt/">PyQt6</a></li>
@@ -100,7 +104,7 @@ SX-Con is a desktop application built with PyQt6 for managing vendor information
 </details>
 
 <details>
-  <summary>Backend</summary>
+  <summary>Backend</summary><! -- REMOVE THIS COMMENT || The info in the following block is not correct -->
   <ul>
     <li><a href="https://docs.python.org/3/library/sqlite3.html">SQLite</a> (Local Development)</li>
     <li><a href="https://azure.microsoft.com/en-us/products/azure-sql/database">Azure SQL</a> (Production)</li>
@@ -108,7 +112,7 @@ SX-Con is a desktop application built with PyQt6 for managing vendor information
 </details>
 
 <details>
-<summary>Database</summary>
+<summary>Database</summary><! -- REMOVE THIS COMMENT || The info in the following block is not correct -->
   <ul>
     <li><a href="https://azure.microsoft.com/en-us/products/azure-sql/database">Azure SQL Database</a></li>
     <li><a href="https://learn.microsoft.com/en-us/sql/connect/odbc/microsoft-odbc-driver-for-sql-server">ODBC Driver 18 for SQL Server</a></li>
@@ -126,27 +130,31 @@ SX-Con is a desktop application built with PyQt6 for managing vendor information
 <!-- Features -->
 ### Features
 
-- **Vendor Management**: Create and manage vendor records with comprehensive information
-- **Product Tracking**: Track product inventory with quantity and pricing
-- **Input Validation**: Robust input restrictions matching database constraints
-- **Revenue Sharing**: Calculate and manage revenue distribution
-- **Azure SQL Integration**: Secure cloud database connectivity
-- **Auto-generated Fields**: Automatic ticket numbers and timestamps
 - **Multi-tab Interface**: Separate tabs for Create, View, Get, Delete, and Admin operations
+<!-- Add feature description for Multi-tab interface (Joe Lee) -->
+- **Login Authentication**: login credentials are hashed and stored
+<!-- Add feature description for hashing (Colin Henderson) -->
+- **Content Management**: Create and manage records with comprehensive information
+<!-- Add feature description for CMS (Joe Lee) -->
+- **Input Validation**: Robust input restrictions matching database constraints
+<!-- Add feature description for validation (Alexander Bubienko) -->
+- **Revenue Sharing**: Calculate and manage revenue distribution
+<!-- Add feature description for calculation (Kyle Valdez) -->
+- **Azure Cosmos NoSQL Integration**: Secure cloud database connectivity
+<!-- Add feature description for DB Connection (Maksym Komarov) -->
+- **Azure Cosmos NoSQL Actions**: 
+<!-- Add feature description for DB interactions (Tim Liu) -->
+- **Auto-generated Fields**: Automatic ticket numbers and timestamps
+<!-- Add feature description for autopopulations (Tyler Slagboom) -->
+- **Printing**: Ticket/Traveler printing
+<!-- Add feature description for ptinting (Colin Heinselman) -->
 
-<!-- Env Variables -->
-### Environment Variables
+<!-- Config Files -->
+### Config Files
 
+The connection method will look for the config.ini in services directory
 Create `services/config.ini` with the following structure:
-
 ```ini
-[SQL Connection Parameters]
-odbc_driver = {ODBC Driver 18 for SQL Server}
-server_addr = your-server.database.windows.net
-server_port = 1433
-db_name = your-database-name
-sql_access_token = 1256
-
 [Cosmos Connection Parameters]
 endpoint = your-cosmos-endpoint
 key = your-cosmos-key
