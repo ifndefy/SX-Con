@@ -148,7 +148,9 @@ The application provides a user-friendly interface for creating, viewing, and ma
 - **Auto-generated Fields**: Automatic ticket numbers and timestamps
     - <!-- Add feature description for autopopulations (Tyler Slagboom) -->
 - **Printing**: Ticket/Traveler printing
-    - <!-- Add feature description for ptinting (Colin Heinselman) -->
+    - Tickets are generated as PDFs for easy printing.
+    - PDF layout and formatting is created using reportlab.
+    - Once the PDF is generated, it is automatically downloaded to the user's machine using standard os file-handling functions.
 
 <!-- Config Files -->
 ### Configs
