@@ -117,7 +117,8 @@ The application provides a user-friendly interface for creating, viewing, and ma
 - **Azure Cosmos NoSQL Actions**: 
     - Azure Cosmos NoSQL gives the user ability to interact with the database (being with insert, update, delete, and get the value) with its own query language.
 - **Auto-generated Fields**: Automatic ticket numbers and timestamps
-    - <!-- Add feature description for autopopulations (Tyler Slagboom) -->
+    - Additional information is automatically fetched from the database and entered when the user enters product information and vendor ID
+    - Database is fetched on startup to automatically generate the next ticket number as well as the ticket's date and timestamp
 - **Printing**: Ticket/Traveler printing
     - Tickets are generated as PDFs for easy printing.
     - PDF layout and formatting is created using reportlab.
@@ -215,4 +216,5 @@ poetry run python SXC.py
 - Kyle Valdez, cvaldez3@csus.edu
 - Tim Liu, timliu@csusu.edu
 - Colin Heinselman, cheinselman@csus.edu
+- Tyler Slagboom, tylerslagboom@csus.edu
 <!-- Put your name and email here -->
