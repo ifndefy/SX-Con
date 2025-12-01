@@ -39,7 +39,7 @@ A comprehensive application for managing vendor records, products, and revenue s
   * [Screenshots](#screenshots)
   * [Tech Stack](#tech-stack)
   * [Features](#features)
-  * [Configs](#configs)
+  * [Configuration](#configuration)
 - [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
   * [Installation](#installation)
@@ -151,7 +151,7 @@ The application provides a user-friendly interface for creating, viewing, and ma
     - <!-- Add feature description for ptinting (Colin Heinselman) -->
 
 <!-- Config Files -->
-### Configs
+### Configuration
 
 The connection method will look for the config.ini in services directory
 Create `services/config.ini` with the following structure:
@@ -164,9 +164,38 @@ database_name = your-database
 container_name = your-container
 ```
 
+## Getting Started
+
+### Prerequisites
+- Python v3.11.9
+- Poetry v2.2.1
+
+### Installation
+1. Confirm Poetry/Python version.
+
+```powershell
+poetry --version
+```
+
+```powershell
+Python --version
+```
+
+2. Enable Python environment using Poetry.
+
+```powershell
+poetry env activate
+```
+
+3. Install dependencies from `poetry.lock`.
+
+```powershell
+poetry install --no-root
+```
+
 <!-- Usage -->
 
-### Usage
+## Usage
 1. Open shell terminal in SX-Con root directory.
 2. Enable poetry environment.
 
@@ -183,11 +212,11 @@ poetry run python SXC.py
 <!-- explain how to use this step by step -->
 
 <!-- Roadmap -->
-### Roadmap
+## Roadmap
 <!-- Insert the flow chart from the slide here -->
 
 <!-- Contact -->
-### Contact
+## Contact
 
 - Joe Lee, joeslee@csus.edu
 - Maksym Komarov, mkomarov@csus.edu
