@@ -115,7 +115,7 @@ The application provides a user-friendly interface for creating, viewing, and ma
 - **Azure Cosmos NoSQL Integration**: Secure cloud database connectivity
     - Cosmos NoSQL allows for minimal upkeep/scaling costs, ease of use and improved database connection latency. Secure access is guaranteed thorugh either key-based authentication.  
 - **Azure Cosmos NoSQL Actions**: 
-    - <!-- Add feature description for DB interactions (Tim Liu) -->
+    - Azure Cosmos NoSQL gives the user ability to interact with the database (being with insert, update, delete, and get the value) with its own query language.
 - **Auto-generated Fields**: Automatic ticket numbers and timestamps
     - <!-- Add feature description for autopopulations (Tyler Slagboom) -->
 - **Printing**: Ticket/Traveler printing
@@ -213,5 +213,6 @@ poetry run python SXC.py
 - Colin Henderson, colinrhenderson@csus.edu
 - Alexander Bubienko, alexanderbubienko@csus.edu
 - Kyle Valdez, cvaldez3@csus.edu
+- Tim Liu, timliu@csusu.edu
 - Colin Heinselman, cheinselman@csus.edu
 <!-- Put your name and email here -->
