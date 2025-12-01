@@ -74,6 +74,10 @@ The application provides a user-friendly interface for creating, viewing, and ma
 ## Admin
 ![Admin](src/imgs/admin.PNG)
 
+## ERD
+![ERD1](src/imgs/ERD1.PNG)
+![ERD2](src/imgs/ERD2.PNG)
+
 </div>
 <!-- TechStack -->
 
@@ -209,4 +213,5 @@ poetry run python SXC.py
 - Colin Henderson, colinrhenderson@csus.edu
 - Alexander Bubienko, alexanderbubienko@csus.edu
 - Kyle Valdez, cvaldez3@csus.edu
+- Colin Heinselman, cheinselman@csus.edu
 <!-- Put your name and email here -->
