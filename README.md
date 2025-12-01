@@ -95,39 +95,6 @@ The application provides a user-friendly interface for creating, viewing, and ma
   - Python bcrypt
 <!-- Update the tech stack, it should list what's on the slideshow -->
 
-<details>
-  <summary>Client</summary><! -- REMOVE THIS COMMENT || The info in the following block is not correct -->
-  <ul>
-    <li><a href="https://www.python.org/">Python</a></li>
-    <li><a href="https://www.riverbankcomputing.com/software/pyqt/">PyQt6</a></li>
-    <li><a href="https://code.visualstudio.com/">VSCode</a></li>
-  </ul>
-</details>
-
-<details>
-  <summary>Backend</summary><! -- REMOVE THIS COMMENT || The info in the following block is not correct -->
-  <ul>
-    <li><a href="https://docs.python.org/3/library/sqlite3.html">SQLite</a> (Local Development)</li>
-    <li><a href="https://azure.microsoft.com/en-us/products/azure-sql/database">Azure SQL</a> (Production)</li>
-  </ul>
-</details>
-
-<details>
-<summary>Database</summary><! -- REMOVE THIS COMMENT || The info in the following block is not correct -->
-  <ul>
-    <li><a href="https://azure.microsoft.com/en-us/products/azure-sql/database">Azure SQL Database</a></li>
-    <li><a href="https://learn.microsoft.com/en-us/sql/connect/odbc/microsoft-odbc-driver-for-sql-server">ODBC Driver 18 for SQL Server</a></li>
-  </ul>
-</details>
-
-<details>
-<summary>Authentication</summary>
-  <ul>
-    <li><a href="https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview">Azure Identity</a></li>
-    <li><a href="https://learn.microsoft.com/en-us/azure/active-directory/develop/access-tokens">Azure Access Tokens</a></li>
-  </ul>
-</details>
-
 <!-- Features -->
 ### Features
 
@@ -211,9 +178,20 @@ poetry run python SXC.py
 
 <!-- explain how to use this step by step -->
 
+1. Upon program startup, login using credentials.
+2. On home page landing, populate the fields. Required fields include VendorID, ProductID(s), Price(s), Quantity(s)
+3. Click "Create Record" button to insert into database
+4. Navigate through tabs for other usage. The same buttons existing on the home page also exist on the other pages, with the exception of record creation.
+
 <!-- Roadmap -->
-## Roadmap
-<!-- Insert the flow chart from the slide here -->
+## Roadmap and Milestones
+1. Design and Structure
+2. Implement Core methods
+3. Implement "Create New" tab as MVP
+4. Implement CMS tabs
+5. Test
+6. Refine
+7. Publish
 
 <!-- Contact -->
 ## Contact
