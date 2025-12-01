@@ -167,6 +167,19 @@ container_name = your-container
 <!-- Usage -->
 
 ### Usage
+1. Open shell terminal in SX-Con root directory.
+2. Enable poetry environment.
+
+```powershell
+poetry env activate
+```
+
+3. Run python script.
+
+```powershell
+poetry run python SXC.py
+```
+
 <!-- explain how to use this step by step -->
 
 <!-- Roadmap -->
