@@ -193,4 +193,5 @@ poetry run python SXC.py
 - Maksym Komarov, mkomarov@csus.edu
 - Colin Henderson, colinrhenderson@csus.edu
 - Alexander Bubienko, alexanderbubienko@csus.edu
+- Kyle Valdez, cvaldez3@csus.edu
 <!-- Put your name and email here -->
