@@ -115,10 +115,9 @@ The application provides a user-friendly interface for creating, viewing, and ma
 - **Azure Cosmos NoSQL Integration**: Secure cloud database connectivity
     - Cosmos NoSQL allows for minimal upkeep/scaling costs, ease of use and improved database connection latency. Secure access is guaranteed thorugh either key-based authentication.  
 - **Azure Cosmos NoSQL Actions**: 
-    - <!-- Add feature description for DB interactions (Tim Liu) -->
-- **Auto-generated Fields**: Automatic ticket numbers and timestamps- 
-    - Additional data is automatically fetched from the database when product and vendor information is inputted for ease of use
-    - Database is automatically queried on application start to generate the next ticket ID, in addition to the ticket's date and timestamp
+    - Azure Cosmos NoSQL gives the user ability to interact with the database (being with insert, update, delete, and get the value) with its own query language.
+- **Auto-generated Fields**: Automatic ticket numbers and timestamps
+    - <!-- Add feature description for autopopulations (Tyler Slagboom) -->
 - **Printing**: Ticket/Traveler printing
     - Tickets are generated as PDFs for easy printing.
     - PDF layout and formatting is created using reportlab.
@@ -216,5 +215,4 @@ poetry run python SXC.py
 - Kyle Valdez, cvaldez3@csus.edu
 - Tim Liu, timliu@csusu.edu
 - Colin Heinselman, cheinselman@csus.edu
-- Tyler Slagboom, tylerslagboom@csus.edu
 <!-- Put your name and email here -->
