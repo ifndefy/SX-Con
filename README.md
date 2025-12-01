@@ -138,7 +138,7 @@ The application provides a user-friendly interface for creating, viewing, and ma
 - **Content Management**: Create and manage records with comprehensive information
     - User input data is stored in Azure Cosmos NoSQL Database. Additional features such as Cosmos actions, autogeneration, and validation are combined to manage the content.
 - **Input Validation**: Robust input restrictions matching database constraints
-    - <!-- Add feature description for validation (Alexander Bubienko) -->
+    - Form fields enforce strict data type validation using PyQt6 validators to prevent database insertion errors. All validation matches Azure SQL database column constraints.
 - **Revenue Sharing**: Calculate and manage revenue distribution
     - <!-- Add feature description for calculation (Kyle Valdez) -->
 - **Azure Cosmos NoSQL Integration**: Secure cloud database connectivity
@@ -179,4 +179,5 @@ container_name = your-container
 - Joe Lee, joeslee@csus.edu
 - Maksym Komarov, mkomarov@csus.edu
 - Colin Henderson, colinrhenderson@csus.edu
+- Alexander Bubienko, alexanderbubienko@csus.edu
 <!-- Put your name and email here -->
