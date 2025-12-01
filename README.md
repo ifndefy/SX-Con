@@ -214,6 +214,7 @@ poetry run python SXC.py
 - Colin Henderson, colinrhenderson@csus.edu
 - Alexander Bubienko, alexanderbubienko@csus.edu
 - Kyle Valdez, cvaldez3@csus.edu
+- Tim Liu, timliu@csusu.edu
 - Colin Heinselman, cheinselman@csus.edu
 - Tyler Slagboom, tylerslagboom@csus.edu
 <!-- Put your name and email here -->
