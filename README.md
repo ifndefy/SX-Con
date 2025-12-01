@@ -193,6 +193,12 @@ poetry run python SXC.py
 6. Refine
 7. Publish
 
+## Testing
+
+## Deployment
+
+## Developer Instructions
+
 <!-- Contact -->
 ## Contact
 
