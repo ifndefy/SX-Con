@@ -140,7 +140,7 @@ The application provides a user-friendly interface for creating, viewing, and ma
 - **Input Validation**: Robust input restrictions matching database constraints
     - Form fields enforce strict data type validation using PyQt6 validators to prevent database insertion errors. All validation matches Azure SQL database column constraints.
 - **Revenue Sharing**: Calculate and manage revenue distribution
-    - <!-- Add feature description for calculation (Kyle Valdez) -->
+    - Implemented a button-triggered revenue calculation that derives totals from (price × quantity) and applies each percentile row (25/50/75/100) to compute gross, vendor (75%), and Super X (25%) shares
 - **Azure Cosmos NoSQL Integration**: Secure cloud database connectivity
     - Cosmos NoSQL allows for minimal upkeep/scaling costs, ease of use and improved database connection latency. Secure access is guaranteed thorugh either key-based authentication.  
 - **Azure Cosmos NoSQL Actions**: 
