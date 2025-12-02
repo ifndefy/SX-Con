@@ -64,7 +64,7 @@ class MainWindow(QWidget):
         logout_button = QPushButton("Logout")
         logout_button.setObjectName("logout_button")
         logout_button.clicked.connect(self.logout)
-        header_layout.addWidget(logout_button)
+        title_layout.addWidget(logout_button)
 
     def setup_tabs(self):
         self.tabs = QTabWidget()
