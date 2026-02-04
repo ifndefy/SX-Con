@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - integration
-  workflow_dispatch:  # remove before merge
+  workflow_dispatch:
     inputs:
       environment:
         description: 'Test environment'
