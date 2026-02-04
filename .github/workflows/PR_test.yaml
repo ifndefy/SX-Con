@@ -1,0 +1,82 @@
+name: Test PR
+
+on:
+  pull_request:
+    branches:
+      - integration
+  workflow_dispatch:  # remove before merge
+    inputs:
+      environment:
+        description: 'Test environment'
+        required: false
+        default: 'test'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      shell: powershell
+      run: |
+        choco install vcredist-all -y --no-progress
+        python -m pip install --upgrade pip
+        pip install flake8 pytest pytest-cov
+        
+        # GUI dependencies
+        pip install PyQt6
+        pip install pytest-qt
+        
+        if (Test-Path requirements.txt) {
+          pip install -r requirements.txt
+        }
+
+    - name: Configure PyQt6 for headless Windows
+      shell: powershell
+      run: |
+        echo "QT_QPA_PLATFORM=offscreen" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "QT_LOGGING_RULES=qt.qpa.*=false" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Optional: also run style warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Test with pytest
+      env:
+        QT_QPA_PLATFORM: offscreen
+        QT_LOGGING_RULES: qt.qpa.*=false
+      shell: powershell
+      run: |
+        # Run with coverage if you want it
+        pytest -v --cov=./ --cov-report=xml --cov-report=html
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage-report
+        path: htmlcov/
+        retention-days: 30
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: |
+          test-results/
+          reports/
+        retention-days: 30
