@@ -4,7 +4,8 @@ on:
   pull_request:
     branches:
       - integration
-  workflow_dispatch:
+
+  workflow_dispatch: # manual execution
     inputs:
       environment:
         description: 'Test environment'
@@ -16,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-latest # the program is only designed to be run on Windows
     timeout-minutes: 30
 
     steps:
@@ -37,6 +38,8 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+#    - name: Tests -> disabled since there are no tests yet
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
