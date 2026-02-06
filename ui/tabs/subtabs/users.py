@@ -1,11 +1,14 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QTabWidget
+from PyQt6.QtWidgets import QVBoxLayout, QTabWidget, QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
+
+from PyQt6.QtWidgets import QDialog
+
 
 from services.connect_database import db_connection
 from ui.tabs.base import BaseTab
@@ -15,6 +18,13 @@ class UsersTab(BaseTab):
         self.tickets_section = []
         self.db_connection = db_connection
         super().__init__(api_handler, "users")
+
+        self.questionList = [
+            "What is your mother's maiden name?",
+            "What color was your first car?",
+            "Who was your best friend in the third grade?"
+            # todo: add 2 more questions
+        ]
 
     def setup_ui(self):
         """
@@ -60,6 +70,7 @@ class UsersTab(BaseTab):
         vendor_section_row_3 = QHBoxLayout()
         self.create_btn = QPushButton("Create New User")
         vendor_section_row_3.addWidget(self.create_btn)
+        self.create_btn.clicked.connect(self.create_new_user_prompt)
 
         vendor_section_row_3.addStretch()
 
@@ -255,6 +266,106 @@ class UsersTab(BaseTab):
         except Exception as e:
             print(f"Error fetching users: {e}")
             return []
+
+    def create_new_user_prompt(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Create New User")
+
+        layout = QVBoxLayout(dialog)
+
+        # Fields
+        layout.addWidget(QLabel("Username:"))
+        username_input = QLineEdit()
+        layout.addWidget(username_input)
+
+        layout.addWidget(QLabel("First Name:"))
+        first_name_input = QLineEdit()
+        layout.addWidget(first_name_input)
+
+        layout.addWidget(QLabel("Last Name:"))
+        last_name_input = QLineEdit()
+        layout.addWidget(last_name_input)
+
+        layout.addWidget(QLabel("Password:"))
+        password_input = QLineEdit()
+        layout.addWidget(password_input)
+
+
+        # Security Questions
+        prompt_label = QLabel("Security Question 1:")
+        prompt_label.setObjectName("label")
+        layout.addWidget(prompt_label)
+        question1 = QComboBox()
+        question1.addItems(self.questionList)
+        question1.setObjectName("prompt_label")
+        question1.setCurrentIndex(-1)
+        layout.addWidget(question1)
+
+        res1_label = QLabel("Response for Question 1:")
+        res1_label.setObjectName("label")
+        layout.addWidget(res1_label)
+        question1_response = QLineEdit()
+        question1_response.setPlaceholderText("Question 1 Response")
+        question1_response.setObjectName("response_field")
+        question1_response.setMaxLength(255)
+        layout.addWidget(question1_response)
+
+        hr2 = QLabel()
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
+
+        # Question 2
+        prompt_label = QLabel("Security Question 2:")
+        prompt_label.setObjectName("label")
+        layout.addWidget(prompt_label)
+        question2 = QComboBox()
+        question2.addItems(self.questionList)
+        question2.setObjectName("prompt_label")
+        question2.setCurrentIndex(-1)
+        layout.addWidget(question2)
+
+        res2_label = QLabel("Response for Question 2:")
+        res2_label.setObjectName("label")
+        layout.addWidget(res2_label)
+        question2_response = QLineEdit()
+        question2_response.setPlaceholderText("Question 2 Response")
+        question2_response.setObjectName("response_field")
+        question2_response.setMaxLength(255)
+        layout.addWidget(question2_response)
+
+        layout.addStretch()
+
+
+
+        # Buttons
+        btn_layout = QHBoxLayout()
+        create_btn = QPushButton("Create")
+        cancel_btn = QPushButton("Cancel")
+
+        btn_layout.addWidget(create_btn)
+        btn_layout.addWidget(cancel_btn)
+        layout.addLayout(btn_layout)
+
+        # Connects
+        # TODO: Update "create" connect by creating a new method to upload the new user to the db
+        create_btn.clicked.connect(dialog.accept)
+        cancel_btn.clicked.connect(dialog.reject)
+
+        # Execute dialog
+        result = dialog.exec()
+
+
+
+        if result == QDialog.DialogCode.Accepted:
+            #TODO: Update to include other fields and either modify other code to accept returns, or add db updates directly here
+            return {
+                "username": username_input.text(),
+                "email": email_input.text()
+            }
+        else:
+            return None
+
+
 
     def setup_button_connections(self):
         """
