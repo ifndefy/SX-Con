@@ -205,4 +205,4 @@ class SettingsTab(BaseTab):
         # todo: change current pw field to READONLY=FALSE
     
     def test_bus_communication(self):
-        status_bar_instance.send_message(f" Hello from settings tab")
+        status_bar_instance.send_message(f"Hello from settings tab")

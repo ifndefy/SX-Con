@@ -7,18 +7,19 @@ from PyQt6.QtWidgets import QLabel
 from handlers.api_handler import APIHandler
 from src import SPOT
 from ui.core.theme_manager import ThemeManager
+from ui.core.status_bar import StatusBar
 from ui.tabs.create_new import CreateNewTab
 from ui.tabs.vendor_tickets import VendorTicketsTab
 from ui.tabs.open_tickets import OpenTicketsTab
 from ui.tabs.settings import SettingsTab
 from ui.tabs.admin_settings import AdminSettingsTab
 from services.connect_database import db_connection
-from services.message_bus import status_bar_instance
 import utils.logger as log
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.status_label = None
         self.revision_label = None
         self.theme_dropdown_menu = None
         self.tabs = None
@@ -31,16 +32,14 @@ class MainWindow(QWidget):
         self.api_handler = APIHandler()
         self.theme_manager = ThemeManager()
         self.db_connection = db_connection
-        self.setup_window()        
-        self.theme_manager.apply_default_theme(self)
+        self.setup_window()
         self.setup_ui()
-
+        self.theme_manager.apply_default_theme(self)               
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
         self.setGeometry(0, 0, 1100, 762)
         self.setMinimumSize(1100, 762)
-
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -65,8 +64,8 @@ class MainWindow(QWidget):
         layout.addWidget(self.tabs)
 
         #Embed status bar into Main window
-        status_container = QWidget()
-        status_container.setObjectName("status_container")
+        status_container = StatusBar("status_container")
+        status_container.add_handler(self.change_status_label)
         status_section = QHBoxLayout(status_container)
 
         status_section.addStretch()
@@ -75,9 +74,6 @@ class MainWindow(QWidget):
         status_section.addStretch()
 
         layout.addWidget(status_container)
-        status_bar_instance.bus_signal.connect(self.hello_status)
-        log.debug(f"Slot created by [ID : {id(self)}] for [ID : {id(status_bar_instance)}]")
-
 
     def setup_tabs(self):
         self.tabs = QTabWidget()
@@ -100,5 +96,6 @@ class MainWindow(QWidget):
     def on_tab_changed(self, index):
         log.info(f"{self.tabs.tabText(index)} tab clicked")
 
-    def hello_status(self, msg):
-        self.status_label.setText(msg)
+    def change_status_label(self, message):
+        if self.status_label:
+            self.status_label.setText(message)

@@ -9,7 +9,6 @@ class ForwardHandler(log.Handler):
     def emit(self, record):
         status_bar_instance.bus_signal.emit(f"{record.getMessage()}")
 
-
 #Logger setup to be done on import
 #Create object to read in config file
 config = cparser.ConfigParser()

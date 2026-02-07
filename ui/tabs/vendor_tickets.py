@@ -162,17 +162,6 @@ class VendorTicketsTab(BaseTab):
         hr3.setObjectName("hr")
         layout.addWidget(hr3)
 
-        # status_container = QWidget()
-        # status_container.setObjectName("status_container")
-        # status_section = QHBoxLayout(status_container)
-
-        # status_section.addStretch()
-        # self.status_label = QLabel("Ready to create record")
-        # status_section.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        # status_section.addStretch()
-
-        # layout.addWidget(status_container)
-
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
