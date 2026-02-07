@@ -1,7 +1,14 @@
 import configparser as cparser
 import logging as log
 import logging.config as config
+from services.message_bus import status_bar_instance
 from pathlib import Path
+
+#Forwarding handler for passing any logging messages to the bus alongside the file handler, inherits base log handler
+class ForwardHandler(log.Handler):
+    def emit(self, record):
+        status_bar_instance.bus_signal.emit(f"{record.getMessage()}")
+
 
 #Logger setup to be done on import
 #Create object to read in config file
@@ -26,12 +33,16 @@ __log_format = log.Formatter(__format)
 #(all modules share same logger obejct, can be changed in the future)
 __app_logger = log.getLogger('base_logger')
 __log_handler = log.FileHandler(__log_location, 'w')
+__forward_handler = ForwardHandler()
 
 #Set handler format and attach to logger object
 __log_handler.setFormatter(__log_format)
+__forward_handler.setFormatter(__log_format)
 __app_logger.addHandler(__log_handler)
+__app_logger.addHandler(__forward_handler)
 
 __app_logger.setLevel(__level_attr)
+status_bar_instance.set_logger(__app_logger)
 
 #Actual logging functions
 def debug(msg: str):

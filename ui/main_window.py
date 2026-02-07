@@ -13,6 +13,8 @@ from ui.tabs.open_tickets import OpenTicketsTab
 from ui.tabs.settings import SettingsTab
 from ui.tabs.admin_settings import AdminSettingsTab
 from services.connect_database import db_connection
+from services.message_bus import status_bar_instance
+import utils.logger as log
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -29,14 +31,16 @@ class MainWindow(QWidget):
         self.api_handler = APIHandler()
         self.theme_manager = ThemeManager()
         self.db_connection = db_connection
-        self.setup_window()
+        self.setup_window()        
         self.theme_manager.apply_default_theme(self)
         self.setup_ui()
+
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
         self.setGeometry(0, 0, 1100, 762)
         self.setMinimumSize(1100, 762)
+
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -60,6 +64,21 @@ class MainWindow(QWidget):
         self.setup_tabs()
         layout.addWidget(self.tabs)
 
+        #Embed status bar into Main window
+        status_container = QWidget()
+        status_container.setObjectName("status_container")
+        status_section = QHBoxLayout(status_container)
+
+        status_section.addStretch()
+        self.status_label = QLabel("Ready to create record")
+        status_section.addWidget(self.status_label)
+        status_section.addStretch()
+
+        layout.addWidget(status_container)
+        status_bar_instance.bus_signal.connect(self.hello_status)
+        log.debug(f"Slot created by [ID : {id(self)}] for [ID : {id(status_bar_instance)}]")
+
+
     def setup_tabs(self):
         self.tabs = QTabWidget()
         self.tabs.setObjectName("main_tabs")
@@ -79,4 +98,7 @@ class MainWindow(QWidget):
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
     def on_tab_changed(self, index):
-        print(f"{self.tabs.tabText(index)} tab clicked")
+        log.info(f"{self.tabs.tabText(index)} tab clicked")
+
+    def hello_status(self, msg):
+        self.status_label.setText(msg)

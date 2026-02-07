@@ -43,19 +43,6 @@ class AdminSettingsTab(BaseTab):
         hr3.setObjectName("hr")
         sub_layout.addWidget(hr3)
 
-        # Status Section
-        status_container = QWidget()
-        status_container.setObjectName("status_container")
-        status_section = QHBoxLayout(status_container)
-
-        # Align to center
-        status_section.addStretch()
-        self.status_label = QLabel("Temporary")
-        status_section.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        status_section.addStretch()
-
-        sub_layout.addWidget(status_container)
-
     def setup_subtabs(self):
         self.tabs = QTabWidget()
         self.tabs.setObjectName("subtabs")
