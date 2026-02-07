@@ -13,6 +13,7 @@ from ui.tabs.open_tickets import OpenTicketsTab
 from ui.tabs.settings import SettingsTab
 from ui.tabs.admin_settings import AdminSettingsTab
 from services.connect_database import db_connection
+import utils.logger as log
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -79,4 +80,4 @@ class MainWindow(QWidget):
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
     def on_tab_changed(self, index):
-        print(f"{self.tabs.tabText(index)} tab clicked")
+        log.info(f"{self.tabs.tabText(index)} tab clicked")

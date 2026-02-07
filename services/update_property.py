@@ -1,5 +1,5 @@
 from services.connect_database import db_connection
-
+import utils.logger as log
 
 def update_property(container_name: str, entity_type: str, entity_id: str, property_name: str, property_value):
     try:
@@ -25,9 +25,9 @@ def update_property(container_name: str, entity_type: str, entity_id: str, prope
             existing_item[property_name] = property_value
 
         container.replace_item(item=item_id, body=existing_item)
-        print(f"Successfully updated {property_name} for {item_id}")
+        log.info(f"Successfully updated {property_name} for {item_id}")
         return 0
 
     except Exception as e:
-        print(f"Error in update_property: {e}")
+        log.error(f"Error in update_property: {e}")
         return None

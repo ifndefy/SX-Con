@@ -18,7 +18,7 @@ from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone
-
+import utils.logger as log
 
 class CreateNewTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -490,7 +490,7 @@ class CreateNewTab(BaseTab):
 
         except Exception as e:
             self.status_label.setText(f"Error creating record: {str(e)}")
-            print(f"Database error: {e}")
+            log.error(f"Database error: {e}")
             return -1
 
     def _gather_record_data(self):
@@ -578,7 +578,7 @@ class CreateNewTab(BaseTab):
             # Validate vendor_id exists
             vendor_id = record_data['vendor']['vendor_id']
             if not vendor_id or vendor_id == "NULL":
-                print("Error: No vendor ID provided")
+                log.error("Error: No vendor ID provided")
                 self.status_label.setText("Error: Vendor ID is required")
                 return -1
 
@@ -598,14 +598,14 @@ class CreateNewTab(BaseTab):
                 'zip': record_data['vendor']['zip']
             }
 
-            print(f"Creating vendor document with ID: vendor_{vendor_id}")
+            log.info(f"Creating vendor document with ID: vendor_{vendor_id}")
 
             # todo: need a ticket to check if vendor_id already exists
             try:
                 vendor_response = entities_container.upsert_item(body=vendor_document)
-                print("Vendor document created successfully")
+                log.info("Vendor document created successfully")
             except Exception as e:
-                print(f"Error creating vendor document: {e}")
+                log.error(f"Error creating vendor document: {e}")
                 self.status_label.setText(f"Error creating vendor: {str(e)}")
                 return -1
 
@@ -615,7 +615,7 @@ class CreateNewTab(BaseTab):
                 if self._has_product_data(product):
                     product_id = product['product_id']
                     if not product_id or product_id == "NULL":
-                        print(f"Skipping product {i} - no product ID")
+                        log.warning(f"Skipping product {i} - no product ID")
                         continue
 
                     product_doc = {
@@ -626,17 +626,17 @@ class CreateNewTab(BaseTab):
                         'product_name': self._convert_null(product['product_name']),
                         'product_type': self._convert_null(product['product_type']),
                     }
-                    print(f"Creating product document: product_{product_id}")
+                    log.info(f"Creating product document: product_{product_id}")
                     try:
                         product_response = entities_container.upsert_item(body=product_doc)
                         product_ids.append(int(product_id))
-                        print(f"Product document created: {product_id}")
+                        log.info(f"Product document created: {product_id}")
                     except Exception as e:
-                        print(f"Error creating product document {product_id}: {e}")
+                        log.error(f"Error creating product document {product_id}: {e}")
 
             ticket_number = record_data['vendor']['ticket_number']
             if not ticket_number or ticket_number == "NULL":
-                print("Error: No ticket number provided")
+                log.error("Error: No ticket number provided")
                 self.status_label.setText("Error: Ticket number is required")
                 return -1
 
@@ -666,23 +666,23 @@ class CreateNewTab(BaseTab):
                 'revenue_sharing': record_data['revenue']
             }
 
-            print(f"Creating consignment document with ID: {ticket_number}")
+            log.info(f"Creating consignment document with ID: {ticket_number}")
             try:
                 consignment_response = consignments_container.create_item(body=consignment_document)
-                print("Consignment document created successfully")
+                log.info("Consignment document created successfully")
             except Exception as e:
-                print(f"Error creating consignment document: {e}")
+                log.error(f"Error creating consignment document: {e}")
                 self.status_label.setText(f"Error creating consignment: {str(e)}")
                 return -1
 
             success_msg = f"Record created successfully! Ticket: {ticket_number}"
-            print(success_msg)
+            log.info(success_msg)
             self.status_label.setText(success_msg)
             return ticket_number
 
         except Exception as e:
             error_msg = f"Cosmos DB insertion error: {e}"
-            print(error_msg)
+            log.error(error_msg)
             import traceback
             traceback.print_exc()
             self.status_label.setText(f"Error creating record: {str(e)}")
@@ -703,10 +703,10 @@ class CreateNewTab(BaseTab):
             if 0 <= product_id <= 99999:
                 return product_id
             else:
-                print(f"Product ID {product_id} is outside valid range")
+                log.error(f"Product ID {product_id} is outside valid range")
                 return None
         except (ValueError, TypeError):
-            print(f"Invalid product ID: {product_id_str}")
+            log.error(f"Invalid product ID: {product_id_str}")
             return None
 
     def _convert_quantity(self, quantity_str):
@@ -724,10 +724,10 @@ class CreateNewTab(BaseTab):
             if 0 <= quantity:
                 return quantity
             else:
-                print(f"Quantity {quantity} must be at least 1")
+                log.error(f"Quantity {quantity} must be at least 1")
                 return None
         except (ValueError, TypeError):
-            print(f"Invalid quantity: {quantity_str}")
+            log.error(f"Invalid quantity: {quantity_str}")
             return None
 
     def _convert_null(self, value):
@@ -926,7 +926,7 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].style().polish(product_section['product_type'])
                     break
         except Exception as e:
-            print(f"Failed to fetch record: {e}")
+            log.error(f"Failed to fetch record: {e}")
 
     def auto_pop_prod_by_name(self, product_name: str):
         try:
@@ -963,7 +963,7 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].style().polish(product_section['product_type'])
                     break
         except Exception as e:
-            print(f"Failed to fetch record by name: {e}")
+            log.error(f"Failed to fetch record by name: {e}")
 
     def auto_pop_vend(self):
         try:
@@ -1003,7 +1003,7 @@ class CreateNewTab(BaseTab):
                 input_field.style().polish(input_field)
 
         except Exception as e:
-            print(f"Failed to fetch vendor: {e}")
+            log.error(f"Failed to fetch vendor: {e}")
 
     def auto_pop_vend_by_phone(self):
         try:
@@ -1043,4 +1043,4 @@ class CreateNewTab(BaseTab):
                 input_field.style().polish(input_field)
 
         except Exception as e:
-            print(f"Failed to fetch vendor by phone: {e}")
+            log.error(f"Failed to fetch vendor by phone: {e}")

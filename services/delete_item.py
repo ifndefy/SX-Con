@@ -4,7 +4,7 @@ How to use:
 """
 
 from connect_database import db_connection
-
+import utils.logger as log
 
 def delete_item(container_name: str, type: str, id: str) -> int:
     """
@@ -16,7 +16,7 @@ def delete_item(container_name: str, type: str, id: str) -> int:
     :author(s): Tim Liu, Joe Lee
     """
     try:
-        print("deleting a record")
+        log.info(f"deleting record {type}_{id} from {container_name}")
         container = db_connection.connect(container_name)
 
         arg = f"{type}_{id}"
@@ -24,5 +24,5 @@ def delete_item(container_name: str, type: str, id: str) -> int:
         container.delete_item(arg, arg)
         return 0
     except Exception as e:
-        print("ERROR: failed to delete " + str(e))
+        log.error("ERROR: failed to delete " + str(e))
         return -1

@@ -330,7 +330,7 @@ class VendorTicketsTab(BaseTab):
             return tickets
 
         except Exception as e:
-            print(f"Error fetching tickets: {e}")
+            log.error(f"Error fetching tickets: {e}")
             return []
 
     def on_view_clicked(self, ticket_index):
@@ -360,7 +360,7 @@ class VendorTicketsTab(BaseTab):
                 self.status_label.setText(f"Hidden details for ticket {ticket_number}")
 
         except Exception as e:
-            print(f"Error in on_view_clicked: {e}")
+            log.error(f"Error in on_view_clicked: {e}")
             self.status_label.setText("Error loading ticket details")
 
     def view(self, ticket_number):
@@ -419,7 +419,7 @@ class VendorTicketsTab(BaseTab):
             }
 
         except Exception as e:
-            print(f"Error fetching ticket details: {e}")
+            log.error(f"Error fetching ticket details: {e}")
             return None
 
     def view_ticket_details(self, ticket_section, ticket_details):
@@ -463,7 +463,7 @@ class VendorTicketsTab(BaseTab):
                 input_field.style().polish(input_field)
 
         except Exception as e:
-            print(f"Failed to fetch vendor: {e}")
+            log.error(f"Failed to fetch vendor: {e}")
 
     def auto_pop_vend_by_phone(self):
         try:
@@ -503,4 +503,4 @@ class VendorTicketsTab(BaseTab):
                 input_field.style().polish(input_field)
 
         except Exception as e:
-            print(f"Failed to fetch vendor by phone: {e}")
+            log.error(f"Failed to fetch vendor by phone: {e}")
