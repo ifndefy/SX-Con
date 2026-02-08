@@ -6,12 +6,17 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
-
 from PyQt6.QtWidgets import QDialog
-
+from PyQt6.QtWidgets import QMessageBox
 
 from services.connect_database import db_connection
+from ui.core.prompts import hash_security_question_answer
 from ui.tabs.base import BaseTab
+
+from src.core.hash_password import hash_password
+from ui.core import prompts
+
+from services import insert_item
 
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -301,6 +306,7 @@ class UsersTab(BaseTab):
         question1.setCurrentIndex(-1)
         layout.addWidget(question1)
 
+
         res1_label = QLabel("Response for Question 1:")
         res1_label.setObjectName("label")
         layout.addWidget(res1_label)
@@ -336,7 +342,6 @@ class UsersTab(BaseTab):
         layout.addStretch()
 
 
-
         # Buttons
         btn_layout = QHBoxLayout()
         create_btn = QPushButton("Create")
@@ -355,17 +360,83 @@ class UsersTab(BaseTab):
         result = dialog.exec()
 
 
+        # Validate that both security questions are selected
+        if question1 == -1 or question2 == -1:
+            QMessageBox.warning(self, "Missing Information", "Please select both security questions.")
+            return
 
+        # Validate that security questions are different
+        if question1.currentIndex() == question2.currentIndex():
+            QMessageBox.warning(self, "Invalid Selection", "Please select two different security questions.")
+            return
+
+        # Validate that response fields have input
+        if question1_response.text() == "" or question2_response.text() == "":
+            QMessageBox.warning(self, "Missing Information", "Please provide responses for both security questions.")
+            return
+
+        # TODO: Remove print statements
+        print(question1.currentText())
+        print(question1.currentIndex())
+        print(question1_response.text())
+
+        print(question2.currentText())
+        print(question2.currentIndex())
+        print(question2_response.text())
+
+        q_dict = {
+            question1.currentText(): question1_response.text(),
+            question2.currentText(): question2_response.text()
+        }
+        #print(q_dict)
+        q_dict_hashed = hash_security_question_answer(q_dict)
+        q_keys = list(q_dict_hashed.keys())
+        q_values = list(q_dict_hashed.values())
+
+
+        # returns a dict including all info to create a new user.
+        # password and security questions and answers are hashed
+        # return value not currently used
         if result == QDialog.DialogCode.Accepted:
-            #TODO: Update to include other fields and either modify other code to accept returns, or add db updates directly here
-            return {
+            print("Input Accepted")
+            user_dict = {
+                "id": "user_5",
+
+
                 "username": username_input.text(),
-                "email": email_input.text()
+                "first_name": first_name_input.text(),
+                "last_name": last_name_input.text(),
+                "password": hash_password(password_input.text()),
+                "q1_q": q_keys[0],
+                "q1_a": q_values[0],
+                "q2_q": q_keys[1],
+                "q2_a": q_values[1]
             }
+            user_dict_2 = {
+                "id": "user_2",
+                "partitionKey": "user_2",
+                "type": "user",
+                "username": "new_user",
+                "first_name": "new",
+                "last_name": "user",
+                "password": "12345",
+                "q1_q": "sdkjlgs",
+                "q1_a": "lskjhsdf",
+                "q2_q": "sldkjgfd",
+                "q2_a": "alksjfhasdj",
+                "admin": False,
+                "_rid": "gdl3AMd62-xTAAAAAAAAAA==",
+                "_self": "dbs/gdl3AA==/colls/gdl3AMd62-w=/docs/gdl3AMd62-xTAAAAAAAAAA==/",
+                "_etag": "\"4500926a-0000-0800-0000-6987ecd90000\"",
+                "_attachments": "attachments/",
+                "_ts": 1770515673
+            }
+
+            insert_item.insert_item("Entities", "user", user_dict_2)
+
+            return user_dict
         else:
             return None
-
-
 
     def setup_button_connections(self):
         """
