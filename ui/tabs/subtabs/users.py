@@ -275,6 +275,10 @@ class UsersTab(BaseTab):
             return []
 
     def create_new_user_prompt(self):
+        '''
+        :purpose: Sets up the UI and uses helper methods to create a user and insert it into the db
+        :author(s): Colin Heinselman
+        '''
         dialog = QDialog(self)
         dialog.setWindowTitle("Create New User")
 
@@ -354,7 +358,6 @@ class UsersTab(BaseTab):
         layout.addLayout(btn_layout)
 
         # Connects
-        # TODO: Update "create" connect by creating a new method to upload the new user to the db
         create_btn.clicked.connect(dialog.accept)
         cancel_btn.clicked.connect(dialog.reject)
 
@@ -376,16 +379,6 @@ class UsersTab(BaseTab):
         if question1_response.text() == "" or question2_response.text() == "":
             QMessageBox.warning(self, "Missing Information", "Please provide responses for both security questions.")
             return
-
-        # TODO: Remove print statements
-        '''
-        print(question1.currentText())
-        print(question1.currentIndex())
-        print(question1_response.text())
-
-        print(question2.currentText())
-        print(question2.currentIndex())
-        print(question2_response.text())'''
 
         q_dict = {
             question1.currentText(): question1_response.text(),

@@ -5,6 +5,10 @@ from services.insert_item import insert_item
 
 
 def get_next_user_id():
+    """
+    :purpose: Returns the next user_id that can be inserted into the db
+    :author(s): Colin Heinselman
+    """
     container_name = "Entities"
     counter_id = "user_counter"
     partition_key = "counter"
@@ -14,42 +18,22 @@ def get_next_user_id():
     user_count = counter["current_user_count"] + 1
     return user_count
 
-    '''
-    while True:
-        container = db_connection.connect(container_name)
-        counter_doc = container.read_item(counter_id, partition_key)
-        
-        current = counter_doc["current_value"]
-        new_value = current + 1
-        counter_doc["current_value"] = new_value
-
-        try:
-            container.replace_item(
-                item=counter_id,
-                body=counter_doc,
-                etag=counter_doc["_etag"],
-                match_condition="IfNotModified"
-            )
-            
-            return new_value  # SUCCESS
-        except Exception as e:
-            # Someone else updated it → retry
-            if "PreconditionFailed" in str(e):
-                continue
-            else:
-                raise e
-            '''
-
 def increment_user_counter():
+    """
+    :purpose: Increments the user counter by 1 in the db, represented by the user with user_id: user_counter
+    :author(s): Colin Heinselman
+    """
     user_count = get_next_user_id()
     update_property("Entities", "user", "counter", "current_user_count", user_count)
 
 def insert_new_user(user_data: dict):
-    '''
-    user_data should include the following fields:
-    username, first_name, last_name, password,
-    q1_q, q1_a, q2_q, q2_a, admin
-    '''
+    """
+    :purpose: Inserts a new user into the db with automated user_id creation
+    :param: user_data: Dictionary containing user data with the following fields:
+            username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin
+    :author(s): Colin Heinselman
+    """
+
     if len(list(user_data.keys())) < 9:
         print("User creation failed. Missing one of the following fields:")
         print("username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin")
