@@ -394,45 +394,44 @@ class UsersTab(BaseTab):
         q_keys = list(q_dict_hashed.keys())
         q_values = list(q_dict_hashed.values())
 
+        user_dict = {
+            "id": "user_5",
+
+            "username": username_input.text(),
+            "first_name": first_name_input.text(),
+            "last_name": last_name_input.text(),
+            "password": hash_password(password_input.text()),
+            "q1_q": q_keys[0],
+            "q1_a": q_values[0],
+            "q2_q": q_keys[1],
+            "q2_a": q_values[1]
+        }
+        user_dict_2 = {
+            "id": "user_2",
+            "partitionKey": "user_2",
+            "type": "user",
+            "username": "new_user",
+            "first_name": "new",
+            "last_name": "user",
+            "password": "12345",
+            "q1_q": "sdkjlgs",
+            "q1_a": "lskjhsdf",
+            "q2_q": "sldkjgfd",
+            "q2_a": "alksjfhasdj",
+            "admin": False,
+            "_rid": "gdl3AMd62-xTAAAAAAAAAA==",
+            "_self": "dbs/gdl3AA==/colls/gdl3AMd62-w=/docs/gdl3AMd62-xTAAAAAAAAAA==/",
+            "_etag": "\"4500926a-0000-0800-0000-6987ecd90000\"",
+            "_attachments": "attachments/",
+            "_ts": 1770515673
+        }
+
 
         # returns a dict including all info to create a new user.
         # password and security questions and answers are hashed
         # return value not currently used
         if result == QDialog.DialogCode.Accepted:
-            print("Input Accepted")
-            user_dict = {
-                "id": "user_5",
-
-
-                "username": username_input.text(),
-                "first_name": first_name_input.text(),
-                "last_name": last_name_input.text(),
-                "password": hash_password(password_input.text()),
-                "q1_q": q_keys[0],
-                "q1_a": q_values[0],
-                "q2_q": q_keys[1],
-                "q2_a": q_values[1]
-            }
-            user_dict_2 = {
-                "id": "user_2",
-                "partitionKey": "user_2",
-                "type": "user",
-                "username": "new_user",
-                "first_name": "new",
-                "last_name": "user",
-                "password": "12345",
-                "q1_q": "sdkjlgs",
-                "q1_a": "lskjhsdf",
-                "q2_q": "sldkjgfd",
-                "q2_a": "alksjfhasdj",
-                "admin": False,
-                "_rid": "gdl3AMd62-xTAAAAAAAAAA==",
-                "_self": "dbs/gdl3AA==/colls/gdl3AMd62-w=/docs/gdl3AMd62-xTAAAAAAAAAA==/",
-                "_etag": "\"4500926a-0000-0800-0000-6987ecd90000\"",
-                "_attachments": "attachments/",
-                "_ts": 1770515673
-            }
-
+            print("Valid Input")
             insert_item.insert_item("Entities", "user", user_dict_2)
 
             return user_dict
