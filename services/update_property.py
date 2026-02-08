@@ -1,7 +1,11 @@
 from services.connect_database import db_connection
-
+from src import SPOT
 
 def update_property(container_name: str, entity_type: str, entity_id: str, property_name: str, property_value):
+    if SPOT.OFFLINE:
+        print("OFFLINE - Invalid Action - Requires network access")
+        return 0
+
     try:
         container = db_connection.connect(container_name)
         item_id = f"{entity_type}_{entity_id}"

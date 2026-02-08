@@ -1,7 +1,7 @@
 from typing import Any
 
 from services.connect_database import db_connection
-
+from src import SPOT
 
 def get_item_by_property(container_name: str, entity_type: str, property_name: str, property_value: str) -> Any | None:
     """
@@ -13,6 +13,10 @@ def get_item_by_property(container_name: str, entity_type: str, property_name: s
     :return: None
     :author(s): Joe Lee
     """
+    if SPOT.OFFLINE:
+        print("OFFLINE - Invalid Action - Requires network access")
+        return 0
+
     try:
         container = db_connection.connect(container_name)
 

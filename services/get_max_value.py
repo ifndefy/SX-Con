@@ -1,5 +1,5 @@
 from services.connect_database import db_connection
-
+from src import SPOT
 
 def get_max_value(container_name, property_name):
     """
@@ -9,6 +9,10 @@ def get_max_value(container_name, property_name):
     :return: max value of a property
     :author(s): Joe Lee
     """
+    if SPOT.OFFLINE:
+        print("OFFLINE - Invalid Action - Requires network access")
+        return 0
+
     try:
         container = db_connection.connect(container_name)
     except Exception as e:

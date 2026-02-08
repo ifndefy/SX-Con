@@ -2,7 +2,7 @@ from typing import Any
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 
 from services.connect_database import db_connection
-
+from src import SPOT
 
 def get_item(container_name: str, entity_type: str, id: str) -> Any | None:
     """
@@ -13,6 +13,10 @@ def get_item(container_name: str, entity_type: str, id: str) -> Any | None:
     :return: entire document as dictionary, or "-1" if not found
     :author(s): Alexander Bubienko, Joe Lee
     """
+    if SPOT.OFFLINE:
+        print("OFFLINE - Invalid Action - Requires network access")
+        return 0
+
     try:
         container = db_connection.connect(container_name)
 
