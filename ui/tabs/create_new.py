@@ -470,12 +470,25 @@ class CreateNewTab(BaseTab):
             self.repaint()
             QApplication.processEvents()
 
-            # Get record data using existing method
-            record_data = self._gather_record_data()
+            # Get vendor data
+            vendor_data = self._gather_vendor_data()
 
             # Validate required fields
-            if not self._validate_required_fields(record_data):
+            if not self._validate_required_fields(vendor_data):
                 return -1
+            
+            # Get products data
+            products_data = self._gather_products_data()
+        
+            # Get revenue data
+            revenue_data = self._gather_revenue_data()
+        
+            # Combine into record data for database
+            record_data = {
+                'vendor': vendor_data,
+                'products': products_data,
+                'revenue': revenue_data
+            }
 
             # Post to database
             record_id = self._post_to_database(record_data)
@@ -493,11 +506,11 @@ class CreateNewTab(BaseTab):
             print(f"Database error: {e}")
             return -1
 
-    def _gather_record_data(self):
+    def _gather_vendor_data(self):
         """
         :author(s): Alexander Bubienko
-        :purpose: Gather all field data and convert empty strings to NULL
-        :return: Dictionary containing vendor data, products data, and revenue data
+        :purpose: Gather vendor field data and convert empty strings to NULL
+        :return: Dictionary containing vendor data
         """
         # Vendor information
         vendor_data = {
@@ -513,7 +526,14 @@ class CreateNewTab(BaseTab):
             'state': self.state_input.text().strip() or "NULL",
             'zip': self.zip_input.text().strip() or "NULL"
         }
-
+        return vendor_data
+    
+    def _gather_products_data(self):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Gather product field data and convert empty strings to NULL
+        :return: List of dictionaries containing product data
+        """
         # Product information
         products_data = []
         for i, product_section in enumerate(self.product_sections):
@@ -526,32 +546,32 @@ class CreateNewTab(BaseTab):
                 'quantity': product_section['quantity'].text().strip() or "NULL"
             }
             products_data.append(product_data)
+        return products_data
 
-
-        # Revenue sharing data
-        revenue_data = self.revenue_generation.get_revenue_data()
-
-        return {
-            'vendor': vendor_data,
-            'products': products_data,
-            'revenue': revenue_data
-        }
-
-    def _validate_required_fields(self, record_data):
+    def _gather_revenue_data(self):
         """
-        :author(s): Alexander Bubienko, Colin Henderson
+        :author(s): Alexander Bubienko
+        :purpose: Gather revenue data and convert empty strings to NULL
+        :return: Dictionary containing revenue data
+        """
+        # Revenue sharing data
+        return self.revenue_generation.get_revenue_data()
+
+    def _validate_required_fields(self, vendor_data, products_data=None):
+        """
+        :author(s): Alexander Bubienko, Colin Henderson, Joe Lee
         :purpose: Validate that required fields are filled
         :return: True if all required fields are valid, False otherwise
         """
-        vendor = record_data['vendor']
-        products = record_data['products']
-
-        if not vendor['vendor_id'] or vendor['vendor_id'] == "NULL":
+        if not vendor_data['vendor_id'] or vendor_data['vendor_id'] == "NULL":
             self.status_label.setText("Error: Vendor ID is required")
             return False
 
+        if products_data is None:
+            products_data = self._gather_products_data()
+
         has_valid_product = False
-        for product in products:
+        for product in products_data:
             if (product['product_id'] and product['product_id'] != "NULL" and
                     product['product_type'] and product['product_type'] != "SELECT" and
                     product['price'] and product['price'] != "NULL" and
@@ -560,7 +580,8 @@ class CreateNewTab(BaseTab):
                 break
 
         if not has_valid_product:
-            self.status_label.setText("Error: At least one product requires Product ID, Product Type, Price, and Quantity")
+            self.status_label.setText(
+                "Error: At least one product requires Product ID, Product Type, Price, and Quantity")
             return False
 
         return True
@@ -614,9 +635,15 @@ class CreateNewTab(BaseTab):
             for i, product in enumerate(record_data['products']):
                 if self._has_product_data(product):
                     product_id = product['product_id']
+                    product_name = product['product_name']
                     if not product_id or product_id == "NULL":
                         print(f"Skipping product {i} - no product ID")
-                        continue
+                        self.status_label.setText("Error: Product ID is required for all products")
+                        return -1
+                    if not product_name or product_name == "NULL":
+                        print(f"Error: Product {i} missing Product Name")
+                        self.status_label.setText("Error: Product Name is required for all products")
+                        return -1
 
                     product_doc = {
                         'id': f"product_{product_id}",
