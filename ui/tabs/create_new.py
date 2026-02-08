@@ -557,21 +557,21 @@ class CreateNewTab(BaseTab):
         # Revenue sharing data
         return self.revenue_generation.get_revenue_data()
 
-    def _validate_required_fields(self, record_data):
+    def _validate_required_fields(self, vendor_data, products_data=None):
         """
-        :author(s): Alexander Bubienko, Colin Henderson
+        :author(s): Alexander Bubienko, Colin Henderson, Joe Lee
         :purpose: Validate that required fields are filled
         :return: True if all required fields are valid, False otherwise
         """
-        vendor = record_data['vendor']
-        products = record_data['products']
-
-        if not vendor['vendor_id'] or vendor['vendor_id'] == "NULL":
+        if not vendor_data['vendor_id'] or vendor_data['vendor_id'] == "NULL":
             self.status_label.setText("Error: Vendor ID is required")
             return False
 
+        if products_data is None:
+            products_data = self._gather_products_data()
+
         has_valid_product = False
-        for product in products:
+        for product in products_data:
             if (product['product_id'] and product['product_id'] != "NULL" and
                     product['product_type'] and product['product_type'] != "SELECT" and
                     product['price'] and product['price'] != "NULL" and
@@ -580,7 +580,8 @@ class CreateNewTab(BaseTab):
                 break
 
         if not has_valid_product:
-            self.status_label.setText("Error: At least one product requires Product ID, Product Type, Price, and Quantity")
+            self.status_label.setText(
+                "Error: At least one product requires Product ID, Product Type, Price, and Quantity")
             return False
 
         return True
