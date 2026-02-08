@@ -376,13 +376,14 @@ class UsersTab(BaseTab):
             return
 
         # TODO: Remove print statements
+        '''
         print(question1.currentText())
         print(question1.currentIndex())
         print(question1_response.text())
 
         print(question2.currentText())
         print(question2.currentIndex())
-        print(question2_response.text())
+        print(question2_response.text())'''
 
         q_dict = {
             question1.currentText(): question1_response.text(),
