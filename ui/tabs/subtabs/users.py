@@ -1,20 +1,37 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QTabWidget
+from PyQt6.QtWidgets import QVBoxLayout, QTabWidget, QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QMessageBox
 
 from services.connect_database import db_connection
+from ui.core.prompts import hash_security_question_answer
 from ui.tabs.base import BaseTab
+
+from src.core.hash_password import hash_password
+from ui.core import prompts
+
+from services import insert_item
+
+from services import user_insert_counter
 
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
         self.tickets_section = []
         self.db_connection = db_connection
         super().__init__(api_handler, "users")
+
+        self.questionList = [
+            "What is your mother's maiden name?",
+            "What color was your first car?",
+            "Who was your best friend in the third grade?"
+            # todo: add 2 more questions
+        ]
 
     def setup_ui(self):
         """
@@ -60,6 +77,7 @@ class UsersTab(BaseTab):
         vendor_section_row_3 = QHBoxLayout()
         self.create_btn = QPushButton("Create New User")
         vendor_section_row_3.addWidget(self.create_btn)
+        self.create_btn.clicked.connect(self.create_new_user_prompt)
 
         vendor_section_row_3.addStretch()
 
@@ -242,6 +260,151 @@ class UsersTab(BaseTab):
         except Exception as e:
             print(f"Error fetching users: {e}")
             return []
+
+    def create_new_user_prompt(self):
+        '''
+        :purpose: Sets up the UI and uses helper methods to create a user and insert it into the db
+        :author(s): Colin Heinselman
+        '''
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Create New User")
+
+        layout = QVBoxLayout(dialog)
+
+        # Fields
+        layout.addWidget(QLabel("Username:"))
+        username_input = QLineEdit()
+        layout.addWidget(username_input)
+
+        layout.addWidget(QLabel("First Name:"))
+        first_name_input = QLineEdit()
+        layout.addWidget(first_name_input)
+
+        layout.addWidget(QLabel("Last Name:"))
+        last_name_input = QLineEdit()
+        layout.addWidget(last_name_input)
+
+        layout.addWidget(QLabel("Password:"))
+        password_input = QLineEdit()
+        layout.addWidget(password_input)
+
+
+        # Security Questions
+        prompt_label = QLabel("Security Question 1:")
+        prompt_label.setObjectName("label")
+        layout.addWidget(prompt_label)
+        question1 = QComboBox()
+        question1.addItems(self.questionList)
+        question1.setObjectName("prompt_label")
+        question1.setCurrentIndex(-1)
+        layout.addWidget(question1)
+
+
+        res1_label = QLabel("Response for Question 1:")
+        res1_label.setObjectName("label")
+        layout.addWidget(res1_label)
+        question1_response = QLineEdit()
+        question1_response.setPlaceholderText("Question 1 Response")
+        question1_response.setObjectName("response_field")
+        question1_response.setMaxLength(255)
+        layout.addWidget(question1_response)
+
+        hr2 = QLabel()
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
+
+        # Question 2
+        prompt_label = QLabel("Security Question 2:")
+        prompt_label.setObjectName("label")
+        layout.addWidget(prompt_label)
+        question2 = QComboBox()
+        question2.addItems(self.questionList)
+        question2.setObjectName("prompt_label")
+        question2.setCurrentIndex(-1)
+        layout.addWidget(question2)
+
+        res2_label = QLabel("Response for Question 2:")
+        res2_label.setObjectName("label")
+        layout.addWidget(res2_label)
+        question2_response = QLineEdit()
+        question2_response.setPlaceholderText("Question 2 Response")
+        question2_response.setObjectName("response_field")
+        question2_response.setMaxLength(255)
+        layout.addWidget(question2_response)
+
+        layout.addStretch()
+
+
+        # Buttons
+        btn_layout = QHBoxLayout()
+        create_btn = QPushButton("Create")
+        cancel_btn = QPushButton("Cancel")
+
+        btn_layout.addWidget(create_btn)
+        btn_layout.addWidget(cancel_btn)
+        layout.addLayout(btn_layout)
+
+        # Connects
+        create_btn.clicked.connect(dialog.accept)
+        cancel_btn.clicked.connect(dialog.reject)
+
+        # Execute dialog
+        result = dialog.exec()
+
+
+        # Validate that both security questions are selected
+        if question1 == -1 or question2 == -1:
+            QMessageBox.warning(self, "Missing Information", "Please select both security questions.")
+            return
+
+        # Validate that security questions are different
+        if question1.currentIndex() == question2.currentIndex():
+            QMessageBox.warning(self, "Invalid Selection", "Please select two different security questions.")
+            return
+
+        # Validate that response fields have input
+        if question1_response.text() == "" or question2_response.text() == "":
+            QMessageBox.warning(self, "Missing Information", "Please provide responses for both security questions.")
+            return
+
+        q_dict = {
+            question1.currentText(): question1_response.text(),
+            question2.currentText(): question2_response.text()
+        }
+        #print(q_dict)
+        q_dict_hashed = hash_security_question_answer(q_dict)
+        q_keys = list(q_dict_hashed.keys())
+        q_values = list(q_dict_hashed.values())
+
+
+        user_id = user_insert_counter.get_next_user_id()
+
+        user_dict = {
+            # type and user_id automatically handled by user_insert_counter.insert_new_user()
+            #"type": "user",
+            #"user_id": 0,
+            "username": username_input.text(),
+            "first_name": first_name_input.text(),
+            "last_name": last_name_input.text(),
+            "password": hash_password(password_input.text()),
+            "q1_q": q_keys[0],
+            "q1_a": q_values[0],
+            "q2_q": q_keys[1],
+            "q2_a": q_values[1],
+            "admin": False
+        }
+
+
+        # returns a dict including all info to create a new user.
+        # password and security questions and answers are hashed
+        # return value not currently used
+        if result == QDialog.DialogCode.Accepted:
+            print("Valid Input")
+            user_insert_counter.insert_new_user(user_dict)
+
+            return user_dict
+        else:
+            return None
 
     def setup_button_connections(self):
         """

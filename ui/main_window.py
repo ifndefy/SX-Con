@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QTabWidget
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QPushButton
 
 from handlers.api_handler import APIHandler
 from src import SPOT
@@ -74,6 +75,10 @@ class MainWindow(QWidget):
         status_section.addStretch()
 
         layout.addWidget(status_container)
+        logout_button = QPushButton("Logout")
+        logout_button.setObjectName("logout_button")
+        logout_button.clicked.connect(self.logout)
+        title_layout.addWidget(logout_button)
 
     def setup_tabs(self):
         self.tabs = QTabWidget()
@@ -99,3 +104,28 @@ class MainWindow(QWidget):
     def change_status_label(self, message):
         if self.status_label:
             self.status_label.setText(message)
+        print(f"{self.tabs.tabText(index)} tab clicked")
+
+    def logout(self):
+        """
+        Handle user logout.
+
+        When the login screen is implemented, this method should:
+          - show the login window
+          - close this main window
+
+        For now, it safely handles the case where LoginWindow doesn't exist yet.
+        """
+        try:
+            # Adjust the import path to wherever your LoginWindow will live
+            from ui.core.login_window import LoginWindow
+
+            self.login_window = LoginWindow()
+            self.login_window.show()
+            print("Logged out: returning to login screen.")
+        except ImportError:
+            # Fallback behavior until login is implemented
+            print("LoginWindow not implemented yet. Closing application on logout.")
+
+        # Close the main window either way
+        self.close()
