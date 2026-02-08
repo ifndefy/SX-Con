@@ -18,6 +18,8 @@ from ui.core import prompts
 
 from services import insert_item
 
+from services import user_insert_counter
+
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
         self.tickets_section = []
@@ -394,9 +396,13 @@ class UsersTab(BaseTab):
         q_keys = list(q_dict_hashed.keys())
         q_values = list(q_dict_hashed.values())
 
-        user_dict = {
-            "id": "user_5",
 
+        user_id = user_insert_counter.get_next_user_id()
+
+        user_dict = {
+            # type and user_id automatically handled by user_insert_counter.insert_new_user()
+            #"type": "user",
+            #"user_id": 0,
             "username": username_input.text(),
             "first_name": first_name_input.text(),
             "last_name": last_name_input.text(),
@@ -404,26 +410,8 @@ class UsersTab(BaseTab):
             "q1_q": q_keys[0],
             "q1_a": q_values[0],
             "q2_q": q_keys[1],
-            "q2_a": q_values[1]
-        }
-        user_dict_2 = {
-            "id": "user_2",
-            "partitionKey": "user_2",
-            "type": "user",
-            "username": "new_user",
-            "first_name": "new",
-            "last_name": "user",
-            "password": "12345",
-            "q1_q": "sdkjlgs",
-            "q1_a": "lskjhsdf",
-            "q2_q": "sldkjgfd",
-            "q2_a": "alksjfhasdj",
-            "admin": False,
-            "_rid": "gdl3AMd62-xTAAAAAAAAAA==",
-            "_self": "dbs/gdl3AA==/colls/gdl3AMd62-w=/docs/gdl3AMd62-xTAAAAAAAAAA==/",
-            "_etag": "\"4500926a-0000-0800-0000-6987ecd90000\"",
-            "_attachments": "attachments/",
-            "_ts": 1770515673
+            "q2_a": q_values[1],
+            "admin": False
         }
 
 
@@ -432,7 +420,7 @@ class UsersTab(BaseTab):
         # return value not currently used
         if result == QDialog.DialogCode.Accepted:
             print("Valid Input")
-            insert_item.insert_item("Entities", "user", user_dict_2)
+            user_insert_counter.insert_new_user(user_dict)
 
             return user_dict
         else:
