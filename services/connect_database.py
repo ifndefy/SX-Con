@@ -2,6 +2,7 @@ import configparser as cparser
 
 from azure.cosmos import CosmosClient
 from pathlib import Path
+import utils.logger as log
 
 
 class DatabaseConnection:
@@ -21,7 +22,7 @@ class DatabaseConnection:
     def connect(self, container_name: str):
         if container_name not in self._connections:
             self._connections[container_name] = self.database.get_container_client(container_name)
-            print(f"Connected to container: {container_name}")
+            log.debug(f"Connected to container: {container_name}")
         return self._connections[container_name]
 
 

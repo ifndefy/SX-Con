@@ -1,5 +1,5 @@
 from services.connect_database import db_connection
-
+import utils.logger as log
 
 def insert_item(container_name: str, entity_type: str, item_data: dict):
     """
@@ -26,9 +26,9 @@ def insert_item(container_name: str, entity_type: str, item_data: dict):
         }
 
         container.create_item(body=document)
-        print(f"Successfully inserted {item_id} into {container_name}")
+        log.info(f"Successfully inserted {item_id} into {container_name}")
         return 0
 
     except Exception as e:
-        print(f"Error in insert_item: {e}")
+        log.error(f"Error in insert_item: {e}")
         return "-1"

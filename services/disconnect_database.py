@@ -1,6 +1,6 @@
 from typing import Optional
 import pyodbc
-
+import utils.logger as log
 
 def disconnect(
     *,
@@ -27,7 +27,7 @@ def disconnect(
             try:
                 cursor.close()
             except Exception as e:
-                print(f"Warning: error while closing cursor: {e}")
+                log.warning(f"error while closing cursor: {e}")
 
         # Then handle the connection
         if connection is None:
@@ -40,15 +40,15 @@ def disconnect(
                 connection.commit()
         except Exception as e:
             # If commit/rollback fails, still attempt to close
-            print(f"Warning: commit/rollback failed: {e}")
+            log.warning(f"commit/rollback failed: {e}")
 
         try:
             connection.close()
         except Exception as e:
-            print(f"Warning: error while closing connection: {e}")
+            log.error(f"error while closing connection: {e}")
             return -1
 
         return 0
     except Exception as e:
-        print(f"Unexpected error during disconnect: {e}")
+        log.error(f"Unexpected error during disconnect: {e}")
         return -1
