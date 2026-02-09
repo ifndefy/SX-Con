@@ -1,4 +1,5 @@
 from services.connect_database import db_connection
+from src import SPOT
 import utils.logger.logger as log
 
 def insert_item(container_name: str, entity_type: str, item_data: dict):
@@ -9,6 +10,10 @@ def insert_item(container_name: str, entity_type: str, item_data: dict):
     :param: entity_type: "user", "vendor", or "product" (required)
     :author(s): Joe Lee
     """
+    if SPOT.OFFLINE:
+        print("OFFLINE - Invalid Action - Requires network access")
+        return 0
+
     try:
         container = db_connection.connect(container_name)
 

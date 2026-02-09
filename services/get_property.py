@@ -1,4 +1,5 @@
 from services.connect_database import db_connection
+from src import SPOT
 import utils.logger.logger as log
 
 def get_property(container_name: str, attribute: str, entity_type: str, id_value: str) -> str:
@@ -12,6 +13,10 @@ def get_property(container_name: str, attribute: str, entity_type: str, id_value
     :use case: get_property("Entities", "username", "1", "user")
     :author(s): Alexander Bubienko, Joe Lee
     """
+    if SPOT.OFFLINE:
+        print("OFFLINE - Invalid Action - Requires network access")
+        return 0
+
     try:
         container = db_connection.connect(container_name)
 

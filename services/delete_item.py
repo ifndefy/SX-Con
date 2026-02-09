@@ -4,6 +4,7 @@ How to use:
 """
 
 from connect_database import db_connection
+from src import SPOT
 import utils.logger.logger as log
 
 def delete_item(container_name: str, type: str, id: str) -> int:
@@ -15,6 +16,10 @@ def delete_item(container_name: str, type: str, id: str) -> int:
     :return: 0 on success -1 on failure
     :author(s): Tim Liu, Joe Lee
     """
+    if SPOT.OFFLINE:
+        print("OFFLINE - Invalid Action - Requires network access")
+        return 0
+
     try:
         log.info(f"deleting record {type}_{id} from {container_name}")
         container = db_connection.connect(container_name)
