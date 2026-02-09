@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.core.theme_manager import ThemeManager
 from ui.tabs.base import BaseTab
+from services.message_bus import status_bar_instance
 
 class SettingsTab(BaseTab):
     def __init__(self, api_handler):
@@ -166,6 +167,7 @@ class SettingsTab(BaseTab):
         self.save_btn = QPushButton("Save Settings")
         layout.addWidget(self.save_btn)
         btn_layout.addWidget(self.save_btn)
+        self.save_btn.clicked.connect(self.test_bus_communication)
 
         layout.addLayout(btn_layout)
 
@@ -173,19 +175,6 @@ class SettingsTab(BaseTab):
         hr4 = QLabel()
         hr4.setObjectName("hr")
         layout.addWidget(hr4)
-
-        # Status Section
-        status_container = QWidget()
-        status_container.setObjectName("status_container")
-        status_section = QHBoxLayout(status_container)
-
-        # Align to center
-        status_section.addStretch()
-        self.status_label = QLabel("")
-        status_section.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        status_section.addStretch()
-
-        layout.addWidget(status_container)
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
@@ -196,7 +185,7 @@ class SettingsTab(BaseTab):
 
     def on_theme_changed(self, theme_name):
         self.theme_manager.apply_theme(theme_name, self)
-        self.status_label.setText(f"Changed theme to {theme_name}")
+        self.status_label.setText(f"Changed theme to {theme_name}")        
 
     def setup_button_connections(self):
         """
@@ -214,3 +203,6 @@ class SettingsTab(BaseTab):
         pass
         # todo: add new pw line
         # todo: change current pw field to READONLY=FALSE
+    
+    def test_bus_communication(self):
+        status_bar_instance.send_message(f"Hello from settings tab")
