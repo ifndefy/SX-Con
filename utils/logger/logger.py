@@ -13,7 +13,8 @@ class ForwardHandler(log.Handler):
 #Create object to read in config file
 config = cparser.ConfigParser()
 
-config.read("config.ini")
+CONFIG_PATH = Path(__file__).with_name("config.ini")
+config.read(CONFIG_PATH)
 
 #Get logger config values from file
 __path = config.get('Logger Settings', 'log_path')

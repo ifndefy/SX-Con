@@ -1,5 +1,5 @@
 from services.connect_database import db_connection
-import utils.logger as log
+import utils.logger.logger as log
 
 def insert_item(container_name: str, entity_type: str, item_data: dict):
     """

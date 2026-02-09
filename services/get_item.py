@@ -2,7 +2,7 @@ from typing import Any
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 
 from services.connect_database import db_connection
-import utils.logger as log
+import utils.logger.logger as log
 
 def get_item(container_name: str, entity_type: str, id: str) -> Any | None:
     """

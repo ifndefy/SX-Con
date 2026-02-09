@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget
 from services.message_bus import status_bar_instance
-import utils.logger as log
+import utils.logger.logger as log
 
 class StatusBar(QWidget):
     event_handler = None

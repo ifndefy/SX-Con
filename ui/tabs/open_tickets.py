@@ -1,4 +1,3 @@
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -9,7 +8,7 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
-import utils.logger as log
+import utils.logger.logger as log
 
 class OpenTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):

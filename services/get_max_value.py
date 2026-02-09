@@ -1,5 +1,5 @@
 from services.connect_database import db_connection
-import utils.logger as log
+import utils.logger.logger as log
 
 def get_max_value(container_name, property_name):
     """

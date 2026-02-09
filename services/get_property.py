@@ -1,5 +1,5 @@
 from services.connect_database import db_connection
-import utils.logger as log
+import utils.logger.logger as log
 
 def get_property(container_name: str, attribute: str, entity_type: str, id_value: str) -> str:
     """

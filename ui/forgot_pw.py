@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtCore import Qt
-import utils.logger as log
+import utils.logger.logger as log
 
 class ForgotPasswordScreen(QDialog):
     def __init__(self, theme_manager, parent=None):

@@ -1,4 +1,3 @@
-from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
@@ -13,7 +12,7 @@ from services.get_item_by_property import get_item_by_property
 from ui.core import format_phone
 from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
-import utils.logger as log 
+import utils.logger.logger as log
 
 class VendorTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):

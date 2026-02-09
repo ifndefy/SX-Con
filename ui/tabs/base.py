@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QWidget
-import utils.logger as log
+import utils.logger.logger as log
 
 class BaseTab(QWidget):
     def __init__(self, api_handler, tab_name):

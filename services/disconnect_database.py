@@ -1,6 +1,6 @@
 from typing import Optional
 import pyodbc
-import utils.logger as log
+import utils.logger.logger as log
 
 def disconnect(
     *,

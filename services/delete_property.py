@@ -4,7 +4,7 @@ How to use:
 """
 
 from connect_database import db_connection
-import utils.logger as log
+import utils.logger.logger as log
 
 def delete_property(container_name: str, type: str, id: str, attribute_name: str) -> int:
     """

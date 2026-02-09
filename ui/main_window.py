@@ -15,7 +15,7 @@ from ui.tabs.open_tickets import OpenTicketsTab
 from ui.tabs.settings import SettingsTab
 from ui.tabs.admin_settings import AdminSettingsTab
 from services.connect_database import db_connection
-import utils.logger as log
+import utils.logger.logger as log
 
 class MainWindow(QWidget):
     def __init__(self):

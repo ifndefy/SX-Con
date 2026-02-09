@@ -2,7 +2,7 @@ import configparser as cparser
 
 from azure.cosmos import CosmosClient
 from pathlib import Path
-import utils.logger as log
+import utils.logger.logger as log
 
 
 class DatabaseConnection:
