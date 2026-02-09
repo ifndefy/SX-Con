@@ -3,6 +3,7 @@ from azure.cosmos.exceptions import CosmosResourceNotFoundError
 
 from services.connect_database import db_connection
 from src import SPOT
+import utils.logger.logger as log
 
 def get_item(container_name: str, entity_type: str, id: str) -> Any | None:
     """
@@ -25,14 +26,14 @@ def get_item(container_name: str, entity_type: str, id: str) -> Any | None:
 
         try:
             document = container.read_item(item=item_id, partition_key=partition_key)
-            print(f"Cosmos DB Container {container_name} found ID: {item_id} ID: {partition_key}")
+            log.info(f"Cosmos DB Container {container_name} found ID: {item_id} ID: {partition_key}")
             return document
         except CosmosResourceNotFoundError:
-            print(f"Cosmos DB container {container_name} not found ID: {item_id} ID: {partition_key}")
+            log.info(f"Cosmos DB container {container_name} not found ID: {item_id} ID: {partition_key}")
             return None
         except Exception as e:
-            print(f"Error reading document: {e}")
+            log.error(f"Error reading document: {e}")
             return None
     except Exception as e:
-        print(f"Error in get_item: {e}")
+        log.error(f"Error in get_item: {e}")
         return None

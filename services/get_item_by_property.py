@@ -2,6 +2,7 @@ from typing import Any
 
 from services.connect_database import db_connection
 from src import SPOT
+import utils.logger.logger as log
 
 def get_item_by_property(container_name: str, entity_type: str, property_name: str, property_value: str) -> Any | None:
     """
@@ -28,11 +29,11 @@ def get_item_by_property(container_name: str, entity_type: str, property_name: s
         ))
 
         if items:
-            print(f"Cosmos DB Container {container_name} found by {property_name}: {property_value}")
+            log.info(f"Cosmos DB Container {container_name} found by {property_name}: {property_value}")
             return items[0]
         else:
-            print(f"Cosmos DB container {container_name} not found by {property_name}: {property_value}")
+            log.info(f"Cosmos DB container {container_name} not found by {property_name}: {property_value}")
             return None
     except Exception as e:
-        print(f"Error in get_item_by_property: {e}")
+        log.error(f"Error in get_item_by_property: {e}")
         return None

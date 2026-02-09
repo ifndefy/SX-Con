@@ -18,7 +18,21 @@ from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone
+import utils.logger.logger as log
+# from ui.core.format_price import restricted_format_price
 
+BASE_RATE = 25
+
+def compute_rate(product_type: str) -> int:
+    """
+    :purpose: returns adjusted rate if product type is "hot food"
+    :return: int
+    :author(s): Colin Henderson
+    """
+    t = (product_type or "").strip().lower()
+    if t in ("hot food", "hot foods"):
+        return 30
+    return BASE_RATE
 
 class CreateNewTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -294,19 +308,6 @@ class CreateNewTab(BaseTab):
         hr3.setObjectName("hr")
         layout.addWidget(hr3)
 
-        # Status Section
-        status_container = QWidget()
-        status_container.setObjectName("status_container")
-        status_section = QHBoxLayout(status_container)
-
-        # Align to center
-        status_section.addStretch()
-        self.status_label = QLabel("Ready to create record")
-        status_section.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        status_section.addStretch()
-
-        layout.addWidget(status_container)
-
         # Set up the scroll area
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
@@ -383,11 +384,25 @@ class CreateNewTab(BaseTab):
         line2_layout.addWidget(notes_input)
         product_section['notes'] = notes_input
 
+        # Rate - integer only, placed to the right of Notes
+        line2_layout.addWidget(QLabel("Rate:"))
+        rate_input = QLineEdit()
+        rate_input.setPlaceholderText(str(BASE_RATE))
+        rate_input.setFixedWidth(80)
+        rate_input.setValidator(QIntValidator(0, 100, self))
+        # Default to BASE_RATE until type indicates otherwise
+        rate_input.setText(str(BASE_RATE))
+        line2_layout.addWidget(rate_input)
+        product_section['rate'] = rate_input
+
         # Price - Fixed width
         line2_layout.addWidget(QLabel("Price:"))
         price_input = QLineEdit()
         price_input.setPlaceholderText(f"$0.00")
         price_input.setFixedWidth(100)
+
+        # restricted_format_price(price_input)
+
         line2_layout.addWidget(price_input)
         product_section['price'] = price_input
 
@@ -402,10 +417,29 @@ class CreateNewTab(BaseTab):
 
         section_layout.addLayout(line2_layout)
 
+        product_type_input.currentTextChanged.connect(
+            lambda _txt, sec=product_section: self._on_product_type_changed(sec)
+        )
+
         # Add to container
         self.products_layout.addWidget(section_widget)
         self.product_sections.append(product_section)
         self.product_counter += 1
+
+    def _on_product_type_changed(self, product_section: dict):
+        try:
+            rate_widget = product_section.get('rate')
+            type_widget = product_section.get('product_type')
+            if not rate_widget or not type_widget:
+                return
+            current = (rate_widget.text() or "").strip()
+            safe_to_override = (current == "" or current in (str(BASE_RATE), "30"))
+            if not safe_to_override:
+                return
+            new_rate = compute_rate(type_widget.currentText())
+            rate_widget.setText(str(new_rate))
+        except Exception as e:
+            print(f"Failed to auto-set rate: {e}")
 
     def create_removal_handler(self, widget, product_section):
         def removal_handler():
@@ -470,12 +504,25 @@ class CreateNewTab(BaseTab):
             self.repaint()
             QApplication.processEvents()
 
-            # Get record data using existing method
-            record_data = self._gather_record_data()
+            # Get vendor data
+            vendor_data = self._gather_vendor_data()
 
             # Validate required fields
-            if not self._validate_required_fields(record_data):
+            if not self._validate_required_fields(vendor_data):
                 return -1
+            
+            # Get products data
+            products_data = self._gather_products_data()
+        
+            # Get revenue data
+            revenue_data = self._gather_revenue_data()
+        
+            # Combine into record data for database
+            record_data = {
+                'vendor': vendor_data,
+                'products': products_data,
+                'revenue': revenue_data
+            }
 
             # Post to database
             record_id = self._post_to_database(record_data)
@@ -490,14 +537,14 @@ class CreateNewTab(BaseTab):
 
         except Exception as e:
             self.status_label.setText(f"Error creating record: {str(e)}")
-            print(f"Database error: {e}")
+            log.error(f"Database error: {e}")
             return -1
 
-    def _gather_record_data(self):
+    def _gather_vendor_data(self):
         """
         :author(s): Alexander Bubienko
-        :purpose: Gather all field data and convert empty strings to NULL
-        :return: Dictionary containing vendor data, products data, and revenue data
+        :purpose: Gather vendor field data and convert empty strings to NULL
+        :return: Dictionary containing vendor data
         """
         # Vendor information
         vendor_data = {
@@ -513,7 +560,14 @@ class CreateNewTab(BaseTab):
             'state': self.state_input.text().strip() or "NULL",
             'zip': self.zip_input.text().strip() or "NULL"
         }
-
+        return vendor_data
+    
+    def _gather_products_data(self):
+        """
+        :author(s): Alexander Bubienko
+        :purpose: Gather product field data and convert empty strings to NULL
+        :return: List of dictionaries containing product data
+        """
         # Product information
         products_data = []
         for i, product_section in enumerate(self.product_sections):
@@ -522,36 +576,37 @@ class CreateNewTab(BaseTab):
                 'product_type': product_section['product_type'].currentText().strip() or "NULL",
                 'product_name': product_section['product_name'].text().strip() or "NULL",
                 'notes': product_section['notes'].text().strip() or "NULL",
+                'rate': product_section.get('rate').text().strip() if product_section.get('rate') else "NULL",
                 'price': product_section['price'].text().strip() or "NULL",
                 'quantity': product_section['quantity'].text().strip() or "NULL"
             }
             products_data.append(product_data)
+        return products_data
 
-
-        # Revenue sharing data
-        revenue_data = self.revenue_generation.get_revenue_data()
-
-        return {
-            'vendor': vendor_data,
-            'products': products_data,
-            'revenue': revenue_data
-        }
-
-    def _validate_required_fields(self, record_data):
+    def _gather_revenue_data(self):
         """
-        :author(s): Alexander Bubienko, Colin Henderson
+        :author(s): Alexander Bubienko
+        :purpose: Gather revenue data and convert empty strings to NULL
+        :return: Dictionary containing revenue data
+        """
+        # Revenue sharing data
+        return self.revenue_generation.get_revenue_data()
+
+    def _validate_required_fields(self, vendor_data, products_data=None):
+        """
+        :author(s): Alexander Bubienko, Colin Henderson, Joe Lee
         :purpose: Validate that required fields are filled
         :return: True if all required fields are valid, False otherwise
         """
-        vendor = record_data['vendor']
-        products = record_data['products']
-
-        if not vendor['vendor_id'] or vendor['vendor_id'] == "NULL":
+        if not vendor_data['vendor_id'] or vendor_data['vendor_id'] == "NULL":
             self.status_label.setText("Error: Vendor ID is required")
             return False
 
+        if products_data is None:
+            products_data = self._gather_products_data()
+
         has_valid_product = False
-        for product in products:
+        for product in products_data:
             if (product['product_id'] and product['product_id'] != "NULL" and
                     product['product_type'] and product['product_type'] != "SELECT" and
                     product['price'] and product['price'] != "NULL" and
@@ -560,7 +615,8 @@ class CreateNewTab(BaseTab):
                 break
 
         if not has_valid_product:
-            self.status_label.setText("Error: At least one product requires Product ID, Product Type, Price, and Quantity")
+            self.status_label.setText(
+                "Error: At least one product requires Product ID, Product Type, Price, and Quantity")
             return False
 
         return True
@@ -578,7 +634,7 @@ class CreateNewTab(BaseTab):
             # Validate vendor_id exists
             vendor_id = record_data['vendor']['vendor_id']
             if not vendor_id or vendor_id == "NULL":
-                print("Error: No vendor ID provided")
+                log.error("Error: No vendor ID provided")
                 self.status_label.setText("Error: Vendor ID is required")
                 return -1
 
@@ -598,14 +654,14 @@ class CreateNewTab(BaseTab):
                 'zip': record_data['vendor']['zip']
             }
 
-            print(f"Creating vendor document with ID: vendor_{vendor_id}")
+            log.info(f"Creating vendor document with ID: vendor_{vendor_id}")
 
             # todo: need a ticket to check if vendor_id already exists
             try:
                 vendor_response = entities_container.upsert_item(body=vendor_document)
-                print("Vendor document created successfully")
+                log.info("Vendor document created successfully")
             except Exception as e:
-                print(f"Error creating vendor document: {e}")
+                log.error(f"Error creating vendor document: {e}")
                 self.status_label.setText(f"Error creating vendor: {str(e)}")
                 return -1
 
@@ -614,9 +670,21 @@ class CreateNewTab(BaseTab):
             for i, product in enumerate(record_data['products']):
                 if self._has_product_data(product):
                     product_id = product['product_id']
+                    product_name = product['product_name']
                     if not product_id or product_id == "NULL":
-                        print(f"Skipping product {i} - no product ID")
+                        log.warning(f"Skipping product {i} - no product ID")
                         continue
+                        print(f"Skipping product {i} - no product ID")
+                        self.status_label.setText("Error: Product ID is required for all products")
+                        return -1
+                    if not product_name or product_name == "NULL":
+                        print(f"Error: Product {i} missing Product Name")
+                        self.status_label.setText("Error: Product Name is required for all products")
+                        return -1
+
+                    rate_value = self._convert_rate(product.get('rate'))
+                    if rate_value is None:
+                        rate_value = compute_rate(product.get('product_type'))
 
                     product_doc = {
                         'id': f"product_{product_id}",
@@ -625,18 +693,19 @@ class CreateNewTab(BaseTab):
                         'product_id': self._convert_product_id(product_id),
                         'product_name': self._convert_null(product['product_name']),
                         'product_type': self._convert_null(product['product_type']),
+                        'rate': rate_value,
                     }
-                    print(f"Creating product document: product_{product_id}")
+                    log.info(f"Creating product document: product_{product_id}")
                     try:
                         product_response = entities_container.upsert_item(body=product_doc)
                         product_ids.append(int(product_id))
-                        print(f"Product document created: {product_id}")
+                        log.info(f"Product document created: {product_id}")
                     except Exception as e:
-                        print(f"Error creating product document {product_id}: {e}")
+                        log.error(f"Error creating product document {product_id}: {e}")
 
             ticket_number = record_data['vendor']['ticket_number']
             if not ticket_number or ticket_number == "NULL":
-                print("Error: No ticket number provided")
+                log.error("Error: No ticket number provided")
                 self.status_label.setText("Error: Ticket number is required")
                 return -1
 
@@ -655,6 +724,11 @@ class CreateNewTab(BaseTab):
                             'product_id': product['product_id'],
                             'product_type': product['product_type'],
                             'notes': product['notes'],
+                            'rate': (
+                                self._convert_rate(product.get('rate'))
+                                if self._convert_rate(product.get('rate')) is not None
+                                else compute_rate(product.get('product_type'))
+                            ),
                             'price': self._convert_null(product['price']),
                             'quantity': self._convert_quantity(product['quantity']),
                             'sold': 0,
@@ -666,23 +740,23 @@ class CreateNewTab(BaseTab):
                 'revenue_sharing': record_data['revenue']
             }
 
-            print(f"Creating consignment document with ID: {ticket_number}")
+            log.info(f"Creating consignment document with ID: {ticket_number}")
             try:
                 consignment_response = consignments_container.create_item(body=consignment_document)
-                print("Consignment document created successfully")
+                log.info("Consignment document created successfully")
             except Exception as e:
-                print(f"Error creating consignment document: {e}")
+                log.error(f"Error creating consignment document: {e}")
                 self.status_label.setText(f"Error creating consignment: {str(e)}")
                 return -1
 
             success_msg = f"Record created successfully! Ticket: {ticket_number}"
-            print(success_msg)
+            log.info(success_msg)
             self.status_label.setText(success_msg)
             return ticket_number
 
         except Exception as e:
             error_msg = f"Cosmos DB insertion error: {e}"
-            print(error_msg)
+            log.error(error_msg)
             import traceback
             traceback.print_exc()
             self.status_label.setText(f"Error creating record: {str(e)}")
@@ -703,10 +777,10 @@ class CreateNewTab(BaseTab):
             if 0 <= product_id <= 99999:
                 return product_id
             else:
-                print(f"Product ID {product_id} is outside valid range")
+                log.error(f"Product ID {product_id} is outside valid range")
                 return None
         except (ValueError, TypeError):
-            print(f"Invalid product ID: {product_id_str}")
+            log.error(f"Invalid product ID: {product_id_str}")
             return None
 
     def _convert_quantity(self, quantity_str):
@@ -724,10 +798,33 @@ class CreateNewTab(BaseTab):
             if 0 <= quantity:
                 return quantity
             else:
-                print(f"Quantity {quantity} must be at least 1")
+                log.error(f"Quantity {quantity} must be at least 1")
                 return None
         except (ValueError, TypeError):
-            print(f"Invalid quantity: {quantity_str}")
+            log.error(f"Invalid quantity: {quantity_str}")
+            return None
+
+    def _convert_rate(self, rate_str):
+        """
+            :purpose: check if rate is in acceptable range
+            :return: int
+            :author(s): Colin Henderson
+        """
+        if rate_str is None:
+            return None
+        if rate_str == "NULL":
+            return None
+        cleaned = str(rate_str).strip()
+        if cleaned == "":
+            return None
+        try:
+            val = int(cleaned)
+            if 0 <= val <= 100:
+                return val
+            print(f"Rate {val} outside valid range 0-100")
+            return None
+        except (ValueError, TypeError):
+            print(f"Invalid rate: {rate_str}")
             return None
 
     def _convert_null(self, value):
@@ -888,7 +985,7 @@ class CreateNewTab(BaseTab):
         in the Products table
         note - attempting formatting for further use
         return: none
-        author: Tyler Slagboom, Joe Lee
+        author: Tyler Slagboom, Joe Lee, Colin Henderson
         """
         try:
             item = get_item("Entities", "product", prod_id)
@@ -911,6 +1008,12 @@ class CreateNewTab(BaseTab):
                             product_section['product_type'].setEnabled(False)
                             product_section['product_type'].style().unpolish(product_section['product_type'])
                             product_section['product_type'].style().polish(product_section['product_type'])
+                        if "product_rate" in product_section:
+                            if item and "rate" in item and item["rate"] is not None:
+                                product_section['rate'].setText(str(item["rate"]))
+                        else:
+                         product_section['rate'].setText(str(compute_rate(item.get("product_type") if item else "")))
+
                     else:
                         # Product doesn't exist - clear and unlock
                         product_section['product_name'].setText("")
@@ -924,9 +1027,12 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].setEnabled(True)
                         product_section['product_type'].style().unpolish(product_section['product_type'])
                         product_section['product_type'].style().polish(product_section['product_type'])
+
+                        if 'rate' in product_section:
+                            product_section['rate'].setText(str(BASE_RATE))
                     break
         except Exception as e:
-            print(f"Failed to fetch record: {e}")
+            log.error(f"Failed to fetch record: {e}")
 
     def auto_pop_prod_by_name(self, product_name: str):
         try:
@@ -950,6 +1056,12 @@ class CreateNewTab(BaseTab):
                             product_section['product_type'].setEnabled(False)
                             product_section['product_type'].style().unpolish(product_section['product_type'])
                             product_section['product_type'].style().polish(product_section['product_type'])
+
+                        if 'rate' in product_section:
+                            if "rate" in item and item["rate"] is not None:
+                                product_section['rate'].setText(str(item["rate"]))
+                            else:
+                                product_section['rate'].setText(str(compute_rate(item.get("product_type"))))
                     else:
                         product_section['product_id'].setObjectName("")
                         product_section['product_id'].setReadOnly(False)
@@ -961,9 +1073,12 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].setEnabled(True)
                         product_section['product_type'].style().unpolish(product_section['product_type'])
                         product_section['product_type'].style().polish(product_section['product_type'])
+
+                        if 'rate' in product_section:
+                            product_section['rate'].setText(str(BASE_RATE))
                     break
         except Exception as e:
-            print(f"Failed to fetch record by name: {e}")
+            log.error(f"Failed to fetch record by name: {e}")
 
     def auto_pop_vend(self):
         try:
@@ -1003,7 +1118,7 @@ class CreateNewTab(BaseTab):
                 input_field.style().polish(input_field)
 
         except Exception as e:
-            print(f"Failed to fetch vendor: {e}")
+            log.error(f"Failed to fetch vendor: {e}")
 
     def auto_pop_vend_by_phone(self):
         try:
@@ -1043,4 +1158,4 @@ class CreateNewTab(BaseTab):
                 input_field.style().polish(input_field)
 
         except Exception as e:
-            print(f"Failed to fetch vendor by phone: {e}")
+            log.error(f"Failed to fetch vendor by phone: {e}")

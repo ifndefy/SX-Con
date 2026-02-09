@@ -1,5 +1,5 @@
 from services.connect_database import db_connection
-
+import utils.logger.logger as log
 
 def autogen_ticket_num():
     """
@@ -27,5 +27,5 @@ def autogen_ticket_num():
         return str(max_ticket)
 
     except Exception as e:
-        print(f"Error generating ticket number: {e}")
+        log.error(f"Error generating ticket number: {e}")
         return "OFFLINE"

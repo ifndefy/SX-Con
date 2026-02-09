@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtCore import Qt
-
+import utils.logger.logger as log
 
 class ForgotPasswordScreen(QDialog):
     def __init__(self, theme_manager, parent=None):
@@ -140,7 +140,7 @@ class ForgotPasswordScreen(QDialog):
             'response2': question2_response
         }
 
-        print("Data:", sec_data) # just for debugging purposes
+        log.debug("Data:", sec_data) # just for debugging purposes
 
         # todo: move pop up to its own method?
         QMessageBox.information(

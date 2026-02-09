@@ -1,5 +1,6 @@
 from services.connect_database import db_connection
 from src import SPOT
+import utils.logger.logger as log
 
 def get_property(container_name: str, attribute: str, entity_type: str, id_value: str) -> str:
     """
@@ -26,9 +27,9 @@ def get_property(container_name: str, attribute: str, entity_type: str, id_value
             document = container.read_item(item=item_id, partition_key=partition_key)
             return str(document.get(attribute, "-1"))
         except Exception as e:
-            print(f"Error reading document: {e}")
+            log.error(f"Error reading document: {e}")
             return "-1"
 
     except Exception as e:
-        print(f"Error in get_property: {e}")
+        log.error(f"Error in get_property: {e}")
         return "-1"

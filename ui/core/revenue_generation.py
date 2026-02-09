@@ -143,66 +143,57 @@ class RevenueGeneration(QWidget):
                 self.revenue_records[i]['super_x'].setText(record.get('super_x', '$0.00'))
 
     @staticmethod
-    def calculate_revenues(price, quantity, percentile):
+    @staticmethod
+    def calculate_revenues(price, quantity, percentile, rate=25):
         """
-        Calculate revenue allocation.
-
-        Formula:
-            gross = (price * quantity) * percentile
-            vendor = gross * 0.75
-            super_x = gross * 0.25
+        gross = (price * quantity) * percentile
+        super_x = gross * rate
+        vendor  = gross * (1 - rate)
+        where `rate` is a fraction (0..1). If passed as an integer, treated as percent.
         """
-        q2 = Decimal("0.01")  # two-decimal quantizer
+        q2 = Decimal("0.01")
 
         try:
-            # Parse price & quantity
             d_price = Decimal(str(price))
             d_qty = Decimal(str(quantity))
-
-            if d_price.is_nan() or d_qty.is_nan():
-                return -1
-            if d_price < 0 or d_qty < 0:
+            if d_price.is_nan() or d_qty.is_nan() or d_price < 0 or d_qty < 0:
                 return -1
 
-            # Parse percentile / quartile
+            # percentile parsing (your existing logic)
             if isinstance(percentile, str):
                 p_str = percentile.strip()
                 if p_str.endswith("%"):
-                    p_val = Decimal(p_str[:-1].strip())
-                    p = p_val / Decimal(100)
+                    p = Decimal(p_str[:-1].strip()) / Decimal(100)
                 else:
                     p = Decimal(p_str)
             else:
                 p = Decimal(str(percentile))
 
-            # If given like 25, 50, 75, 100 treat as percent
             if p > 1:
                 p = p / Decimal(100)
-
-            # Validate range 0..1
             if p < 0 or p > 1:
                 return -1
 
-            # Compute gross & splits
-            gross = (d_price * d_qty * p)
-            vendor = gross * Decimal("0.75")
-            super_x = gross * Decimal("0.25")
+            # rate parsing (NEW)
+            r = Decimal(str(rate).strip())
+            if r > 1:
+                r = r / Decimal(100)
+            if r < 0 or r > 1:
+                return -1
 
-            # Round to two decimals (retain only 2 places)
+            gross = d_price * d_qty * p
+            super_x = gross * r
+            vendor = gross * (Decimal("1") - r)
+
             gross = gross.quantize(q2, rounding=ROUND_HALF_UP)
             vendor = vendor.quantize(q2, rounding=ROUND_HALF_UP)
             super_x = super_x.quantize(q2, rounding=ROUND_HALF_UP)
 
-            # Optional: ensure vendor + super_x == gross (fix any 1-cent drift)
             diff = gross - (vendor + super_x)
             if diff != 0:
                 vendor = (vendor + diff).quantize(q2, rounding=ROUND_HALF_UP)
 
-            return {
-                "gross": f"{gross:.2f}",
-                "vendor": f"{vendor:.2f}",
-                "super_x": f"{super_x:.2f}",
-            }
+            return {"gross": f"{gross:.2f}", "vendor": f"{vendor:.2f}", "super_x": f"{super_x:.2f}"}
 
         except (InvalidOperation, ValueError, TypeError):
             return -1

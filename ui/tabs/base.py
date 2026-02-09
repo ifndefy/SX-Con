@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QWidget
+import utils.logger.logger as log
 
 class BaseTab(QWidget):
     def __init__(self, api_handler, tab_name):
@@ -16,5 +17,5 @@ class BaseTab(QWidget):
         pass
 
     def on_button_clicked(self):
-        print(f"{self.tab_name} button clicked")
+        log.info(f"{self.tab_name} button clicked")
         result = self.api_handler.process_action(self.tab_name.upper())
