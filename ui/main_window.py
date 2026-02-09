@@ -104,7 +104,6 @@ class MainWindow(QWidget):
     def change_status_label(self, message):
         if self.status_label:
             self.status_label.setText(message)
-        print(f"{self.tabs.tabText(index)} tab clicked")
 
     def logout(self):
         """
