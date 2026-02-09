@@ -13,7 +13,7 @@ from services.get_item_by_property import get_item_by_property
 from ui.core import format_phone
 from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
-
+import utils.logger as log 
 
 class VendorTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
