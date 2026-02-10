@@ -16,7 +16,7 @@ class SettingsTab(BaseTab):
     def __init__(self, api_handler):
         self.save_btn = None
         self.load_btn = None
-        self.status_label = None
+        # self.status_label = None
         self.theme_dropdown_menu = None
         self.ticket_counter = None
         self.tickets_layout = None
@@ -185,7 +185,7 @@ class SettingsTab(BaseTab):
 
     def on_theme_changed(self, theme_name):
         self.theme_manager.apply_theme(theme_name, self)
-        self.status_label.setText(f"Changed theme to {theme_name}")        
+        # self.status_label.setText(f"Changed theme to {theme_name}")
 
     def setup_button_connections(self):
         """

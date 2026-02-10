@@ -244,7 +244,7 @@ class VendorsTab(BaseTab):
         self.tickets_section.clear()
 
         # Update status
-        self.status_label.setText("All tickets cleared")
+        # self.status_label.setText("All tickets cleared")
 
     def fetch_on_clicked(self):
         """
@@ -255,7 +255,8 @@ class VendorsTab(BaseTab):
         self.remove_ticket_section()
         vendors = self.fetch()
         if not vendors:
-            self.status_label.setText("No vendors found")
+            # self.status_label.setText("No vendors found")
+            print("err") # delete when fixed
         else:
             for vendor in vendors:
                 self.add_user_section()

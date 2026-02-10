@@ -191,7 +191,7 @@ class ProductsTab(BaseTab):
         self.tickets_section.clear()
 
         # Update status
-        self.status_label.setText("All tickets cleared")
+        # self.status_label.setText("All tickets cleared")
 
     def fetch_on_clicked(self):
         """
@@ -202,7 +202,8 @@ class ProductsTab(BaseTab):
         self.remove_ticket_section()
         products = self.fetch()
         if not products:
-            self.status_label.setText("No products found")
+            # self.status_label.setText("No products found")
+            print("err") # delete when fixed
         else:
             for product in products:
                 self.add_user_section()

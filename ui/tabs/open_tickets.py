@@ -205,7 +205,7 @@ class OpenTicketsTab(BaseTab):
         self.tickets_section.clear()
 
         # Update status
-        self.status_label.setText("All tickets cleared")
+        # self.status_label.setText("All tickets cleared")
 
 
     def setup_button_connections(self):
@@ -225,7 +225,8 @@ class OpenTicketsTab(BaseTab):
         self.remove_ticket_section()
         tickets = self.fetch("OPEN")
         if not tickets:
-            self.status_label.setText(f"No tickets found for Status: OPEN")
+            # self.status_label.setText(f"No tickets found for Status: OPEN")
+            print("err") # delete when fixed
         else:
             for ticket in tickets:
                 self.add_ticket_section(ticket)  # Pass ticket data to populate fields
@@ -270,7 +271,7 @@ class OpenTicketsTab(BaseTab):
             ticket_number = ticket_section['ticket_num'].text().strip()
 
             if not ticket_number:
-                self.status_label.setText("No ticket number available")
+                # self.status_label.setText("No ticket number available")
                 return
 
             details_container = ticket_section['details_container']
@@ -282,17 +283,18 @@ class OpenTicketsTab(BaseTab):
                     self.view_ticket_details(ticket_section, ticket_details)
                     details_container.setVisible(True)
                     ticket_section['view_btn'].setText("Hide")
-                    self.status_label.setText(f"Displaying details for ticket {ticket_number}")
+                    # self.status_label.setText(f"Displaying details for ticket {ticket_number}")
                 else:
-                    self.status_label.setText(f"No details found for ticket {ticket_number}")
+                    # self.status_label.setText(f"No details found for ticket {ticket_number}")
+                    print("err") # delete when fixed
             else:
                 details_container.setVisible(False)
                 ticket_section['view_btn'].setText("View")
-                self.status_label.setText(f"Hidden details for ticket {ticket_number}")
+                # self.status_label.setText(f"Hidden details for ticket {ticket_number}")
 
         except Exception as e:
             log.error(f"Error in on_view_clicked: {e}")
-            self.status_label.setText("Error loading ticket details")
+            # self.status_label.setText("Error loading ticket details")
 
     def view(self, ticket_number):
         try:

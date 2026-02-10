@@ -210,7 +210,7 @@ class UsersTab(BaseTab):
         self.tickets_section.clear()
 
         # Update status
-        self.status_label.setText("All tickets cleared")
+        # self.status_label.setText("All tickets cleared")
 
     def fetch_on_clicked(self):
         """
@@ -221,7 +221,8 @@ class UsersTab(BaseTab):
         self.remove_ticket_section()
         users = self.fetch()
         if not users:
-            self.status_label.setText("No users found")
+            # self.status_label.setText("No users found")
+            print("err") # delete when fixed
         else:
             for user in users:
                 self.add_user_section()
