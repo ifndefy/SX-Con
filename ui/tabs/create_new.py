@@ -18,8 +18,9 @@ from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone
+from ui.core import format_price
 import utils.logger.logger as log
-# from ui.core.format_price import restricted_format_price
+
 
 BASE_RATE = 25
 
@@ -397,11 +398,11 @@ class CreateNewTab(BaseTab):
 
         # Price - Fixed width
         line2_layout.addWidget(QLabel("Price:"))
-        price_input = QLineEdit()
-        price_input.setPlaceholderText(f"$0.00")
+        price_input = format_price.PriceField()
+        price_input.setObjectName("DEFAULT")
         price_input.setFixedWidth(100)
-
-        # restricted_format_price(price_input)
+        price_input.setMaxLength(9)
+        price_input.setValidator(QIntValidator(0, 2147483647, self))
 
         line2_layout.addWidget(price_input)
         product_section['price'] = price_input

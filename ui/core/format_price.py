@@ -1,81 +1,34 @@
-from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtCore import Qt
 
-line_edit = QLineEdit()
+# This class clones format_phone
+# Modifications are made to fit into the mold of the price field
 
-def format_price(value):
+class PriceField(QLineEdit):
 
-    if value is None:
-        return -1
-    
-    if type(value) is not str:
-        return -1
-    
-    if value == "":
-        return -1
-    
+    def __init__(self, parent = None):
+        """
+            Param: self and parent (widgets)
+            Purpose: input text widget, aligns it to the right and has a placeholder of "$0.00". Connects to user edits
+            Author(s): Kyle Valdez
+        """
+        super().__init__(parent)
+        self.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.setPlaceholderText("$0.00")
+        self.textEdited.connect(self.__placeholder_manager)
 
-    #checks to see if each index is a digit between 0-9, less than will result in -1
-    index = 0
-    while (index < len(value)):
-        ch  = value[index]
+    def __placeholder_manager(self, string):
+        """
+            Param: self and string (current text of user)
+            Purpose: Make sure only integer digits are taken, formats the text as currency with looking for the last two numbers as cents.
+                    QLineEdit is edited in real time.
+            Author(s): Kyle Valdez
+        """
+        raw_text = "".join(filter(str.isdigit, string))
 
-        if ch < "0" and ch > "9":
-            return -1
-        
-        index = index + 1
+        if len(raw_text) <= 2:
+            formatted = f"${raw_text.zfill(1)}"
+        else:
+            formatted = f"${raw_text[:-2]}.{raw_text[-2:]}"
 
-
-    #value is at least 3 in length, ad zeroes in front to make sure it is 3
-    while (len(value) < 3):
-        value = "0" + value
-
-
-    #dollars and cents part, use string slicing to make sure cents .00
-    dollars_parted  = value[0: len(value) - 2]
-    cents_parted = value[len(value) - 2: len(value)]
-
-    dollars_format = int(dollars_parted)
-
-    formatted_amount = "$" + str(dollars_format) + "." + cents_parted
-
-    return formatted_amount
-
-def restricted_format_price ():
-    
-    validator = QIntValidator(0, 10000000)
-    line_edit.setValidator(validator)
-
-    def user_types (text):
-
-        digits = ""
-        i = 0
-        while (i < len(text)):
-            ch = text[i]
-
-            if ch >= "0" and ch <= "9":
-                digits = digits + ch
-
-            i = i + 1
-
-        if digits == "":
-            line_edit.setText("")
-            return
-        
-        formatted = format_price(digits)
-
-        if formatted == -1:
-            line_edit.setText("")
-            return
-        
-        line_edit.setText(formatted)
-
-        line_edit.tetEdited.connect(user_types)
-
-        return -1
-    
-    return -1
-
-
-
-
+        self.setText(formatted)
