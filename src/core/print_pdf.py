@@ -139,4 +139,5 @@ def print_pdf(pdf_path, printer_name=None):
         else:
             raise RuntimeError(f"Error: Printing failed (error {e.returncode}): {e.stderr or e}") from e
 
-print_pdf(r"D:\SX-Con\utils\tickets\ticket_test_trial.pdf")
+# Uncomment and pass in PDF path to test print
+# print_pdf(r"D:\SX-Con\utils\tickets\ticket_test_trial.pdf")
