@@ -3,6 +3,8 @@ from services.get_item import get_item
 from services.update_property import update_property
 from services.insert_item import insert_item
 
+from services import get_max_value
+
 
 def get_next_user_id():
     """
@@ -13,7 +15,7 @@ def get_next_user_id():
     counter_id = "user_counter"
     partition_key = "counter"
 
-    counter = get_item("Entities", "user", "counter")
+    counter = get_item("Entities", "user", 0)
 
     user_count = counter["current_user_count"] + 1
     return user_count
@@ -24,7 +26,7 @@ def increment_user_counter():
     :author(s): Colin Heinselman
     """
     user_count = get_next_user_id()
-    update_property("Entities", "user", "counter", "current_user_count", user_count)
+    update_property("Entities", "user", 0, "current_user_count", user_count)
 
 def insert_new_user(user_data: dict):
     """
@@ -64,6 +66,10 @@ if __name__ == "__main__":
     }
 
     insert_new_user(user_dict)
+
+    max_user_id = get_max_value.get_max_value("Entities", "user_id")
+    print(max_user_id)
+
 
 
 
