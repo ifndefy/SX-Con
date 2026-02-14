@@ -104,12 +104,12 @@ class CreateNewTab(BaseTab):
         # Vendor ID
         vendor_section_row_1.addWidget(QLabel("ID:"))
         self.vendor_id_input = QLineEdit()
+        self.vendor_id_input.setObjectName("DEFAULT")
         self.vendor_id_input.setPlaceholderText("4 INTS")
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
-
-        self.vendor_id_input.textEdited.connect(self.auto_pop_vend)
+        self.vendor_id_input.editingFinished.connect(self.auto_pop_vend)
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         # Phone Number
@@ -117,9 +117,7 @@ class CreateNewTab(BaseTab):
         self.phone_input = format_phone.PhoneNumField()
         self.phone_input.setObjectName("DEFAULT")
         self.phone_input.setFixedWidth(150)
-        self.phone_input.setValidator(QIntValidator(0, 2147483647, self))
-
-        self.phone_input.textEdited.connect(self.auto_pop_vend_by_phone)
+        self.phone_input.editingFinished.connect(self.auto_pop_vend_by_phone)
         vendor_section_row_1.addWidget(self.phone_input)
 
         # Date and Time - Read-only
@@ -1105,13 +1103,11 @@ class CreateNewTab(BaseTab):
                             input_field.setReadOnly(True)
                 else:
                     for input_field in field_mapping.values():
-                        input_field.setText("")
-                        input_field.setObjectName("")
+                        input_field.setObjectName("DEFAULT")
                         input_field.setReadOnly(False)
             else:
                 for input_field in field_mapping.values():
-                    input_field.setText("")
-                    input_field.setObjectName("")
+                    input_field.setObjectName("DEFAULT")
                     input_field.setReadOnly(False)
 
             for input_field in field_mapping.values():
@@ -1145,13 +1141,11 @@ class CreateNewTab(BaseTab):
                             input_field.setReadOnly(True)
                 else:
                     for input_field in field_mapping.values():
-                        input_field.setText("")
-                        input_field.setObjectName("")
+                        input_field.setObjectName("DEFAULT")
                         input_field.setReadOnly(False)
             else:
                 for input_field in field_mapping.values():
-                    input_field.setText("")
-                    input_field.setObjectName("")
+                    input_field.setObjectName("DEFAULT")
                     input_field.setReadOnly(False)
 
             for input_field in field_mapping.values():
