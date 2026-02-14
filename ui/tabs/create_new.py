@@ -386,6 +386,7 @@ class CreateNewTab(BaseTab):
         # Rate - integer only, placed to the right of Notes
         line2_layout.addWidget(QLabel("Rate:"))
         rate_input = QLineEdit()
+        rate_input.setObjectName("READ_ONLY")
         rate_input.setPlaceholderText(str(BASE_RATE))
         rate_input.setFixedWidth(80)
         rate_input.setValidator(QIntValidator(0, 100, self))
