@@ -875,15 +875,24 @@ class CreateNewTab(BaseTab):
         :author(s): Joe Lee, Colin Henderson
         """
         self.ticket_input.clear()
-        self.vendor_id_input.clear()
-        self.phone_input.clear()
-        self.first_name_input.clear()
-        self.middle_name_input.clear()
-        self.last_name_input.clear()
-        self.address_input.clear()
-        self.city_input.clear()
-        self.state_input.clear()
-        self.zip_input.clear()
+
+        fields = [
+            self.vendor_id_input,
+            self.phone_input,
+            self.first_name_input,
+            self.middle_name_input,
+            self.last_name_input,
+            self.address_input,
+            self.city_input,
+            self.state_input,
+            self.zip_input
+        ]
+        for field in fields:
+            field.clear()
+            field.setReadOnly(False)
+            field.setObjectName("DEFAULT")
+            field.style().unpolish(field)
+            field.style().polish(field)
         self.auto_pop_vend()
 
         # Clear all product fields
