@@ -109,7 +109,7 @@ class CreateNewTab(BaseTab):
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
-        self.vendor_id_input.editingFinished.connect(self.auto_pop_vend)
+        self.vendor_id_input.returnPressed.connect(self.auto_pop_vend)
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         # Phone Number
@@ -117,7 +117,7 @@ class CreateNewTab(BaseTab):
         self.phone_input = format_phone.PhoneNumField()
         self.phone_input.setObjectName("DEFAULT")
         self.phone_input.setFixedWidth(150)
-        self.phone_input.editingFinished.connect(self.auto_pop_vend_by_phone)
+        self.phone_input.returnPressed.connect(self.auto_pop_vend_by_phone)
         vendor_section_row_1.addWidget(self.phone_input)
 
         # Date and Time - Read-only
@@ -337,7 +337,7 @@ class CreateNewTab(BaseTab):
         product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
         product_id_input.setValidator(product_id_validator)
 
-        product_id_input.textChanged.connect(self.auto_pop_prod)
+        product_id_input.returnPressed.connect(self.auto_pop_prod)
 
         line1_layout.addWidget(product_id_input)
         product_section['product_id'] = product_id_input
@@ -360,7 +360,7 @@ class CreateNewTab(BaseTab):
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
         product_name_input.setValidator(alpha_validator)
 
-        product_name_input.textChanged.connect(self.auto_pop_prod_by_name)
+        product_name_input.returnPressed.connect(self.auto_pop_prod_by_name)
 
         line1_layout.addWidget(product_name_input)
         product_section['product_name'] = product_name_input
@@ -986,7 +986,7 @@ class CreateNewTab(BaseTab):
             # self.status_label.setText(f"Error calculating revenues: {e}")
             return -1
 
-    def auto_pop_prod(self, prod_id: str):
+    def auto_pop_prod(self):
         """
         SXC-136 action:
         - autofill product_id and product_name when product_id exists
@@ -996,10 +996,18 @@ class CreateNewTab(BaseTab):
         author: Tyler Slagboom, Joe Lee, Colin Henderson
         """
         try:
-            item = get_item("Entities", "product", prod_id)
+            sender = self.sender()
+            if not sender:
+                return
 
             for product_section in self.product_sections:
-                if product_section['product_id'].hasFocus():
+                if product_section['product_id'] is sender:
+                    prod_id = product_section['product_id'].text().strip()
+                    if not prod_id:
+                        return
+
+                    item = get_item("Entities", "product", prod_id)
+
                     if item:
                         # Product exists - populate and lock
                         if "product_name" in item:
@@ -1042,12 +1050,20 @@ class CreateNewTab(BaseTab):
         except Exception as e:
             log.error(f"Failed to fetch record: {e}")
 
-    def auto_pop_prod_by_name(self, product_name: str):
+    def auto_pop_prod_by_name(self):
         try:
-            item = get_item_by_property("Entities", "product", "product_name", product_name)
+            sender = self.sender()
+            if not sender:
+                return
 
             for product_section in self.product_sections:
-                if product_section['product_name'].hasFocus():
+                if product_section['product_name'] is sender:
+                    prod_name = sender.text().strip()
+                    if not prod_name:
+                        return
+
+                    item = get_item_by_property("Entities", "product", "product_name", prod_name)
+
                     if item:
                         if "product_id" in item:
                             product_section['product_id'].setText(str(item["product_id"]))
@@ -1071,19 +1087,19 @@ class CreateNewTab(BaseTab):
                             else:
                                 product_section['rate'].setText(str(compute_rate(item.get("product_type"))))
                     else:
-                        product_section['product_id'].setObjectName("")
+                        product_section['product_id'].setObjectName("DEFAULT")
                         product_section['product_id'].setReadOnly(False)
                         product_section['product_id'].style().unpolish(product_section['product_id'])
                         product_section['product_id'].style().polish(product_section['product_id'])
 
                         product_section['product_type'].setCurrentText("SELECT")
-                        product_section['product_type'].setObjectName("")
+                        product_section['product_type'].setObjectName("DEFAULT")
                         product_section['product_type'].setEnabled(True)
                         product_section['product_type'].style().unpolish(product_section['product_type'])
                         product_section['product_type'].style().polish(product_section['product_type'])
 
-                        if 'rate' in product_section:
-                            product_section['rate'].setText(str(BASE_RATE))
+                        product_section['rate'].setObjectName("DEFAULT")
+                        product_section['rate'].setText(str(BASE_RATE))
                     break
         except Exception as e:
             log.error(f"Failed to fetch record by name: {e}")
