@@ -23,6 +23,7 @@ idna = "3.11"
 urllib3 = "2.5.0"
 certifi = "2025.11.12"
 pandas = ">=3.0.0"
+openpyxl = "^3.1.5"
 
 [build-system]
 requires = ["poetry-core"]

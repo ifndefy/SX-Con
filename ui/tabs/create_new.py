@@ -287,7 +287,7 @@ class CreateNewTab(BaseTab):
         action_layout = QVBoxLayout()
 
         self.print_btn = QPushButton("Print")
-        self.excel_btn = excel.ExcelButton(self.export_record, xls_gen.generate_excel, "Excel")
+        self.excel_btn = excel.ExcelButton(self.gather_record, xls_gen.generate_excel, None, "Excel")
         self.pdf_btn = QPushButton("PDF")
 
         action_layout.addWidget(self.print_btn)
@@ -480,12 +480,15 @@ class CreateNewTab(BaseTab):
         msg_box.exec()
         return msg_box.clickedButton() == confirm_btn
 
-    def export_record(self):
+    def gather_record(self):
         vendor_info = self._gather_vendor_data()
-        print(f"Vendor_info = {vendor_info}")
         product_info = self._gather_products_data()
-        print(f"Prod_info = {product_info}")
-        pass
+        revenue_data = self._gather_revenue_data()
+        return {
+            'vendor_info': vendor_info,
+            'prod_info': product_info,
+            'revenue_info': revenue_data
+        }
 
     def setup_button_connections(self):
         """
