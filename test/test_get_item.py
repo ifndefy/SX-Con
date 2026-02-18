@@ -24,9 +24,3 @@ def test_get_item() -> int:
 
     except Exception:
         return -1
-
-
-if __name__ == "__main__":
-    exit_code = test_get_item()
-    print(f"Test result: {exit_code}")
-    exit(exit_code)
