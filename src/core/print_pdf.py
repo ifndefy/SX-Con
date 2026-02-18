@@ -91,7 +91,6 @@ def find_printer():
 def print_pdf(pdf_path, printer_name=None):
     """
     Purpose: Prints a pdf, it is likely this can print other file types as well, but this program only uses PDFs
-    :todo: check if printing xlsx is possible
     Method: Verifies dependency files exist, then calls find_printer for a printer to print from
     Author(s): Joe Lee
     """
@@ -117,7 +116,7 @@ def print_pdf(pdf_path, printer_name=None):
     cmd = [
         SPOT.SUMATRA_RELATIVE_PATH,
         "-print-to", printer_name,
-        "-print-settings", "1x",
+        "-print-settings", "1x", # number of copies
         "-silent",
         "-exit-on-print",
         pdf_path
