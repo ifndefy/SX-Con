@@ -9,16 +9,16 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QMessageBox
 
-from services.connect_database import db_connection
 from ui.core.prompts import hash_security_question_answer
 from ui.tabs.base import BaseTab
-
-from src.core.hash_password import hash_password
 from ui.core import prompts
 
-from services import insert_item
+from src.core.hash_password import hash_password
+from services.connect_database import db_connection
+from services.create_user import create_user
 
-from services import user_insert_counter
+
+
 
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -374,10 +374,8 @@ class UsersTab(BaseTab):
         q_values = list(q_dict_hashed.values())
 
 
-        user_id = user_insert_counter.get_next_user_id()
-
-        user_dict = {
-            # type and user_id automatically handled by user_insert_counter.insert_new_user()
+        user_data = {
+            # type and user_id automatically handled by create_user
             #"type": "user",
             #"user_id": 0,
             "username": username_input.text(),
@@ -396,8 +394,8 @@ class UsersTab(BaseTab):
         # password and security questions and answers are hashed
         # return value not currently used
         if result == QDialog.DialogCode.Accepted:
-            print("Valid Input")
-            user_insert_counter.insert_new_user(user_dict)
+            #print("Valid Input")
+            create_user(user_data)
 
             return 0
         else:
