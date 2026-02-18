@@ -53,6 +53,10 @@ QTabWidget#subtabs QTabBar::tab {
     background-color: #691601;
 }
 
+QTabWidget#subtabs QTabBar::tab:selected {
+    background-color: #008000;
+}
+
 QTabBar::tab:selected {
     background-color: #008000;
     color: #ffffff;
