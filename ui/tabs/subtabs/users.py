@@ -15,7 +15,7 @@ from ui.core import prompts
 
 from src.core.hash_password import hash_password
 from services.connect_database import db_connection
-from services.create_user import create_user
+from services import create_user
 
 
 
@@ -368,8 +368,28 @@ class UsersTab(BaseTab):
     def handle_create(self, dialog, username_input, first_name_input,
                       last_name_input, password_input, question1, question1_response,
                       question2, question2_response):
+        """
+        :purpose: links buttons with methods
+        :return: None.
 
-        ## Ensure all fields have input data
+        :param dialog: The dialog window that triggered the "create" action
+        :param username_input: The username input
+        :param first_name_input: The first name input
+        :param last_name_input: The last name input
+        :param password_input: The password input
+        :param question1: The first security question selected
+        :param question1_response: The input field containing the user's response to question1
+        :param question2: The second security question selected
+        :param question2_response: The input field containing the user's response to question2
+
+        :author(s): Colin Heinselman
+        """
+
+        excluded_characters = "',\", ;, --, #, /*, */, `, <, >, $, &, |, ?, :, =, %, \\, ~, space, tab"
+        invalid_username_message = ("Please ensure that your username does not "
+                                    "contain any of the special characters or reserved words:" +
+                                    excluded_characters + " \n ")
+        ## Ensure all fields have input data. Returns are simply used to properly exit the function
 
         # Validate that both security questions are selected
         if question1.currentIndex() == -1 or question2.currentIndex() == -1:
@@ -397,6 +417,11 @@ class UsersTab(BaseTab):
             QMessageBox.warning(self, "Missing Information", "Please provide password.")
             return
 
+        elif not create_user.is_username_valid(username_input.text()):
+            return
+
+
+        print("password = ", password_input.text())
 
         # Hash security questions and answers
         q_dict = {
@@ -423,7 +448,8 @@ class UsersTab(BaseTab):
             "q2_a": q_values[1],
             "admin": False
         }
-        
-        create_user(user_data)
+
+        # TODO: Use return values to see if something went wrong in create_user and create a generic error message
+        create_user.create_user(user_data)
 
         dialog.accept()

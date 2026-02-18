@@ -1,6 +1,18 @@
-from services.insert_item import insert_item
+import re
 
+from services.insert_item import insert_item
 from services import get_max_value
+
+banned_substrings = [
+        "administrator", "root", "system", "guest",
+        "support", "help", "owner", "moderator",
+        "login", "logout", "create", "delete", "config",
+        "settings", "account", "profile", "username",
+        #"test",
+        #"admin"
+        # TODO: Uncomment out common testing substrings
+    ]
+
 def create_user(user_data: dict):
     """
     :purpose: Inserts a new user into the db with automated user_id creation
@@ -23,6 +35,39 @@ def create_user(user_data: dict):
 
     insert_item("Entities", "user", user_data)
     return 0
+
+def is_username_valid(username: str) -> bool:
+    """
+    :purpose: Takes a username and checks if it is a valid username. Restricts certain keywords and special characters.
+    :param username: The username
+    :return: False if username is invalid. True otherwise
+    :author(s): Colin Heinselman
+    """
+
+    allowed_pattern = re.compile(r"^[a-zA-Z0-9_.]{3,20}$")
+    forbidden_chars_pattern = re.compile(r"[\'\";#/*`<>$&|?:=%\\~\s]")
+
+    if contains_banned_substring(username):
+        return False
+    elif len(username) < 4:
+        return False
+    elif not allowed_pattern.fullmatch(username):
+        return False
+    elif forbidden_chars_pattern.fullmatch(username):
+        return False
+
+    return True
+
+
+def contains_banned_substring(username: str) -> bool:
+    lower_username = username.lower()  # make check case-insensitive
+    for banned in banned_substrings:
+        if banned in lower_username:
+            return True
+    return False
+
+
+
 
 
 if __name__ == "__main__":
@@ -59,6 +104,10 @@ if __name__ == "__main__":
     }
     # Should return an error
     create_user(user_dict2)
+
+
+    print(is_username_valid("test_admin123"))
+
 
 
 
