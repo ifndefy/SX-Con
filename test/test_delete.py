@@ -18,7 +18,7 @@ def test_delete_item():
     Author(s): Colin Henderson
     """
     try:
-        container = db_connection.container_name
+        container = getattr(db_connection, "container_name")
         entity_type = "vendor"
 
         entity_id = str(uuid.uuid4())
@@ -48,7 +48,7 @@ def test_delete_property():
     Author(s): Colin Henderson
     """
     try:
-        container_name = getattr(db_connection, "container_name", "Entities")
+        container = getattr(db_connection, "container_name")
         entity_type = "vendor"
         attribute_to_delete = "email"
 
@@ -60,18 +60,18 @@ def test_delete_property():
             attribute_to_delete: "test@example.com",
         }
 
-        insert_result = insert_item(container_name, entity_type, item_data)
+        insert_result = insert_item(container, entity_type, item_data)
         if insert_result != 0:
             return -1
 
-        delete_prop_result = delete_property(container_name, entity_type, entity_id, attribute_to_delete)
+        delete_prop_result = delete_property(container, entity_type, entity_id, attribute_to_delete)
         if delete_prop_result != 0:
             return -1
 
         item_id = f"{entity_type}_{entity_id}"
         partition_key = item_id
         try:
-            container = db_connection.connect(container_name)
+            container = db_connection.connect(container)
             item = container.read_item(item_id, partition_key)
         except Exception:
             return -1
