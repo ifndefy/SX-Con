@@ -1,39 +1,13 @@
-from services.connect_database import db_connection
-from services.get_item import get_item
-from services.update_property import update_property
 from services.insert_item import insert_item
 
 from services import get_max_value
-
-
-def get_next_user_id():
-    """
-    :purpose: Returns the next user_id that can be inserted into the db
-    :author(s): Colin Heinselman
-    """
-    container_name = "Entities"
-    counter_id = "user_counter"
-    partition_key = "counter"
-
-    counter = get_item("Entities", "user", 0)
-
-    user_count = counter["current_user_count"] + 1
-    return user_count
-
-def increment_user_counter():
-    """
-    :purpose: Increments the user counter by 1 in the db, represented by the user with user_id: user_counter
-    :author(s): Colin Heinselman
-    """
-    user_count = get_next_user_id()
-    update_property("Entities", "user", 0, "current_user_count", user_count)
-
-def insert_new_user(user_data: dict):
+def create_user(user_data: dict):
     """
     :purpose: Inserts a new user into the db with automated user_id creation
     :param: user_data: Dictionary containing user data with the following fields:
             username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin
     :author(s): Colin Heinselman
+    :return: -1 if user_data missing fields. 0 otherwise
     """
 
     if len(list(user_data.keys())) < 9:
@@ -42,10 +16,9 @@ def insert_new_user(user_data: dict):
         return -1
 
     user_data["type"] = "user"
-    user_data["user_id"] = get_next_user_id()
+    user_data["user_id"] = get_max_value.get_max_value("Entities", "user_id") + 1
 
     insert_item("Entities", "user", user_data)
-    increment_user_counter()
     return 0
 
 
@@ -68,7 +41,7 @@ if __name__ == "__main__":
     max_user_id = get_max_value.get_max_value("Entities", "user_id")
     print(max_user_id)
 
-
+    create_user(user_dict)
 
 
 

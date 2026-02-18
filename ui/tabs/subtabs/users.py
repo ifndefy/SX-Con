@@ -352,21 +352,17 @@ class UsersTab(BaseTab):
         # Execute dialog
         result = dialog.exec()
 
-
         # Validate that both security questions are selected
         if question1 == -1 or question2 == -1:
             QMessageBox.warning(self, "Missing Information", "Please select both security questions.")
-            return
 
         # Validate that security questions are different
         if question1.currentIndex() == question2.currentIndex():
             QMessageBox.warning(self, "Invalid Selection", "Please select two different security questions.")
-            return
 
         # Validate that response fields have input
         if question1_response.text() == "" or question2_response.text() == "":
             QMessageBox.warning(self, "Missing Information", "Please provide responses for both security questions.")
-            return
 
         q_dict = {
             question1.currentText(): question1_response.text(),
@@ -403,9 +399,9 @@ class UsersTab(BaseTab):
             print("Valid Input")
             user_insert_counter.insert_new_user(user_dict)
 
-            return user_dict
+            return 0
         else:
-            return None
+            return -1
 
     def setup_button_connections(self):
         """
