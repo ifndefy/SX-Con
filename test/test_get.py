@@ -21,10 +21,8 @@ def test_get_max_value():
             enable_cross_partition_query=True
         ))
 
-        print("getting max value from items")
         if items and items[0] is not None:
             max_value = items[0]
-            print("max value is", max_value)
         else:
             max_value = -1
 
