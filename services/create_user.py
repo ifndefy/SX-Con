@@ -10,7 +10,10 @@ def create_user(user_data: dict):
     :return: -1 if user_data missing fields. 0 otherwise
     """
 
-    if len(list(user_data.keys())) < 9:
+
+    required_fields = ["username", "first_name", "last_name", "password", "q1_q", "q1_a", "q2_q", "q2_a", "admin"]
+
+    if len(list(user_data.keys())) < 9 or not all(key in user_data for key in required_fields):
         print("User creation failed. Missing one of the following fields:")
         print("username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin")
         return -1
@@ -41,7 +44,24 @@ if __name__ == "__main__":
     max_user_id = get_max_value.get_max_value("Entities", "user_id")
     print(max_user_id)
 
+    # Creates a valid user
     create_user(user_dict)
+
+    user_dict2 = {
+        "username": "test user2",
+        "first_name": "user2",
+        "last_name": "test2",
+        "q1_q": "question1",
+        "q1_a": "answer",
+        "q2_q": "question2",
+        "q2_a": "answer",
+        "admin": False
+    }
+    # Should return an error
+    create_user(user_dict2)
+
+
+
 
 
 

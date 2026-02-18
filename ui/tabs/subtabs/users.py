@@ -346,60 +346,15 @@ class UsersTab(BaseTab):
         layout.addLayout(btn_layout)
 
         # Connects
-        create_btn.clicked.connect(dialog.accept)
+        create_btn.clicked.connect(lambda: self.handle_create(dialog, username_input, first_name_input,
+                                                              last_name_input, password_input, question1,
+                                                              question1_response, question2, question2_response))
         cancel_btn.clicked.connect(dialog.reject)
 
         # Execute dialog
+        # result = 0 > user clicked "Cancel".     result = 1 > user clicked "Create" and succeeded.
         result = dialog.exec()
 
-        # Validate that both security questions are selected
-        if question1 == -1 or question2 == -1:
-            QMessageBox.warning(self, "Missing Information", "Please select both security questions.")
-
-        # Validate that security questions are different
-        if question1.currentIndex() == question2.currentIndex():
-            QMessageBox.warning(self, "Invalid Selection", "Please select two different security questions.")
-
-        # Validate that response fields have input
-        if question1_response.text() == "" or question2_response.text() == "":
-            QMessageBox.warning(self, "Missing Information", "Please provide responses for both security questions.")
-
-        q_dict = {
-            question1.currentText(): question1_response.text(),
-            question2.currentText(): question2_response.text()
-        }
-        #print(q_dict)
-        q_dict_hashed = hash_security_question_answer(q_dict)
-        q_keys = list(q_dict_hashed.keys())
-        q_values = list(q_dict_hashed.values())
-
-
-        user_data = {
-            # type and user_id automatically handled by create_user
-            #"type": "user",
-            #"user_id": 0,
-            "username": username_input.text(),
-            "first_name": first_name_input.text(),
-            "last_name": last_name_input.text(),
-            "password": hash_password(password_input.text()),
-            "q1_q": q_keys[0],
-            "q1_a": q_values[0],
-            "q2_q": q_keys[1],
-            "q2_a": q_values[1],
-            "admin": False
-        }
-
-
-        # returns a dict including all info to create a new user.
-        # password and security questions and answers are hashed
-        # return value not currently used
-        if result == QDialog.DialogCode.Accepted:
-            #print("Valid Input")
-            create_user(user_data)
-
-            return 0
-        else:
-            return -1
 
     def setup_button_connections(self):
         """
@@ -408,3 +363,67 @@ class UsersTab(BaseTab):
         :author(s): Joe Lee
         """
         self.update_btn.clicked.connect(self.fetch_on_clicked)
+
+
+    def handle_create(self, dialog, username_input, first_name_input,
+                      last_name_input, password_input, question1, question1_response,
+                      question2, question2_response):
+
+        ## Ensure all fields have input data
+
+        # Validate that both security questions are selected
+        if question1.currentIndex() == -1 or question2.currentIndex() == -1:
+            QMessageBox.warning(self, "Missing Information", "Please select both security questions.")
+            return
+        # Validate that security questions are different
+        elif question1.currentIndex() == question2.currentIndex():
+            QMessageBox.warning(self, "Invalid Selection", "Please select two different security questions.")
+            return
+        # Validate that response fields have input
+
+        elif question1_response.text() == "" or question2_response.text() == "":
+            QMessageBox.warning(self, "Missing Information", "Please provide responses for both security questions.")
+            return
+        elif not username_input.text():
+            QMessageBox.warning(self, "Missing Information", "Please provide username.")
+            return
+        elif not first_name_input.text():
+            QMessageBox.warning(self, "Missing Information", "Please provide first name.")
+            return
+        elif not last_name_input.text():
+            QMessageBox.warning(self, "Missing Information", "Please provide last name.")
+            return
+        elif not password_input.text():
+            QMessageBox.warning(self, "Missing Information", "Please provide password.")
+            return
+
+
+        # Hash security questions and answers
+        q_dict = {
+            question1.currentText(): question1_response.text(),
+            question2.currentText(): question2_response.text()
+        }
+        # print(q_dict)
+        q_dict_hashed = hash_security_question_answer(q_dict)
+        q_keys = list(q_dict_hashed.keys())
+        q_values = list(q_dict_hashed.values())
+        
+        
+        user_data = {
+            # type and user_id automatically handled by create_user
+            # "type": "user",
+            # "user_id": 0,
+            "username": username_input.text().strip(),
+            "first_name": first_name_input.text().strip(),
+            "last_name": last_name_input.text().strip(),
+            "password": hash_password(password_input.text()).strip(),
+            "q1_q": q_keys[0],
+            "q1_a": q_values[0],
+            "q2_q": q_keys[1],
+            "q2_a": q_values[1],
+            "admin": False
+        }
+        
+        create_user(user_data)
+
+        dialog.accept()
