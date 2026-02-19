@@ -287,7 +287,7 @@ class CreateNewTab(BaseTab):
         action_layout = QVBoxLayout()
 
         self.print_btn = QPushButton("Print")
-        self.excel_btn = excel.ExcelButton(self.gather_record, xls_gen.generate_excel, None, "Excel")
+        self.excel_btn = excel.ExcelButton(self.gather_record, xls_gen.generate_excel, "Excel")
         self.pdf_btn = QPushButton("PDF")
 
         action_layout.addWidget(self.print_btn)
