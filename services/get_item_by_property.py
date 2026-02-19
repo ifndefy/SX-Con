@@ -4,7 +4,7 @@ from services.connect_database import db_connection
 from src import SPOT
 import utils.logger.logger as log
 
-def get_item_by_property(container_name: str, entity_type: str, property_name: str, property_value: str) -> Any | None:
+def get_item_by_property(container_name: str, entity_type: str, property_name: str, property_value: Any) -> Any | None:
     """
     :purpose: gets an item by property
     :param container_name: name of the container
@@ -21,7 +21,10 @@ def get_item_by_property(container_name: str, entity_type: str, property_name: s
     try:
         container = db_connection.connect(container_name)
 
-        query = f"SELECT * FROM c WHERE c.type = '{entity_type}' AND c.{property_name} = '{property_value}'"
+        if isinstance(property_value, (int, float)):
+            query = f"SELECT * FROM c WHERE c.type = '{entity_type}' AND c.{property_name} = {property_value}"
+        else:
+            query = f"SELECT * FROM c WHERE c.type = '{entity_type}' AND c.{property_name} = '{property_value}'"
 
         items = list(container.query_items(
             query=query,
