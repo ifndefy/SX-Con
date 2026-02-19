@@ -14,6 +14,7 @@ class PDF:
         os.makedirs(self.tickets_dir, exist_ok=True)
 
         self.width, self.height = letter
+        self.y = self.height - 30
 
         self.ticket_num = ticket_num
         self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
@@ -40,19 +41,20 @@ class PDF:
     # todo: def get_current_user()
 
     def create_supermarket_ticket(self):
-        self.draw_ticket_content(self.cursor, self.height - 30)
+        self.draw_header(self.cursor, self.y)
+        self.draw_ticket_content(self.cursor, self.y)
         num_prods = len(self.ticket_data["price_data"]["products"])
         if num_prods <= 5:
-            self.cursor.line(30, self.height / 2, self.width - 30, self.height / 2)
-            self.draw_ticket_content(self.cursor, self.height / 2 - 30)
+            self.cursor.line(30, self.y / 2, self.width - 30, self.y / 2)
+            self.draw_ticket_content(self.cursor, self.y / 2 - 30)
         else:
             self.cursor.showPage()
-            self.draw_ticket_content(self.cursor, self.height - 30)
+            self.y = self.height - 30
+            self.draw_header(self.cursor, self.y)
+            self.draw_ticket_content(self.cursor, self.y)
         self.cursor.save()
 
-    # def draw_header(self, cursor, y_axis):
-
-    def draw_ticket_content(self, cursor, y_axis):
+    def draw_header(self, cursor, y_axis):
         y = y_axis
         c = cursor
 
@@ -78,8 +80,12 @@ class PDF:
 
         c.line(30, y, self.width - 30, y)
         y -= 20
-        y_prod_start = y
-        y_prod = y
+
+        self.y = y
+
+    def draw_ticket_content(self, cursor, y_axis):
+        y_prod = y_axis
+        c = cursor
 
         count = 0
         for prod in self.ticket_data["price_data"]["products"]:
@@ -103,7 +109,9 @@ class PDF:
             count += 1
             if count == 24:
                 self.cursor.showPage()
-                y_prod = y_prod_start
+                self.y = self.height - 30
+                self.draw_header(self.cursor, self.y)
+                y_prod = self.y
         y = y_prod
         c.line(30, y + 5, self.width - 30, y + 5)
         y -= 15
