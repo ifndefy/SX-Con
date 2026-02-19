@@ -162,7 +162,3 @@ class PDF:
         c.rect(112, y - 3, 173, 15)
         c.drawString(112 + 3, y + 1, "123456789012345678901234567890") # todo: popoulate with user data
         c.drawString(300, y, "Employee Signature: _________________________")
-
-
-test = PDF(100025)
-test.create_supermarket_ticket()
