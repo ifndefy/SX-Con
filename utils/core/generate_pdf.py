@@ -108,6 +108,7 @@ class PDF:
             y_prod -= 20
             count += 1
             if count == 24:
+                self.cursor.line(30, y_prod, self.width - 30, y_prod)
                 self.cursor.showPage()
                 self.y = self.height - 30
                 self.draw_header(self.cursor, self.y)
