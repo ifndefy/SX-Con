@@ -4,7 +4,7 @@ from azure.cosmos import CosmosClient
 from pathlib import Path
 from src import SPOT
 import utils.logger.logger as log
-
+from services.message_bus import status_bar_instance
 
 class DatabaseConnection:
     _connections = {}
@@ -27,7 +27,7 @@ class DatabaseConnection:
             SPOT.OFFLINE = True
             self.client = None
             self.database = None
-            print(SPOT.OFFLINE)
+            status_bar_instance.send_message(f"{SPOT.OFFLINE}: Program starting in offline mode")
 
 
     def connect(self, container_name: str):

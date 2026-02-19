@@ -17,7 +17,7 @@ def delete_item(container_name: str, type: str, id: str) -> int:
     :author(s): Tim Liu, Joe Lee
     """
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return 0
 
     try:

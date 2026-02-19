@@ -18,7 +18,7 @@ def delete_property(container_name: str, type: str, id: str, attribute_name: str
     :author(s): Tim Liu, Joe Lee
     """
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return 0
 
     try:
