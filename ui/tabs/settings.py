@@ -10,7 +10,6 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.core.theme_manager import ThemeManager
 from ui.tabs.base import BaseTab
-from services.message_bus import status_bar_instance
 import utils.logger.logger as log
 
 class SettingsTab(BaseTab):

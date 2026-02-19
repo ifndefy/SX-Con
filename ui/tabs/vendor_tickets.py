@@ -13,6 +13,7 @@ from ui.core import format_phone
 from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
 import utils.logger.logger as log
+from services.message_bus import status_bar_instance
 
 class VendorTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -265,7 +266,7 @@ class VendorTicketsTab(BaseTab):
 
         self.tickets_section.clear()
 
-        # self.status_label.setText("All tickets cleared")
+        log.info("All tickets cleared")
 
     def setup_button_connections(self):
         self.fetch_btn.clicked.connect(self.on_fetch_clicked)
@@ -276,7 +277,7 @@ class VendorTicketsTab(BaseTab):
         if vendor_id:
             tickets = self.fetch(vendor_id)
             if not tickets:
-                self.status_label.setText(f"No tickets found for Vendor ID: {vendor_id}")
+                log.warning(f"No tickets found for Vendor ID: {vendor_id}")
             else:
                 for ticket in tickets:
                     self.add_ticket_section()
@@ -285,7 +286,7 @@ class VendorTicketsTab(BaseTab):
                     last_section['datetime'].setText(str(ticket['datetime']))
                     last_section['status'].setText(ticket['status'])
         else:
-            self.status_label.setText("Please enter a Vendor ID")
+            status_bar_instance.send_message("Please enter a Vendor ID")
 
     def fetch(self, vendor_id_input):
         try:
@@ -327,7 +328,7 @@ class VendorTicketsTab(BaseTab):
             ticket_number = ticket_section['ticket_num'].text().strip()
 
             if not ticket_number:
-                self.status_label.setText("No ticket number available")
+                log.warning("No ticket number available")
                 return
 
             details_container = ticket_section['details_container']
@@ -339,18 +340,16 @@ class VendorTicketsTab(BaseTab):
                     self.view_ticket_details(ticket_section, ticket_details)
                     details_container.setVisible(True)
                     ticket_section['view_btn'].setText("Hide")
-                    # self.status_label.setText(f"Displaying details for ticket {ticket_number}")
+                    log.info(f"Displaying details for ticket {ticket_number}")
                 else:
-                    # self.status_label.setText(f"No details found for ticket {ticket_number}")
-                    print("err") # delete when fixed
+                    log.error(f"No details found for ticket {ticket_number}")
             else:
                 details_container.setVisible(False)
                 ticket_section['view_btn'].setText("View")
-                self.status_label.setText(f"Hidden details for ticket {ticket_number}")
+                log.info(f"Hidden details for ticket {ticket_number}")
 
         except Exception as e:
             log.error(f"Error in on_view_clicked: {e}")
-            self.status_label.setText("Error loading ticket details")
 
     def view(self, ticket_number):
         try:
