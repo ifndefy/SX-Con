@@ -1,7 +1,10 @@
 from services.connect_database import db_connection
 from services.update_property import update_property
+from services.get_item import get_item
+from services.delete_item import delete_item
 from src import  SPOT
 import utils.logger.logger as log
+
 
 def test_update_property(container_name: str):
     """
@@ -24,14 +27,19 @@ def test_update_property(container_name: str):
         }
 
         container.create_item(body=document)
+
         update_property(container_name, "test", "test_test", "test_update", "yes")
 
-        grab_item = container.get_item('Entities', 'test', 'test_update', 'test')
-        if grab_item == document:
+        grab_item = get_item(container_name, "test", "test")
+        log.debug(f"item: {grab_item['test_update']}")
+        if grab_item['test_update'] == "yes":
+            log.debug(f"update_property test succeeded")
             return 0
         else:
+            log.debug(f"update_property test failed")
             return -1
-
     except Exception as e:
         log.error(f"Error in test_update_property: {e}")
         return -1
+    finally:
+        delete_item(container_name, "test", "test")
