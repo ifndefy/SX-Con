@@ -19,6 +19,8 @@ from ui.core import prompts
 from services import insert_item
 
 from services import user_insert_counter
+import utils.logger.logger as log
+from services.message_bus import status_bar_instance
 
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -210,7 +212,7 @@ class UsersTab(BaseTab):
         self.tickets_section.clear()
 
         # Update status
-        # self.status_label.setText("All tickets cleared")
+        status_bar_instance.send_message("All tickets cleared")
 
     def fetch_on_clicked(self):
         """
@@ -221,8 +223,7 @@ class UsersTab(BaseTab):
         self.remove_ticket_section()
         users = self.fetch()
         if not users:
-            # self.status_label.setText("No users found")
-            print("err") # delete when fixed
+            log.error("No users found")
         else:
             for user in users:
                 self.add_user_section()
@@ -259,7 +260,7 @@ class UsersTab(BaseTab):
             return users
 
         except Exception as e:
-            print(f"Error fetching users: {e}")
+            log.error(f"Error fetching users: {e}")
             return []
 
     def create_new_user_prompt(self):
@@ -400,7 +401,7 @@ class UsersTab(BaseTab):
         # password and security questions and answers are hashed
         # return value not currently used
         if result == QDialog.DialogCode.Accepted:
-            print("Valid Input")
+            log.info("New_user_prompt: Valid Input")
             user_insert_counter.insert_new_user(user_dict)
 
             return user_dict
