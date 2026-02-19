@@ -27,7 +27,7 @@ class DatabaseConnection:
             SPOT.OFFLINE = True
             self.client = None
             self.database = None
-            status_bar_instance.send_message(f"{SPOT.OFFLINE}: Program starting in offline mode")
+            status_bar_instance.send_message(f"Connection Error: Program starting in offline mode")
 
 
     def connect(self, container_name: str):
