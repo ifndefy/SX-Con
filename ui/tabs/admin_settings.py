@@ -10,6 +10,7 @@ from ui.tabs.subtabs.tickets import RecordsTab
 from ui.tabs.subtabs.users import UsersTab
 from ui.tabs.subtabs.vendors import VendorsTab
 from ui.tabs.subtabs.products import ProductsTab
+import utils.logger.logger as log
 
 
 class AdminSettingsTab(BaseTab):
@@ -61,4 +62,4 @@ class AdminSettingsTab(BaseTab):
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
     def on_tab_changed(self, index):
-        print(f"{self.tabs.tabText(index)} tab clicked")
+        log.info(f"Admin: {self.tabs.tabText(index)} tab clicked")
