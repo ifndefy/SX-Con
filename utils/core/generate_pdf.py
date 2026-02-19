@@ -45,13 +45,18 @@ class PDF:
         self.draw_ticket_content(self.cursor, self.y)
         num_prods = len(self.ticket_data["price_data"]["products"])
         if num_prods <= 5:
-            self.cursor.line(30, self.y / 2, self.width - 30, self.y / 2)
-            self.draw_ticket_content(self.cursor, self.y / 2 - 30)
+            self.draw_footer(self.cursor, self.y)
+            self.cursor.line(30, self.height / 2, self.width - 30, self.height / 2)
+            self.y = self.height / 2 - 30
+            self.draw_header(self.cursor, self.y)
+            self.draw_ticket_content(self.cursor, self.y)
+            self.draw_footer(self.cursor, self.y)
         else:
             self.cursor.showPage()
             self.y = self.height - 30
             self.draw_header(self.cursor, self.y)
             self.draw_ticket_content(self.cursor, self.y)
+            self.draw_footer(self.cursor, self.y)
         self.cursor.save()
 
     def draw_header(self, cursor, y_axis):
@@ -149,7 +154,11 @@ class PDF:
             c.rect(500 - 3, y_pot - 3, 60, 15)
             y_pot -= 18
         y = y_pot - 30
+        self.y = y
 
+    def draw_footer(self, cursor, y_axis):
+        c = cursor
+        y = y_axis
         c.setFont("Helvetica-Bold", 10)
         c.drawString(30, y, "Vendor Name:")
         c.rect(100, y - 3, 185, 15)
@@ -162,3 +171,9 @@ class PDF:
         c.rect(112, y - 3, 173, 15)
         c.drawString(112 + 3, y + 1, "123456789012345678901234567890") # todo: popoulate with user data
         c.drawString(300, y, "Employee Signature: _________________________")
+
+test = PDF(100025)
+test.create_supermarket_ticket()
+
+test2 = PDF(100026)
+test2.create_supermarket_ticket()
