@@ -11,14 +11,9 @@ def create_user(user_data: dict):
     :author(s): Colin Heinselman
     """
 
-
-    if not user_dict_contains_required_fields(user_data):
-        print("User dictionary is missing required fields")
-        print("User dictionary is missing required fields")
-        return -1
-    if not is_valid_username(user_data["username"]):
-        print("Username is invalid")
-        return -2
+    status = validate_user_data(user_data)
+    if status != 0:
+        return status
 
     user_data["user_id"] = get_max_value("Entities", "user_id") + 1
     insert_item("Entities", "user", user_data)
@@ -79,5 +74,15 @@ def user_dict_contains_required_fields(user_data):
         return False
 
     return True
+
+def validate_user_data(user_data):
+    if not user_dict_contains_required_fields(user_data):
+        print("User dictionary is missing required fields")
+        print("User dictionary is missing required fields")
+        return -1
+    if not is_valid_username(user_data["username"]):
+        print("Username is invalid")
+        return -2
+    return 0
 
 
