@@ -1,72 +1,15 @@
-import re
-
 from services.insert_item import insert_item
 from services.get_max_value import get_max_value
-
-banned_substrings = [
-        "administrator", "root", "system", "guest",
-        "support", "help", "owner", "moderator",
-        "login", "logout", "create", "delete", "config",
-        "settings", "account", "profile", "username",
-        #"test",
-        #"admin"
-        # Strings we may want to temporarily allow for us to use during testing
-    ]
 
 def create_user(user_data: dict):
     """
     :purpose: Inserts a new user into the db with automated user_id creation
     :param: user_data: Dictionary containing user data with the following fields:
             username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin
-    :return: -1 if user_data missing fields. 0 otherwise
     :author(s): Colin Heinselman
     """
-
-    required_fields = ["username", "first_name", "last_name", "password", "q1_q", "q1_a", "q2_q", "q2_a", "admin"]
-
-    if len(list(user_data.keys())) < 9 or not all(key in user_data for key in required_fields):
-        print("User creation failed. Missing one of the following fields:")
-        print("username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin")
-        return -1
-
 
     user_data["user_id"] = get_max_value("Entities", "user_id") + 1
     insert_item("Entities", "user", user_data)
 
     return 0
-
-def is_username_valid(username: str) -> bool:
-    """
-    :purpose: Takes a username and checks if it is a valid username. Restricts certain keywords and special characters.
-    :param username: The username
-    :return: False if username is invalid. True otherwise
-    :author(s): Colin Heinselman
-    """
-
-    allowed_pattern = re.compile(r"^[a-zA-Z0-9_.]{3,20}$")
-    forbidden_chars_pattern = re.compile(r"[\'\";#/*`<>$&|?:=%\\~\s]")
-
-    if contains_banned_substring(username):
-        return False
-    elif len(username) < 4:
-        return False
-    elif not allowed_pattern.fullmatch(username):
-        return False
-    elif forbidden_chars_pattern.fullmatch(username):
-        return False
-
-    return True
-
-
-def contains_banned_substring(username: str) -> bool:
-    """
-    :purpose: Takes a username as input and determine if it includes any banned substrings
-    :param username: The username to check
-    :return: True if the username contains any banned substrings. False otherwise
-    :author(s): Colin Heinselman
-    """
-    lower_username = username.lower()  # make check case-insensitive
-    for banned in banned_substrings:
-        if banned in lower_username:
-            return True
-    return False

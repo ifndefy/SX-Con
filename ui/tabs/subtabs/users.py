@@ -348,12 +348,10 @@ class UsersTab(BaseTab):
         # Connects
         create_btn.clicked.connect(lambda: self.handle_create(dialog, username_input, first_name_input,
                                                               last_name_input, password_input, question1,
-                                                              question1_response, question2, question2_response))
+                                                    question1_response, question2, question2_response))
         cancel_btn.clicked.connect(dialog.reject)
 
-        # Execute dialog
-        # result = 0 > user clicked "Cancel".     result = 1 > user clicked "Create" and succeeded.
-        result = dialog.exec()
+        dialog.exec()
 
 
     def setup_button_connections(self):
@@ -369,9 +367,8 @@ class UsersTab(BaseTab):
                       last_name_input, password_input, question1, question1_response,
                       question2, question2_response):
         """
-        :purpose: links buttons with methods
+        :purpose: links buttons with methods. When user clicks "Create" button, this method will execute to create a new user
         :return: None.
-
         :param dialog: The dialog window that triggered the "create" action
         :param username_input: The username input
         :param first_name_input: The first name input
@@ -384,50 +381,73 @@ class UsersTab(BaseTab):
         :author(s): Colin Heinselman
         """
 
-        # Ensure all fields have input data. Returns are simply used to properly exit the function and ensure UI works
+        raw_user_data = self.extract_raw_user_data(dialog, username_input, first_name_input,
+                      last_name_input, password_input, question1, question1_response,
+                      question2, question2_response)
 
+        # Ensures that all prompts are answered
+        prompts_valid = self.validate_prompts(question1, question2, raw_user_data)
+
+        if not prompts_valid:
+            return
+
+        self.insert_user_data(raw_user_data)
+
+        dialog.accept()
+
+    def validate_prompts(self, question1, question2, user_data):
+        # Ensure all fields have input data. Returns are simply used to properly exit the function and ensure UI works
         # Validate that both security questions are selected
         if question1.currentIndex() == -1 or question2.currentIndex() == -1:
             QMessageBox.warning(self, "Missing Information", "Please select both security questions.")
-            return
+            return False
         # Validate that security questions are different
         elif question1.currentIndex() == question2.currentIndex():
             QMessageBox.warning(self, "Invalid Selection", "Please select two different security questions.")
-            return
+            return False
         # Validate that response fields have input
 
-        elif question1_response.text() == "" or question2_response.text() == "":
+        elif user_data["q1_a"] == "" or user_data["q2_a"] == "":
             QMessageBox.warning(self, "Missing Information", "Please provide responses for both security questions.")
-            return
-        elif not username_input.text():
+            return False
+        elif not user_data["username"]:
             QMessageBox.warning(self, "Missing Information", "Please provide username.")
-            return
-        elif not first_name_input.text():
+            return False
+        elif not user_data["first_name"]:
             QMessageBox.warning(self, "Missing Information", "Please provide first name.")
-            return
-        elif not last_name_input.text():
+            return False
+        elif not user_data["last_name"]:
             QMessageBox.warning(self, "Missing Information", "Please provide last name.")
-            return
-        elif not password_input.text():
+            return False
+        elif not user_data["password"]:
             QMessageBox.warning(self, "Missing Information", "Please provide password.")
-            return
+            return False
 
+        return True
+
+    def hash_security_q_and_a(self, user_data):
         # Hash security questions and answers
-        q_dict = {
-            question1.currentText(): question1_response.text(),
-            question2.currentText(): question2_response.text()
+        q_a_dict = {
+            user_data["q1_q"]: user_data["q1_a"],
+            user_data["q2_q"]: user_data["q2_a"],
         }
-        # print(q_dict)
-        q_dict_hashed = hash_security_question_answer(q_dict)
+
+        q_dict_hashed = hash_security_question_answer(q_a_dict)
         q_keys = list(q_dict_hashed.keys())
         q_values = list(q_dict_hashed.values())
-        
-        
+
+        return q_keys, q_values
+
+    def insert_user_data(self, raw_user_data):
+
+        # Hash security questions and answers
+        q_keys, q_values = self.hash_security_q_and_a(raw_user_data)
+
         user_data = {
-            "username": username_input.text().strip(),
-            "first_name": first_name_input.text().strip(),
-            "last_name": last_name_input.text().strip(),
-            "password": hash_password(password_input.text()).strip(),
+            "username": raw_user_data["username"],
+            "first_name": raw_user_data["first_name"],
+            "last_name": raw_user_data["last_name"],
+            "password": hash_password(raw_user_data["password"]),
             "q1_q": q_keys[0],
             "q1_a": q_values[0],
             "q2_q": q_keys[1],
@@ -435,7 +455,22 @@ class UsersTab(BaseTab):
             "admin": False
         }
 
-
         create_user(user_data)
 
-        dialog.accept()
+
+    def extract_raw_user_data(self, dialog, username_input, first_name_input,
+                      last_name_input, password_input, question1, question1_response,
+                      question2, question2_response):
+
+        raw_user_data = {
+            "username": username_input.text().strip(),
+            "first_name": first_name_input.text().strip(),
+            "last_name": last_name_input.text().strip(),
+            "password": password_input.text().strip(),
+            "q1_q": question1.currentText().strip(),
+            "q1_a": question1_response.text().strip(),
+            "q2_q": question2.currentText().strip(),
+            "q2_a": question2_response.text().strip(),
+            "admin": False
+        }
+        return raw_user_data
