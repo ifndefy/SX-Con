@@ -387,13 +387,15 @@ class UsersTab(BaseTab):
 
         # Ensures that all prompts are answered
         prompts_valid = self.validate_prompts(question1, question2, raw_user_data)
-
         if not prompts_valid:
             return
 
-        self.insert_user_data(raw_user_data)
+        user_insertion_status = self.insert_user_data(raw_user_data)
+        if user_insertion_status == 0:
+            dialog.accept()
+        else:
+            self.invalid_user_message(dialog, user_insertion_status)
 
-        dialog.accept()
 
     def validate_prompts(self, question1, question2, user_data):
         # Ensure all fields have input data. Returns are simply used to properly exit the function and ensure UI works
@@ -455,7 +457,7 @@ class UsersTab(BaseTab):
             "admin": False
         }
 
-        create_user(user_data)
+        return create_user(user_data)
 
 
     def extract_raw_user_data(self, dialog, username_input, first_name_input,
@@ -474,3 +476,15 @@ class UsersTab(BaseTab):
             "admin": False
         }
         return raw_user_data
+
+    def invalid_user_message(self, dialog, user_insertion_status):
+        reason = ""
+        if user_insertion_status == -1:
+            reason = "User is missing required fields"
+        elif user_insertion_status == -2:
+            reason = ("Invalid Username. Ensure your username meets all of the following requirements:\n"
+                      " - Doesn't contain any banned characters: (#, *, /, ^, etc.)\n"
+                      " - Doesn't contain any banned words: (admin, test, system, etc.)\n"
+                      " - Is at least 3 characters long.")
+
+        QMessageBox.warning(self, "Invalid User Information", reason)
