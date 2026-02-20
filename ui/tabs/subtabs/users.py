@@ -15,7 +15,7 @@ from ui.core import prompts
 
 from src.core.hash_password import hash_password
 from services.connect_database import db_connection
-from services import create_user
+from services.create_user import create_user
 
 
 
@@ -436,6 +436,6 @@ class UsersTab(BaseTab):
         }
 
 
-        create_user.create_user(user_data)
+        create_user(user_data)
 
         dialog.accept()
