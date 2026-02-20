@@ -12,6 +12,7 @@ from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 
 from handlers.handler_pdf import handler_live_pdf
+from handlers import handler_print
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
 from services.message_bus import status_bar_instance
@@ -22,7 +23,6 @@ from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone, format_price, excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
-from services.message_bus import status_bar_instance
 
 
 BASE_RATE = 25
@@ -286,13 +286,13 @@ class CreateNewTab(BaseTab):
         # Action buttons
         action_layout = QVBoxLayout()
 
-        self.print_btn = QPushButton("Print")
         self.excel_btn = excel.ExcelButton(self.gather_record, xls_gen.generate_excel, "Excel")
         self.pdf_btn = QPushButton("PDF")
+        self.print_btn = QPushButton("Print")
 
-        action_layout.addWidget(self.print_btn)
         action_layout.addWidget(self.excel_btn)
         action_layout.addWidget(self.pdf_btn)
+        action_layout.addWidget(self.print_btn)
 
         action_layout.addStretch()
 
@@ -503,9 +503,22 @@ class CreateNewTab(BaseTab):
         self.add_product_btn.clicked.connect(self.add_product_section)
         self.calc_btn.clicked.connect(self.update_revenue_fields)
         self.pdf_btn.clicked.connect(self.on_pdf_clicked)
+        self.print_btn.clicked.connect(self.on_print_clicked)
 
         # wire up Clear Form
         self.clear_btn.clicked.connect(self.clear_form)
+
+    def on_print_clicked(self):
+        ticket = self.ticket_input.text().strip()
+
+        if not self.on_pdf_clicked():
+            return
+
+        result = handler_print.handler_db_print(ticket)
+        if result:
+            log.info(f"Print executed for ticket {ticket}")
+        else:
+            log.error(f"Printing ticket {ticket} failed. Check the logs.")
 
     def on_pdf_clicked(self):
         vendor_data = self._gather_vendor_data()
@@ -516,6 +529,10 @@ class CreateNewTab(BaseTab):
             if self._validate_required_fields(vendor_data, products_data):
                 handler_live_pdf(vendor_data, products_data, revenue_data)
                 log.info(f"PDF generated for ticket {vendor_data['ticket_number']}")
+                return True
+            else:
+                log.error("PDF generation for ticket failed")
+                return False
         except Exception as e:
             log.error(f"ERROR generating PDF for ticket {vendor_data['ticket_number']}: {e}")
 
@@ -764,12 +781,10 @@ class CreateNewTab(BaseTab):
                 log.info("Consignment document created successfully")
             except Exception as e:
                 log.error(f"Error creating consignment document: {e}")
-                # self.status_label.setText(f"Error creating consignment: {str(e)}")
                 return -1
 
             success_msg = f"Record created successfully! Ticket: {ticket_number}"
             log.info(success_msg)
-            # self.status_label.setText(success_msg)
             return ticket_number
 
         except Exception as e:
