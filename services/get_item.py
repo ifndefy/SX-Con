@@ -15,7 +15,7 @@ def get_item(container_name: str, entity_type: str, id: str) -> Any | None:
     :author(s): Alexander Bubienko, Joe Lee
     """
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return 0
 
     try:

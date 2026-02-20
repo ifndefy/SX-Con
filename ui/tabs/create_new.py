@@ -20,6 +20,7 @@ from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone, format_price, excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
+from services.message_bus import status_bar_instance
 
 
 BASE_RATE = 25
@@ -52,7 +53,6 @@ class CreateNewTab(BaseTab):
         self.add_product_btn = None
         self.clear_btn = None
         self.revenue_generation = None
-        # self.status_label = None
         self.create_btn = None
 
         self.product_sections = []
@@ -425,6 +425,7 @@ class CreateNewTab(BaseTab):
         self.products_layout.addWidget(section_widget)
         self.product_sections.append(product_section)
         self.product_counter += 1
+        status_bar_instance.send_message(f"Added product line. Total: {len(self.product_sections)}")
 
     def _on_product_type_changed(self, product_section: dict):
         try:
@@ -439,7 +440,7 @@ class CreateNewTab(BaseTab):
             new_rate = compute_rate(type_widget.currentText())
             rate_widget.setText(str(new_rate))
         except Exception as e:
-            print(f"Failed to auto-set rate: {e}")
+            log.error(f"Failed to auto-set rate: {e}")
 
     def create_removal_handler(self, widget, product_section):
         def removal_handler():
@@ -462,7 +463,7 @@ class CreateNewTab(BaseTab):
         widget.deleteLater()
 
         self.product_counter -= 1
-        # self.status_label.setText(f"Removed product line. Total: {len(self.product_sections)}")
+        status_bar_instance.send_message(f"Removed product line. Total: {len(self.product_sections)}")
 
     def show_remove_product_warning(self, product_section):
         product_id = product_section['product_id'].text().strip()
@@ -538,15 +539,14 @@ class CreateNewTab(BaseTab):
             record_id = self._post_to_database(record_data)
 
             if record_id != -1:
-                # self.status_label.setText(f"Record created successfully! ID: {record_id}")
+                status_bar_instance.send_message(f"Record created successfully! ID: {record_id}")
                 self.clear_form()
                 return record_id
             else:
-                # self.status_label.setText("Failed to create record")
+                log.error("Failed to create record")
                 return -1
 
         except Exception as e:
-            # self.status_label.setText(f"Error creating record: {str(e)}")
             log.error(f"Database error: {e}")
             return -1
 
@@ -609,7 +609,7 @@ class CreateNewTab(BaseTab):
         :return: True if all required fields are valid, False otherwise
         """
         if not vendor_data['vendor_id'] or vendor_data['vendor_id'] == "NULL":
-            # self.status_label.setText("Error: Vendor ID is required")
+            log.error("Error: Vendor ID is required")
             return False
 
         if products_data is None:
@@ -625,8 +625,7 @@ class CreateNewTab(BaseTab):
                 break
 
         if not has_valid_product:
-            # self.status_label.setText(
-            #     "Error: At least one product requires Product ID, Product Type, Price, and Quantity")
+            log.error("Error: At least one product requires Product ID, Product Type, Price, and Quantity")
             return False
 
         return True
@@ -645,7 +644,6 @@ class CreateNewTab(BaseTab):
             vendor_id = record_data['vendor']['vendor_id']
             if not vendor_id or vendor_id == "NULL":
                 log.error("Error: No vendor ID provided")
-                # self.status_label.setText("Error: Vendor ID is required")
                 return -1
 
             # Create vendor document
@@ -672,7 +670,6 @@ class CreateNewTab(BaseTab):
                 log.info("Vendor document created successfully")
             except Exception as e:
                 log.error(f"Error creating vendor document: {e}")
-                # self.status_label.setText(f"Error creating vendor: {str(e)}")
                 return -1
 
             # todo: need a ticket to check if product_id already exists
@@ -684,12 +681,8 @@ class CreateNewTab(BaseTab):
                     if not product_id or product_id == "NULL":
                         log.warning(f"Skipping product {i} - no product ID")
                         continue
-                        print(f"Skipping product {i} - no product ID")
-                        # self.status_label.setText("Error: Product ID is required for all products")
-                        return -1
                     if not product_name or product_name == "NULL":
-                        print(f"Error: Product {i} missing Product Name")
-                        # self.status_label.setText("Error: Product Name is required for all products")
+                        log.error("Error: Product Name is required for all products")
                         return -1
 
                     rate_value = self._convert_rate(product.get('rate'))
@@ -716,7 +709,6 @@ class CreateNewTab(BaseTab):
             ticket_number = record_data['vendor']['ticket_number']
             if not ticket_number or ticket_number == "NULL":
                 log.error("Error: No ticket number provided")
-                # self.status_label.setText("Error: Ticket number is required")
                 return -1
 
             consignment_document = {
@@ -832,10 +824,10 @@ class CreateNewTab(BaseTab):
             val = int(cleaned)
             if 0 <= val <= 100:
                 return val
-            print(f"Rate {val} outside valid range 0-100")
+            log.error(f"Rate {val} outside valid range 0-100")
             return None
         except (ValueError, TypeError):
-            print(f"Invalid rate: {rate_str}")
+            log.error(f"Invalid rate: {rate_str}")
             return None
 
     def _convert_null(self, value):
@@ -918,7 +910,7 @@ class CreateNewTab(BaseTab):
         self.add_product_section()
         self.add_product_section()
         self.revenue_generation.clear_revenue_data()
-        # self.status_label.setText("Form cleared")
+        status_bar_instance.send_message("Form cleared")
         self.update_ticket_number()
 
     def _parse_money(self, s: str) -> float:
@@ -964,38 +956,38 @@ class CreateNewTab(BaseTab):
                 price = self._parse_money(section['price'].text())
                 qty = self._parse_int(section['quantity'].text())
                 if price < 0 or qty < 0:
-                    # self.status_label.setText("Error: Negative price or quantity")
+                    log.error("Error: Negative price or quantity")
                     return -1
                 subtotal += price * qty
 
             records = getattr(self.revenue_generation, "revenue_records", None)
             if not records or len(records) != 4:
-                # self.status_label.setText("Error: Revenue widget not initialized")
+                log.error("Error: Revenue widget not initialized")
                 return -1
 
             calc = getattr(self.revenue_generation, "calculate_revenues", None)
             if not callable(calc):
-                # self.status_label.setText("Error: Revenue calculation method (SXC-22) not found")
+                log.error("Error: Revenue calculation method (SXC-22) not found")
                 return -1
 
             for rec in records:
                 pct_label = rec['percentage'].text()
                 result = calc(subtotal, 1, pct_label)
                 if result == -1 or not self._valid_revenue_result(result):
-                    # self.status_label.setText(f"Error: Invalid revenue output for {pct_label}")
+                    log.error(f"Error: Invalid revenue output for {pct_label}")
                     return -1
 
                 rec['vendor'].setText(f"${float(result['vendor']):.2f}")
                 rec['super_x'].setText(f"${float(result['super_x']):.2f}")
 
-            # self.status_label.setText("Revenue fields updated")
+            status_bar_instance.send_message("Revenue fields updated")
             return 0
 
         except ValueError:
-            # self.status_label.setText("Error: Non-numeric price or quantity")
+            log.error("Error: Non-numeric price or quantity")
             return -1
         except Exception as e:
-            # self.status_label.setText(f"Error calculating revenues: {e}")
+            log.error(f"Error calculating revenues: {e}")
             return -1
 
     def auto_pop_prod(self):

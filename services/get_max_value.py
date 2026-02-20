@@ -11,7 +11,7 @@ def get_max_value(container_name, property_name):
     :author(s): Joe Lee
     """
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return 0
 
     try:

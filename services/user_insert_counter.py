@@ -2,7 +2,7 @@ from services.connect_database import db_connection
 from services.get_item import get_item
 from services.update_property import update_property
 from services.insert_item import insert_item
-
+import utils.logger.logger as log
 
 def get_next_user_id():
     """
@@ -35,8 +35,7 @@ def insert_new_user(user_data: dict):
     """
 
     if len(list(user_data.keys())) < 9:
-        print("User creation failed. Missing one of the following fields:")
-        print("username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin")
+        log.error("User creation failed. Missing one of the following fields: username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin")
         return -1
 
     user_data["type"] = "user"
