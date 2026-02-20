@@ -514,11 +514,8 @@ class CreateNewTab(BaseTab):
         if not self.on_pdf_clicked():
             return
 
-        result = handler_print.handler_print(ticket)
-        if result:
-            log.info(f"Print executed for ticket {ticket}")
-        else:
-            log.error(f"Printing ticket {ticket} failed. Check the logs.")
+        handler_print.handler_print(ticket)
+        log.info(f"Print requested for ticket {ticket}")
 
     def on_pdf_clicked(self):
         vendor_data = self._gather_vendor_data()
