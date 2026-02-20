@@ -17,8 +17,8 @@ from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_generation import RevenueGeneration
-from ui.core import format_phone
-from ui.core import format_price
+from ui.core import format_phone, format_price, excel
+from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 
 
@@ -287,11 +287,11 @@ class CreateNewTab(BaseTab):
         action_layout = QVBoxLayout()
 
         self.print_btn = QPushButton("Print")
-        self.export_btn = QPushButton("Export")
+        self.excel_btn = excel.ExcelButton(self.gather_record, xls_gen.generate_excel, "Excel")
         self.pdf_btn = QPushButton("PDF")
 
         action_layout.addWidget(self.print_btn)
-        action_layout.addWidget(self.export_btn)
+        action_layout.addWidget(self.excel_btn)
         action_layout.addWidget(self.pdf_btn)
 
         action_layout.addStretch()
@@ -479,6 +479,16 @@ class CreateNewTab(BaseTab):
 
         msg_box.exec()
         return msg_box.clickedButton() == confirm_btn
+
+    def gather_record(self):
+        vendor_info = self._gather_vendor_data()
+        product_info = self._gather_products_data()
+        revenue_data = self._gather_revenue_data()
+        return {
+            'vendor_info': vendor_info,
+            'prod_info': product_info,
+            'revenue_info': revenue_data
+        }
 
     def setup_button_connections(self):
         """
