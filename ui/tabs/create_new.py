@@ -11,8 +11,10 @@ from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 
+from handlers.handler_pdf import handler_live_pdf
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
+from services.message_bus import status_bar_instance
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
@@ -500,9 +502,22 @@ class CreateNewTab(BaseTab):
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
         self.calc_btn.clicked.connect(self.update_revenue_fields)
+        self.pdf_btn.clicked.connect(self.on_pdf_clicked)
 
         # wire up Clear Form
         self.clear_btn.clicked.connect(self.clear_form)
+
+    def on_pdf_clicked(self):
+        vendor_data = self._gather_vendor_data()
+        products_data = self._gather_products_data()
+        self.update_revenue_fields()
+        revenue_data = self._gather_revenue_data()
+        try:
+            if self._validate_required_fields(vendor_data, products_data):
+                handler_live_pdf(vendor_data, products_data, revenue_data)
+                log.info(f"PDF generated for ticket {vendor_data['ticket_number']}")
+        except Exception as e:
+            log.error(f"ERROR generating PDF for ticket {vendor_data['ticket_number']}: {e}")
 
     def create_record(self):
         """

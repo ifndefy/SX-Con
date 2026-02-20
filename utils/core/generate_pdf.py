@@ -14,29 +14,40 @@ class PDF:
         os.makedirs(self.tickets_dir, exist_ok=True)
 
         self.width, self.height = letter
-        self.y = self.height - 30
+        self.y = self.height - 60
 
         self.ticket_num = ticket_num
-        self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
-
-        self.cursor = canvas.Canvas(self.pdf_filename, pagesize=letter)
+        self.pdf_filename = None
+        self.cursor = None
         self.vendor_id = None
-
         self.ticket_data = None
         self.vendor_data = None
 
-        self.set_ticket_data()
-        self.set_vendor_num()
-        self.set_vendor_data()
+        if str(self.ticket_num).upper() != "LIVE":
+            self.set_ticket_data()
+            self.set_vendor_num()
+            self.set_vendor_data()
+            self.set_pdf_filename()
+            self.set_cursor(self.pdf_filename)
 
     def set_ticket_data(self):
         self.ticket_data = get_item_by_property("Consignments", "consignment", "ticket_number", self.ticket_num)
 
-    def set_vendor_num(self):
+    def set_vendor_num(self, ):
         self.vendor_id = self.ticket_data["vendor_id"]
 
     def set_vendor_data(self):
         self.vendor_data = get_item_by_property("Entities", "vendor", "vendor_id", self.vendor_id)
+
+    def set_pdf_filename(self):
+        self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
+
+    def set_cursor(self, f_name):
+        if f_name:
+            self.pdf_filename = f_name
+        if self.pdf_filename is None:
+            raise Exception("PDF name could not be set")
+        self.cursor = canvas.Canvas(self.pdf_filename, pagesize=letter)
 
     # todo: def get_current_user()
 

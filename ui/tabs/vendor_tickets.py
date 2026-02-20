@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
+from handlers.handler_pdf import handler_db_pdf
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
 from ui.core import format_phone
@@ -251,9 +252,37 @@ class VendorTicketsTab(BaseTab):
         tickets_section['index'] = ticket_index
 
         view_btn.clicked.connect(self.make_view_handler(ticket_index))
+        pdf_btn.clicked.connect(self.make_pdf_handler(ticket_index))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
 
         self.tickets_section.append(tickets_section)
+
+    def make_pdf_handler(self, ticket_index):
+        """
+        :Purpose: handles GUI interactions with the pdf_btn
+        :Param: ticket_index - GUI objects for the ticket field
+        :Author(s): Joe Lee
+        """
+        def handler():
+            ticket_section = self.tickets_section[ticket_index]
+            ticket_number = ticket_section['ticket_num'].text().strip()
+            if ticket_number:
+                self.handle_pdf_btn_clicked(ticket_number)
+            else:
+                log.warning("No ticket number available for PDF generation")
+        return handler
+
+    def handle_pdf_btn_clicked(self, ticket_number):
+        """
+        :Purpose: handles interaction between pdf generation files
+        :Param: ticket_number - typecasted value found in GUI ticket field
+        :Author(s): Joe Lee
+        """
+        try:
+            handler_db_pdf(int(ticket_number))
+            log.info(f"PDF generated for ticket {ticket_number}")
+        except Exception as e:
+            log.error(f"ERROR generating PDF for ticket {ticket_number}: {e}")
 
     def make_form_handler(self, ticket_index):
         def gather_ticket():

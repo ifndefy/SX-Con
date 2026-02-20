@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
+from handlers.handler_pdf import handler_db_pdf
 from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
 import utils.logger.logger as log
@@ -179,10 +180,13 @@ class OpenTicketsTab(BaseTab):
         # Add to container
         self.tickets_layout.addWidget(section_widget)
 
-        # Store the index and connect the view button
+        # Store the index
         ticket_index = len(self.tickets_section)
         tickets_section['index'] = ticket_index
+
+        # Connect the view button
         view_btn.clicked.connect(self.make_view_handler(ticket_index))
+        pdf_btn.clicked.connect(self.make_pdf_handler(ticket_number_input.text()))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
 
         self.tickets_section.append(tickets_section)
@@ -193,7 +197,7 @@ class OpenTicketsTab(BaseTab):
             ticket_number = ticket['ticket_num'].text().strip()
             ticket_details = self.view(ticket_number)
             unpacked_ticket = ticket_details['ticket_data']
-            
+
             ticket_header = {
                 'ticket_number': unpacked_ticket['ticket_number'],
                 'vendor_id': unpacked_ticket['vendor_id'],
@@ -206,13 +210,24 @@ class OpenTicketsTab(BaseTab):
                 'product_data': unpacked_ticket['price_data']['products'],
                 'revenue_sharing': unpacked_ticket['revenue_sharing']
             }
-        
-        return gather_ticket 
+
+        return gather_ticket
+
+    def make_pdf_handler(self, ticket_number):
+        def handler():
+            self.handle_pdf_btn_clicked(int(ticket_number))
+        return handler
+
+    def handle_pdf_btn_clicked(self, ticket_number):
+        try:
+            handler_db_pdf(ticket_number)
+            log.info(f"PDF generated for ticket {ticket_number}")
+        except Exception as e:
+            log.error(f"ERROR generating PDF for ticket {ticket_number}: {e}")
 
     def make_view_handler(self, ticket_index):
         def handler():
             self.on_view_clicked(ticket_index)
-
         return handler
 
     def remove_ticket_section(self):
