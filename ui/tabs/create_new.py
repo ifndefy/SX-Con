@@ -734,6 +734,7 @@ class CreateNewTab(BaseTab):
                         {
                             'product_id': product['product_id'],
                             'product_type': product['product_type'],
+                            'product_name': product['product_name'],
                             'notes': product['notes'],
                             'rate': (
                                 self._convert_rate(product.get('rate'))
