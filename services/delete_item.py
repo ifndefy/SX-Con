@@ -3,7 +3,7 @@ How to use:
     delete_item("Entities", "vendor", "1")
 """
 
-from connect_database import db_connection
+from services.connect_database import db_connection
 from src import SPOT
 import utils.logger.logger as log
 
