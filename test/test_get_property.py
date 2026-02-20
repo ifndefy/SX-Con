@@ -40,7 +40,3 @@ def test_get_property() -> int:
     except Exception:
         return -1
 
-
-if __name__ == "__main__":
-    exit_code = test_get_property()
-    print(f"Test result: {exit_code}")
