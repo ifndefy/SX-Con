@@ -60,6 +60,3 @@ def test_autogen_date():
 
     except Exception:
         return -1
-
-print(test_autogen_date())
-print(test_autogen_ticket_num())
