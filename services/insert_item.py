@@ -31,7 +31,7 @@ def insert_item(container_name: str, entity_type: str, item_data: dict):
         }
 
         container.create_item(body=document)
-        log.info(f"Successfully inserted {item_id} into {container_name}")
+        log.info(f"Successfully inserted {entity_type} into {container_name}")
         return 0
 
     except Exception as e:
