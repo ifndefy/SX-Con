@@ -29,12 +29,6 @@ def create_user(user_data: dict):
         print("username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin")
         return -1
 
-    #TODO: Remove Validation
-    """
-    if not is_username_valid(user_data["username"]):
-        print("Invalid username creation attempt in create_user.py")
-        return -1
-    """
 
     user_data["user_id"] = get_max_value("Entities", "user_id") + 1
     insert_item("Entities", "user", user_data)
@@ -76,43 +70,3 @@ def contains_banned_substring(username: str) -> bool:
         if banned in lower_username:
             return True
     return False
-
-#TODO: Remove main
-"""
-if __name__ == "__main__":
-    #increment_user_counter()
-    #print("Next user number = " + str(get_next_user_id()))
-
-    user_dict = {
-        "username": "test user",
-        "first_name": "user123",
-        "last_name": "test",
-        "password": "239852734958",
-        "q1_q": "question1",
-        "q1_a": "answer",
-        "q2_q": "question2",
-        "q2_a": "answer",
-        "admin": False,
-    }
-
-    max_user_id = get_max_value("Entities", "user_id")
-    print(max_user_id)
-
-    # Creates a valid user
-    create_user(user_dict)
-
-    user_dict2 = {
-        "username": "test user2",
-        "first_name": "user2",
-        "last_name": "test2",
-        "q1_q": "question1",
-        "q1_a": "answer",
-        "q2_q": "question2",
-        "q2_a": "answer",
-        "admin": False
-    }
-    # Should return an error
-    create_user(user_dict2)
-
-
-    print(is_username_valid("test_admin123"))"""

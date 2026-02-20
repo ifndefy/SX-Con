@@ -381,18 +381,10 @@ class UsersTab(BaseTab):
         :param question1_response: The input field containing the user's response to question1
         :param question2: The second security question selected
         :param question2_response: The input field containing the user's response to question2
-
         :author(s): Colin Heinselman
         """
 
-        #TODO: Remove Validation
-        """
-        excluded_characters = "',\", ;, --, #, /*, */, `, <, >, $, &, |, ?, :, =, %, \\, ~, space, tab"
-        invalid_username_message = ("Please ensure that your username does not "
-                                    "contain any of the special characters or reserved words:" +
-                                    excluded_characters + " \n ")"""
-
-        ## Ensure all fields have input data. Returns are simply used to properly exit the function
+        # Ensure all fields have input data. Returns are simply used to properly exit the function and ensure UI works
 
         # Validate that both security questions are selected
         if question1.currentIndex() == -1 or question2.currentIndex() == -1:
@@ -420,12 +412,6 @@ class UsersTab(BaseTab):
             QMessageBox.warning(self, "Missing Information", "Please provide password.")
             return
 
-        # TODO: Remove Validation
-        """elif not create_user.is_username_valid(username_input.text()):
-            QMessageBox.warning(self, "Invalid Username", "Invalid Username")
-            return"""
-
-
         # Hash security questions and answers
         q_dict = {
             question1.currentText(): question1_response.text(),
@@ -449,25 +435,7 @@ class UsersTab(BaseTab):
             "admin": False
         }
 
-        #TODO: Remove Validation
-        """
-        if not create_user.is_username_valid(user_data["username"]):
-            print("invalid username")
-            QMessageBox.warning(self, "Invalid Username", "Username may contain a banned substring (admin, user, test, etc.)"
-                                                          "or a restricted special character (#, ;, <, *, etc.")
-            return
-        """
 
-        # TODO: Remove Validation
-        #create_user_status = create_user.create_user(user_data)
         create_user.create_user(user_data)
 
-        # TODO: Remove Validation
-        """if create_user_status == -1:
-            # Something went wrong with user creation
-            QMessageBox.warning(self, "Something Went Wrong", "An error occurred when creating the user. "
-                                                              "Your database connection may be unstable or your chosen "
-                                                              "username may already exist.\n"
-                                                              "Please try again or contact your administrator.")
-"""
         dialog.accept()
