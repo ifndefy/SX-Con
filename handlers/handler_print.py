@@ -3,7 +3,7 @@ import os
 import utils.logger.logger as log
 from utils.core.print_pdf import Sxcprinter
 
-def handler_db_print(tic_num):
+def handler_print(tic_num):
     sxc_printer = Sxcprinter(ticket_number=tic_num)
     try:
         if validate_pdf_exists(tic_num):
