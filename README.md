@@ -46,6 +46,7 @@ A comprehensive application for managing vendor records, products, and revenue s
 - [Usage](#usage)
 - [Roadmap](#roadmap)
 - [License](#license)
+- [Third Party Components](#third-party-components)
 - [Contact](#contact)
 
 <!-- About the Project -->
@@ -205,6 +206,10 @@ poetry run python SXC.py
 ## Deployment
 
 ## Developer Instructions
+
+## Third Party Components
+SumatraPDF:
+https://github.com/sumatrapdfreader/sumatrapdf
 
 <!-- Contact -->
 ## Contact
