@@ -19,9 +19,10 @@ from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_generation import RevenueGeneration
-from ui.core import format_phone
-from ui.core import format_price
+from ui.core import format_phone, format_price, excel
+from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
+from services.message_bus import status_bar_instance
 
 
 BASE_RATE = 25
@@ -54,7 +55,6 @@ class CreateNewTab(BaseTab):
         self.add_product_btn = None
         self.clear_btn = None
         self.revenue_generation = None
-        # self.status_label = None
         self.create_btn = None
 
         self.product_sections = []
@@ -106,12 +106,12 @@ class CreateNewTab(BaseTab):
         # Vendor ID
         vendor_section_row_1.addWidget(QLabel("ID:"))
         self.vendor_id_input = QLineEdit()
+        self.vendor_id_input.setObjectName("DEFAULT")
         self.vendor_id_input.setPlaceholderText("4 INTS")
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
-
-        self.vendor_id_input.textEdited.connect(self.auto_pop_vend)
+        self.vendor_id_input.returnPressed.connect(self.auto_pop_vend)
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         # Phone Number
@@ -119,9 +119,7 @@ class CreateNewTab(BaseTab):
         self.phone_input = format_phone.PhoneNumField()
         self.phone_input.setObjectName("DEFAULT")
         self.phone_input.setFixedWidth(150)
-        self.phone_input.setValidator(QIntValidator(0, 2147483647, self))
-
-        self.phone_input.textEdited.connect(self.auto_pop_vend_by_phone)
+        self.phone_input.returnPressed.connect(self.auto_pop_vend_by_phone)
         vendor_section_row_1.addWidget(self.phone_input)
 
         # Date and Time - Read-only
@@ -289,11 +287,11 @@ class CreateNewTab(BaseTab):
         action_layout = QVBoxLayout()
 
         self.print_btn = QPushButton("Print")
-        self.export_btn = QPushButton("Export")
+        self.excel_btn = excel.ExcelButton(self.gather_record, xls_gen.generate_excel, "Excel")
         self.pdf_btn = QPushButton("PDF")
 
         action_layout.addWidget(self.print_btn)
-        action_layout.addWidget(self.export_btn)
+        action_layout.addWidget(self.excel_btn)
         action_layout.addWidget(self.pdf_btn)
 
         action_layout.addStretch()
@@ -341,7 +339,7 @@ class CreateNewTab(BaseTab):
         product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
         product_id_input.setValidator(product_id_validator)
 
-        product_id_input.textChanged.connect(self.auto_pop_prod)
+        product_id_input.returnPressed.connect(self.auto_pop_prod)
 
         line1_layout.addWidget(product_id_input)
         product_section['product_id'] = product_id_input
@@ -364,7 +362,7 @@ class CreateNewTab(BaseTab):
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
         product_name_input.setValidator(alpha_validator)
 
-        product_name_input.textChanged.connect(self.auto_pop_prod_by_name)
+        product_name_input.returnPressed.connect(self.auto_pop_prod_by_name)
 
         line1_layout.addWidget(product_name_input)
         product_section['product_name'] = product_name_input
@@ -390,6 +388,7 @@ class CreateNewTab(BaseTab):
         # Rate - integer only, placed to the right of Notes
         line2_layout.addWidget(QLabel("Rate:"))
         rate_input = QLineEdit()
+        rate_input.setObjectName("READ_ONLY")
         rate_input.setPlaceholderText(str(BASE_RATE))
         rate_input.setFixedWidth(80)
         rate_input.setValidator(QIntValidator(0, 100, self))
@@ -428,6 +427,7 @@ class CreateNewTab(BaseTab):
         self.products_layout.addWidget(section_widget)
         self.product_sections.append(product_section)
         self.product_counter += 1
+        status_bar_instance.send_message(f"Added product line. Total: {len(self.product_sections)}")
 
     def _on_product_type_changed(self, product_section: dict):
         try:
@@ -442,7 +442,7 @@ class CreateNewTab(BaseTab):
             new_rate = compute_rate(type_widget.currentText())
             rate_widget.setText(str(new_rate))
         except Exception as e:
-            print(f"Failed to auto-set rate: {e}")
+            log.error(f"Failed to auto-set rate: {e}")
 
     def create_removal_handler(self, widget, product_section):
         def removal_handler():
@@ -465,7 +465,7 @@ class CreateNewTab(BaseTab):
         widget.deleteLater()
 
         self.product_counter -= 1
-        # self.status_label.setText(f"Removed product line. Total: {len(self.product_sections)}")
+        status_bar_instance.send_message(f"Removed product line. Total: {len(self.product_sections)}")
 
     def show_remove_product_warning(self, product_section):
         product_id = product_section['product_id'].text().strip()
@@ -481,6 +481,16 @@ class CreateNewTab(BaseTab):
 
         msg_box.exec()
         return msg_box.clickedButton() == confirm_btn
+
+    def gather_record(self):
+        vendor_info = self._gather_vendor_data()
+        product_info = self._gather_products_data()
+        revenue_data = self._gather_revenue_data()
+        return {
+            'vendor_info': vendor_info,
+            'prod_info': product_info,
+            'revenue_info': revenue_data
+        }
 
     def setup_button_connections(self):
         """
@@ -543,15 +553,14 @@ class CreateNewTab(BaseTab):
             record_id = self._post_to_database(record_data)
 
             if record_id != -1:
-                # self.status_label.setText(f"Record created successfully! ID: {record_id}")
+                status_bar_instance.send_message(f"Record created successfully! ID: {record_id}")
                 self.clear_form()
                 return record_id
             else:
-                # self.status_label.setText("Failed to create record")
+                log.error("Failed to create record")
                 return -1
 
         except Exception as e:
-            # self.status_label.setText(f"Error creating record: {str(e)}")
             log.error(f"Database error: {e}")
             return -1
 
@@ -614,7 +623,7 @@ class CreateNewTab(BaseTab):
         :return: True if all required fields are valid, False otherwise
         """
         if not vendor_data['vendor_id'] or vendor_data['vendor_id'] == "NULL":
-            # self.status_label.setText("Error: Vendor ID is required")
+            log.error("Error: Vendor ID is required")
             return False
 
         if products_data is None:
@@ -630,8 +639,7 @@ class CreateNewTab(BaseTab):
                 break
 
         if not has_valid_product:
-            # self.status_label.setText(
-            #     "Error: At least one product requires Product ID, Product Type, Price, and Quantity")
+            log.error("Error: At least one product requires Product ID, Product Type, Price, and Quantity")
             return False
 
         return True
@@ -650,7 +658,6 @@ class CreateNewTab(BaseTab):
             vendor_id = record_data['vendor']['vendor_id']
             if not vendor_id or vendor_id == "NULL":
                 log.error("Error: No vendor ID provided")
-                # self.status_label.setText("Error: Vendor ID is required")
                 return -1
 
             # Create vendor document
@@ -677,7 +684,6 @@ class CreateNewTab(BaseTab):
                 log.info("Vendor document created successfully")
             except Exception as e:
                 log.error(f"Error creating vendor document: {e}")
-                # self.status_label.setText(f"Error creating vendor: {str(e)}")
                 return -1
 
             # todo: need a ticket to check if product_id already exists
@@ -689,12 +695,8 @@ class CreateNewTab(BaseTab):
                     if not product_id or product_id == "NULL":
                         log.warning(f"Skipping product {i} - no product ID")
                         continue
-                        print(f"Skipping product {i} - no product ID")
-                        # self.status_label.setText("Error: Product ID is required for all products")
-                        return -1
                     if not product_name or product_name == "NULL":
-                        print(f"Error: Product {i} missing Product Name")
-                        # self.status_label.setText("Error: Product Name is required for all products")
+                        log.error("Error: Product Name is required for all products")
                         return -1
 
                     rate_value = self._convert_rate(product.get('rate'))
@@ -721,7 +723,6 @@ class CreateNewTab(BaseTab):
             ticket_number = record_data['vendor']['ticket_number']
             if not ticket_number or ticket_number == "NULL":
                 log.error("Error: No ticket number provided")
-                # self.status_label.setText("Error: Ticket number is required")
                 return -1
 
             consignment_document = {
@@ -837,10 +838,10 @@ class CreateNewTab(BaseTab):
             val = int(cleaned)
             if 0 <= val <= 100:
                 return val
-            print(f"Rate {val} outside valid range 0-100")
+            log.error(f"Rate {val} outside valid range 0-100")
             return None
         except (ValueError, TypeError):
-            print(f"Invalid rate: {rate_str}")
+            log.error(f"Invalid rate: {rate_str}")
             return None
 
     def _convert_null(self, value):
@@ -892,15 +893,24 @@ class CreateNewTab(BaseTab):
         :author(s): Joe Lee, Colin Henderson
         """
         self.ticket_input.clear()
-        self.vendor_id_input.clear()
-        self.phone_input.clear()
-        self.first_name_input.clear()
-        self.middle_name_input.clear()
-        self.last_name_input.clear()
-        self.address_input.clear()
-        self.city_input.clear()
-        self.state_input.clear()
-        self.zip_input.clear()
+
+        fields = [
+            self.vendor_id_input,
+            self.phone_input,
+            self.first_name_input,
+            self.middle_name_input,
+            self.last_name_input,
+            self.address_input,
+            self.city_input,
+            self.state_input,
+            self.zip_input
+        ]
+        for field in fields:
+            field.clear()
+            field.setReadOnly(False)
+            field.setObjectName("DEFAULT")
+            field.style().unpolish(field)
+            field.style().polish(field)
         self.auto_pop_vend()
 
         # Clear all product fields
@@ -914,7 +924,7 @@ class CreateNewTab(BaseTab):
         self.add_product_section()
         self.add_product_section()
         self.revenue_generation.clear_revenue_data()
-        # self.status_label.setText("Form cleared")
+        status_bar_instance.send_message("Form cleared")
         self.update_ticket_number()
 
     def _parse_money(self, s: str) -> float:
@@ -960,41 +970,41 @@ class CreateNewTab(BaseTab):
                 price = self._parse_money(section['price'].text())
                 qty = self._parse_int(section['quantity'].text())
                 if price < 0 or qty < 0:
-                    # self.status_label.setText("Error: Negative price or quantity")
+                    log.error("Error: Negative price or quantity")
                     return -1
                 subtotal += price * qty
 
             records = getattr(self.revenue_generation, "revenue_records", None)
             if not records or len(records) != 4:
-                # self.status_label.setText("Error: Revenue widget not initialized")
+                log.error("Error: Revenue widget not initialized")
                 return -1
 
             calc = getattr(self.revenue_generation, "calculate_revenues", None)
             if not callable(calc):
-                # self.status_label.setText("Error: Revenue calculation method (SXC-22) not found")
+                log.error("Error: Revenue calculation method (SXC-22) not found")
                 return -1
 
             for rec in records:
                 pct_label = rec['percentage'].text()
                 result = calc(subtotal, 1, pct_label)
                 if result == -1 or not self._valid_revenue_result(result):
-                    # self.status_label.setText(f"Error: Invalid revenue output for {pct_label}")
+                    log.error(f"Error: Invalid revenue output for {pct_label}")
                     return -1
 
                 rec['vendor'].setText(f"${float(result['vendor']):.2f}")
                 rec['super_x'].setText(f"${float(result['super_x']):.2f}")
 
-            # self.status_label.setText("Revenue fields updated")
+            status_bar_instance.send_message("Revenue fields updated")
             return 0
 
         except ValueError:
-            # self.status_label.setText("Error: Non-numeric price or quantity")
+            log.error("Error: Non-numeric price or quantity")
             return -1
         except Exception as e:
-            # self.status_label.setText(f"Error calculating revenues: {e}")
+            log.error(f"Error calculating revenues: {e}")
             return -1
 
-    def auto_pop_prod(self, prod_id: str):
+    def auto_pop_prod(self):
         """
         SXC-136 action:
         - autofill product_id and product_name when product_id exists
@@ -1004,10 +1014,18 @@ class CreateNewTab(BaseTab):
         author: Tyler Slagboom, Joe Lee, Colin Henderson
         """
         try:
-            item = get_item("Entities", "product", prod_id)
+            sender = self.sender()
+            if not sender:
+                return
 
             for product_section in self.product_sections:
-                if product_section['product_id'].hasFocus():
+                if product_section['product_id'] is sender:
+                    prod_id = product_section['product_id'].text().strip()
+                    if not prod_id:
+                        return
+
+                    item = get_item("Entities", "product", prod_id)
+
                     if item:
                         # Product exists - populate and lock
                         if "product_name" in item:
@@ -1050,12 +1068,20 @@ class CreateNewTab(BaseTab):
         except Exception as e:
             log.error(f"Failed to fetch record: {e}")
 
-    def auto_pop_prod_by_name(self, product_name: str):
+    def auto_pop_prod_by_name(self):
         try:
-            item = get_item_by_property("Entities", "product", "product_name", product_name)
+            sender = self.sender()
+            if not sender:
+                return
 
             for product_section in self.product_sections:
-                if product_section['product_name'].hasFocus():
+                if product_section['product_name'] is sender:
+                    prod_name = sender.text().strip()
+                    if not prod_name:
+                        return
+
+                    item = get_item_by_property("Entities", "product", "product_name", prod_name)
+
                     if item:
                         if "product_id" in item:
                             product_section['product_id'].setText(str(item["product_id"]))
@@ -1079,19 +1105,19 @@ class CreateNewTab(BaseTab):
                             else:
                                 product_section['rate'].setText(str(compute_rate(item.get("product_type"))))
                     else:
-                        product_section['product_id'].setObjectName("")
+                        product_section['product_id'].setObjectName("DEFAULT")
                         product_section['product_id'].setReadOnly(False)
                         product_section['product_id'].style().unpolish(product_section['product_id'])
                         product_section['product_id'].style().polish(product_section['product_id'])
 
                         product_section['product_type'].setCurrentText("SELECT")
-                        product_section['product_type'].setObjectName("")
+                        product_section['product_type'].setObjectName("DEFAULT")
                         product_section['product_type'].setEnabled(True)
                         product_section['product_type'].style().unpolish(product_section['product_type'])
                         product_section['product_type'].style().polish(product_section['product_type'])
 
-                        if 'rate' in product_section:
-                            product_section['rate'].setText(str(BASE_RATE))
+                        product_section['rate'].setObjectName("DEFAULT")
+                        product_section['rate'].setText(str(BASE_RATE))
                     break
         except Exception as e:
             log.error(f"Failed to fetch record by name: {e}")
@@ -1120,13 +1146,11 @@ class CreateNewTab(BaseTab):
                             input_field.setReadOnly(True)
                 else:
                     for input_field in field_mapping.values():
-                        input_field.setText("")
-                        input_field.setObjectName("")
+                        input_field.setObjectName("DEFAULT")
                         input_field.setReadOnly(False)
             else:
                 for input_field in field_mapping.values():
-                    input_field.setText("")
-                    input_field.setObjectName("")
+                    input_field.setObjectName("DEFAULT")
                     input_field.setReadOnly(False)
 
             for input_field in field_mapping.values():
@@ -1160,13 +1184,11 @@ class CreateNewTab(BaseTab):
                             input_field.setReadOnly(True)
                 else:
                     for input_field in field_mapping.values():
-                        input_field.setText("")
-                        input_field.setObjectName("")
+                        input_field.setObjectName("DEFAULT")
                         input_field.setReadOnly(False)
             else:
                 for input_field in field_mapping.values():
-                    input_field.setText("")
-                    input_field.setObjectName("")
+                    input_field.setObjectName("DEFAULT")
                     input_field.setReadOnly(False)
 
             for input_field in field_mapping.values():

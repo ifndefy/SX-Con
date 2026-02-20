@@ -9,13 +9,13 @@ def get_item_by_property(container_name: str, entity_type: str, property_name: s
     :purpose: gets an item by property
     :param container_name: name of the container
     :param entity_type: type of the entity
-    :param property_name: name of the propertyW
+    :param property_name: name of the property
     :param property_value: value of the property
     :return: None
     :author(s): Joe Lee
     """
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return 0
 
     try:

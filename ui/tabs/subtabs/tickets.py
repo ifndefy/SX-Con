@@ -9,6 +9,8 @@ from PyQt6.QtWidgets import QWidget
 
 from services.connect_database import db_connection
 from ui.tabs.base import BaseTab
+import utils.logger.logger as log
+from services.message_bus import status_bar_instance
 
 class RecordsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -162,7 +164,7 @@ class RecordsTab(BaseTab):
         self.tickets_section.clear()
 
         # Update status
-        # self.status_label.setText("All tickets cleared")
+        status_bar_instance.send_message("All tickets cleared")
 
     def fetch_on_clicked(self):
         """
@@ -173,8 +175,7 @@ class RecordsTab(BaseTab):
         self.remove_ticket_section()
         tickets = self.fetch()
         if not tickets:
-            # self.status_label.setText("No tickets found")
-            print("err") # delete when fixed
+            log.error("No tickets found")
         else:
             for ticket in tickets:
                 self.add_ticket_section()
@@ -210,7 +211,7 @@ class RecordsTab(BaseTab):
             return tickets
 
         except Exception as e:
-            print(f"Error fetching tickets: {e}")
+            log.error(f"Error fetching tickets: {e}")
             return []
 
     def setup_button_connections(self):

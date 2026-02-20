@@ -41,12 +41,24 @@ QTabWidget#main_tabs QTabBar::tab:last {
     background-color: #691601;
 }
 
+QTabWidget#main_tabs QTabBar::tab:last:selected {
+    background-color: #008000;
+    color: #ffffff;
+    border-color: #5C4033;
+    margin-bottom: -1px;
+    font-weight: bold;
+}
+
 QTabWidget#subtabs QTabBar::tab {
     background-color: #691601;
 }
 
+QTabWidget#subtabs QTabBar::tab:selected {
+    background-color: #008000;
+}
+
 QTabBar::tab:selected {
-    background-color: #8A6A52;
+    background-color: #008000;
     color: #ffffff;
     border-color: #5C4033;
     margin-bottom: -1px;

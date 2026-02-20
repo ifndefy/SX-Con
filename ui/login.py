@@ -8,6 +8,8 @@ from PyQt6.QtCore import Qt
 
 from src import SPOT
 from ui.forgot_pw import ForgotPasswordScreen
+from src.core.authenticate import authenticate_password
+from services.connect_database import db_connection
 
 
 class LoginScreen(QDialog):
@@ -107,12 +109,10 @@ class LoginScreen(QDialog):
 
     def authenticate(self, username, password):
         """
-        purpose: allows anything to login (for now), pass in specific username to cause fail
-        author(s): Joe Lee
+        purpose: requires the username and password to be valid in order to login
+        author(s): Joe Lee, Alexander Bubienko
         """
-        # TODO: replace with Azure DB built in authentication
-
-        # Allow any non-empty credentials to succeed
+        """"
         if username.strip() and password.strip():
             # pass in "testfail" username to intentionally cause fail -- for testing purposes
             if username.strip().lower() == "testfail":
@@ -120,3 +120,36 @@ class LoginScreen(QDialog):
             return True
 
         return False
+        """
+        try:
+            
+            if not username.strip() or not password.strip():
+                return False
+                
+            # Connect to Users container
+            users_container = db_connection.connect('Entities')
+            
+            # Query for user by username
+            query = f"SELECT * FROM c WHERE c.username = '{username}'"
+            users = list(users_container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            
+            if not users:
+                print(f"No user found with username: {username}")
+                return False
+                
+            # Get the stored hash and authenticate
+            stored_hash = users[0].get('password')
+            if not stored_hash:
+                return False
+                
+            # Use the existing authenticate_password function
+            result = authenticate_password(password, stored_hash)
+            
+            return result == "1"
+            
+        except Exception as e:
+            print(f"Authentication error: {e}")
+            return False
