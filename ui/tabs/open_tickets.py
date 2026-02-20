@@ -221,11 +221,9 @@ class OpenTicketsTab(BaseTab):
     def handle_pdf_btn_clicked(self, ticket_number):
         try:
             handler_db_pdf(ticket_number)
-            print(f"PDF generated for ticket {ticket_number}")
+            log.info(f"PDF generated for ticket {ticket_number}")
         except Exception as e:
-            print(f"ERROR generating PDF for ticket {ticket_number}: {e}")
-            import traceback
-            traceback.print_exc()
+            log.error(f"ERROR generating PDF for ticket {ticket_number}: {e}")
 
     def make_view_handler(self, ticket_index):
         def handler():
