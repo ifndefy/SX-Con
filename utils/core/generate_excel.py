@@ -37,12 +37,12 @@ def generate_excel(data):
         with pd.ExcelWriter(file_path[0], "openpyxl") as excel_writer:
             dataframes[0].to_excel(excel_writer, 
                                    sheet_name = sheet, 
-                                   index_col = False)
+                                   index = False)
             for x in range(1, len(dataframes)):
                 dataframes[x].to_excel(excel_writer, 
                                        sheet_name = sheet, 
                                        startrow = excel_writer.sheets[sheet].max_row + vpadding, 
-                                       index_col = False)
+                                       index = False)
 
         #Resize columns to avoid cutoffs + potential additional styling
         excel_file = openpyxl.load_workbook(file_path[0])
