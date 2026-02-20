@@ -3,10 +3,9 @@ from services.get_item_by_property import get_item_by_property
 
 def test_get_item_by_property() -> int:
     """
-    Simple integration-style test.
-    Returns:
-        0  -> success (item retrieved)
-        -1 -> failure (no item or exception)
+    Module test for get_item.
+    Purpose: "Test if get_item_by_property.py retrieves data from the db. Return 0 if success and -1 if not"
+    Author(s): Kyle Valdez
     """
 
     try:
