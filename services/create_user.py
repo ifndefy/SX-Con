@@ -1,7 +1,7 @@
 import re
 
 from services.insert_item import insert_item
-from services import get_max_value
+from services.get_max_value import get_max_value
 
 banned_substrings = [
         "administrator", "root", "system", "guest",
@@ -10,7 +10,7 @@ banned_substrings = [
         "settings", "account", "profile", "username",
         #"test",
         #"admin"
-        # TODO: Uncomment out common testing substrings
+        # Strings we may want to temporarily allow for us to use during testing
     ]
 
 def create_user(user_data: dict):
@@ -18,10 +18,9 @@ def create_user(user_data: dict):
     :purpose: Inserts a new user into the db with automated user_id creation
     :param: user_data: Dictionary containing user data with the following fields:
             username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin
-    :author(s): Colin Heinselman
     :return: -1 if user_data missing fields. 0 otherwise
+    :author(s): Colin Heinselman
     """
-
 
     required_fields = ["username", "first_name", "last_name", "password", "q1_q", "q1_a", "q2_q", "q2_a", "admin"]
 
@@ -30,10 +29,16 @@ def create_user(user_data: dict):
         print("username, first_name, last_name, password, q1_q, q1_a, q2_q, q2_a, admin")
         return -1
 
-    user_data["type"] = "user"
-    user_data["user_id"] = get_max_value.get_max_value("Entities", "user_id") + 1
+    #TODO: Remove Validation
+    """
+    if not is_username_valid(user_data["username"]):
+        print("Invalid username creation attempt in create_user.py")
+        return -1
+    """
 
+    user_data["user_id"] = get_max_value("Entities", "user_id") + 1
     insert_item("Entities", "user", user_data)
+
     return 0
 
 def is_username_valid(username: str) -> bool:
@@ -60,16 +65,20 @@ def is_username_valid(username: str) -> bool:
 
 
 def contains_banned_substring(username: str) -> bool:
+    """
+    :purpose: Takes a username as input and determine if it includes any banned substrings
+    :param username: The username to check
+    :return: True if the username contains any banned substrings. False otherwise
+    :author(s): Colin Heinselman
+    """
     lower_username = username.lower()  # make check case-insensitive
     for banned in banned_substrings:
         if banned in lower_username:
             return True
     return False
 
-
-
-
-
+#TODO: Remove main
+"""
 if __name__ == "__main__":
     #increment_user_counter()
     #print("Next user number = " + str(get_next_user_id()))
@@ -86,7 +95,7 @@ if __name__ == "__main__":
         "admin": False,
     }
 
-    max_user_id = get_max_value.get_max_value("Entities", "user_id")
+    max_user_id = get_max_value("Entities", "user_id")
     print(max_user_id)
 
     # Creates a valid user
@@ -106,12 +115,4 @@ if __name__ == "__main__":
     create_user(user_dict2)
 
 
-    print(is_username_valid("test_admin123"))
-
-
-
-
-
-
-
-
+    print(is_username_valid("test_admin123"))"""
