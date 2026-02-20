@@ -39,4 +39,3 @@ def test_get_property() -> int:
 
     except Exception:
         return -1
-
