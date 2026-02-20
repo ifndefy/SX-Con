@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
+from handlers.handler_print import handler_print
 from handlers.handler_pdf import handler_db_pdf
 from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
@@ -188,8 +189,21 @@ class OpenTicketsTab(BaseTab):
         view_btn.clicked.connect(self.make_view_handler(ticket_index))
         pdf_btn.clicked.connect(self.make_pdf_handler(ticket_number_input.text()))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
+        print_btn.clicked.connect(self.make_print_handler(ticket_number_input.text()))
 
         self.tickets_section.append(tickets_section)
+
+    def make_print_handler(self, ticket_number):
+        def handler():
+            try:
+                handler_db_pdf(int(ticket_number))
+            except Exception as e:
+                log.error(f"Could not generate PDF for ticket {ticket_number}: {e}")
+                return
+
+            handler_print(ticket_number)
+            log.info(f"Print requested for ticket {ticket_number}")
+        return handler
 
     def make_form_handler(self, ticket_index):
         def gather_ticket():

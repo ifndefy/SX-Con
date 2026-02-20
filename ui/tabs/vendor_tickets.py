@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
+from handlers.handler_print import handler_print
 from handlers.handler_pdf import handler_db_pdf
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
@@ -254,8 +255,23 @@ class VendorTicketsTab(BaseTab):
         view_btn.clicked.connect(self.make_view_handler(ticket_index))
         pdf_btn.clicked.connect(self.make_pdf_handler(ticket_index))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
+        print_btn.clicked.connect(self.make_print_handler(ticket_index))
 
         self.tickets_section.append(tickets_section)
+
+    def make_print_handler(self, ticket_index):
+        def handler():
+            ticket_section = self.tickets_section[ticket_index]
+            ticket_number = ticket_section['ticket_num'].text().strip()
+            try:
+                handler_db_pdf(int(ticket_number))
+            except Exception as e:
+                log.error(f"Could not generate PDF for ticket {ticket_number}: {e}")
+                return
+
+            handler_print(ticket_number)
+            log.info(f"Print requested for ticket {ticket_number}")
+        return handler
 
     def make_pdf_handler(self, ticket_index):
         """
