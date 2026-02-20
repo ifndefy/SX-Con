@@ -4,7 +4,7 @@ import utils.logger.logger as log
 
 def update_property(container_name: str, entity_type: str, entity_id: str, property_name: str, property_value):
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return 0
 
     try:

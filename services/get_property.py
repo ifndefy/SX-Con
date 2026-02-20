@@ -14,7 +14,7 @@ def get_property(container_name: str, attribute: str, entity_type: str, id_value
     :author(s): Alexander Bubienko, Joe Lee
     """
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return 0
 
     try:

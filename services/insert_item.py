@@ -11,7 +11,7 @@ def insert_item(container_name: str, entity_type: str, item_data: dict):
     :author(s): Joe Lee
     """
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return 0
 
     try:
