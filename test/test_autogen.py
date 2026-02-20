@@ -26,7 +26,7 @@ def test_autogen_ticket_num():
         else:
             return -1
 
-        ticket_num = autogen_ticket_num()
+        ticket_num = int(autogen_ticket_num())
         if ticket_num - max_ticket == 1:
             return 0
 
