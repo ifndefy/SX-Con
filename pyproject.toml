@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sx-con"
-version = "0.0.2"
+version = "0.0.3"
 description = "Consignment Keeper"
 authors = ["ifndefy <lee.sjoe.3@gmail.com>"]
 package-mode = false
