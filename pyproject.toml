@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sx-con"
-version = "0.0.2"
+version = "0.0.3"
 description = "Consignment Keeper"
 authors = ["ifndefy <lee.sjoe.3@gmail.com>"]
 package-mode = false
@@ -22,6 +22,10 @@ charset-normalizer = "3.4.4"
 idna = "3.11"
 urllib3 = "2.5.0"
 certifi = "2025.11.12"
+sumatra = "0.8.0"
+pywin32 = "310"
+pandas = ">=3.0.0"
+openpyxl = "^3.1.5"
 
 [build-system]
 requires = ["poetry-core"]

@@ -15,7 +15,8 @@ from services.get_max_value import get_max_value
 from services.insert_item import insert_item
 from ui.core.prompts import hash_security_question_answer
 from src.core.hash_password import hash_password
-
+import utils.logger.logger as log
+from services.message_bus import status_bar_instance
 
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -188,8 +189,7 @@ class UsersTab(BaseTab):
         """
         users = self.fetch()
         if not users:
-            # self.status_label.setText("No users found")
-            print("err") # delete when fixed
+            log.error("No users found")
         else:
             for user in users:
                 self.add_user_section()
@@ -227,7 +227,7 @@ class UsersTab(BaseTab):
             return users
 
         except Exception as e:
-            print(f"Error fetching users: {e}")
+            log.error(f"Error fetching users: {e}")
             return []
 
     def create_new_user_prompt(self):

@@ -1,5 +1,6 @@
 import re
 from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtCore import Qt
 
 class PhoneNumField(QLineEdit):
 
@@ -41,3 +42,9 @@ class PhoneNumField(QLineEdit):
             self.setInputMask("")
             self.setText("")
             self.masked = False
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            super().keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)
