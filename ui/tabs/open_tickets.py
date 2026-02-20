@@ -10,6 +10,8 @@ from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
 import utils.logger.logger as log
 from services.message_bus import status_bar_instance
+from ui.core import excel
+from utils.core import generate_excel as xls_gen
 
 class OpenTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -145,7 +147,8 @@ class OpenTicketsTab(BaseTab):
         line1_layout.addWidget(view_btn)
         tickets_section['view_btn'] = view_btn
 
-        excel_btn = QPushButton("Excel")
+        #Create excel button without gather function link once index is assigned
+        excel_btn = excel.ExcelButton(None, xls_gen.generate_excel, "Excel")
         line1_layout.addWidget(excel_btn)
         tickets_section['excel_btn'] = excel_btn
 
@@ -180,8 +183,31 @@ class OpenTicketsTab(BaseTab):
         ticket_index = len(self.tickets_section)
         tickets_section['index'] = ticket_index
         view_btn.clicked.connect(self.make_view_handler(ticket_index))
+        excel_btn.link_gather_function(self.make_form_handler(ticket_index))
 
         self.tickets_section.append(tickets_section)
+
+    def make_form_handler(self, ticket_index):
+        def gather_ticket():
+            ticket = self.tickets_section[ticket_index]
+            ticket_number = ticket['ticket_num'].text().strip()
+            ticket_details = self.view(ticket_number)
+            unpacked_ticket = ticket_details['ticket_data']
+            
+            ticket_header = {
+                'ticket_number': unpacked_ticket['ticket_number'],
+                'vendor_id': unpacked_ticket['vendor_id'],
+                'created': unpacked_ticket['datetime'],
+                'status': unpacked_ticket['status'],
+            }
+
+            return {
+                'ticket_info': ticket_header,
+                'product_data': unpacked_ticket['price_data']['products'],
+                'revenue_sharing': unpacked_ticket['revenue_sharing']
+            }
+        
+        return gather_ticket 
 
     def make_view_handler(self, ticket_index):
         def handler():

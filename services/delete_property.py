@@ -3,7 +3,7 @@ How to use:
     delete_property("Entities", "vendor", "1", "email")
 """
 
-from connect_database import db_connection
+from services.connect_database import db_connection
 from src import SPOT
 import utils.logger.logger as log
 
