@@ -512,11 +512,12 @@ class CreateNewTab(BaseTab):
         products_data = self._gather_products_data()
         self.update_revenue_fields()
         revenue_data = self._gather_revenue_data()
-        if self._validate_required_fields(vendor_data, products_data):
-            handler_live_pdf(vendor_data, products_data, revenue_data)
-            # todo: status bar update
-        else:
-            pass # todo: status bar update
+        try:
+            if self._validate_required_fields(vendor_data, products_data):
+                handler_live_pdf(vendor_data, products_data, revenue_data)
+                log.info(f"PDF generated for ticket {vendor_data['ticket_number']}")
+        except Exception as e:
+            log.error(f"ERROR generating PDF for ticket {vendor_data['ticket_number']}: {e}")
 
     def create_record(self):
         """
