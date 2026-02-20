@@ -9,18 +9,30 @@ def test_get_item() -> int:
     """
 
     # ---- Configure valid test values ----
-    container_name = "Container name (Entities)"
-    entity_type = "Entity Type (product, user, vendor)"
-    entity_id = "Entity id (int)"
+    test_matrix = {
+        "Entities": ["user", "product", "vendor"],
+        "Consignments": ["consignment"]
+    }
+
+    entity_id = "1"
     # --------------------------------------
 
     try:
-        result = get_item(container_name, entity_type, entity_id)
+        for container, entity_types in test_matrix.items():
+            for etype in entity_types:
 
-        if result is not None:
-            return 0
-        else:
-            return -1
+                result = get_item(container, etype, entity_id)
 
-    except Exception:
+                if result is None:
+                    print(
+                        f"FAIL -> container={container}, "
+                        f"type={etype}, id={entity_id}"
+                    )
+                    return -1
+
+        return 0
+
+    except Exception as e:
+        print(f"Exception occurred: {e}")
         return -1
+
