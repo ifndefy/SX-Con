@@ -19,7 +19,7 @@ def insert_item(container_name: str, entity_type: str, item_data: dict):
 
         entity_id = item_data.get(f"{entity_type}_id")
         if not entity_id:
-            return "-1"
+            return -1
 
         item_id = f"{entity_type}_{entity_id}"
 
@@ -36,4 +36,4 @@ def insert_item(container_name: str, entity_type: str, item_data: dict):
 
     except Exception as e:
         log.error(f"Error in insert_item: {e}")
-        return "-1"
+        return -1
