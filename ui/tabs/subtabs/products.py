@@ -84,14 +84,12 @@ class ProductsTab(BaseTab):
 
         self.setup_button_connections()
 
-    def add_product_section(self):
+    def add_product_section(self, prod_data):
         """
         :purpose: adds product lines
         :return: None
-        :author(s): Joe Lee
+        :author(s): Joe Lee, Tim Liu
         """
-        prods_section = {}
-
         # product section container
         section_widget = QWidget()
         section_layout = QVBoxLayout(section_widget)
@@ -103,7 +101,7 @@ class ProductsTab(BaseTab):
         # user id
         line1_layout.addWidget(QLabel("ProductID:"))
         product_id = QLineEdit()
-        product_id.setPlaceholderText("10 DIGITS")
+        product_id.setText(str(prod_data['product_id']))
         product_id.setObjectName("READ_ONLY")
         product_id.setReadOnly(True)
         product_id.setMaxLength(30)
@@ -113,7 +111,7 @@ class ProductsTab(BaseTab):
         # username
         line1_layout.addWidget(QLabel("Product Name:"))
         product_name = QLineEdit()
-        product_name.setPlaceholderText("30 CHAR")
+        product_name.setText(str(prod_data['product_name']))
         product_name.setObjectName("READ_ONLY")
         product_name.setReadOnly(True)
         product_name.setMaxLength(30)
@@ -122,23 +120,13 @@ class ProductsTab(BaseTab):
 
         line1_layout.addStretch()
 
-        # last consignment
-        line1_layout.addWidget(QLabel("Last Consignment:"))
-        last_con = QLineEdit()
-        last_con.setObjectName("READ_ONLY")
-        last_con.setPlaceholderText("datetime")
-        last_con.setReadOnly(True)
-        last_con.setMaxLength(30)
-        last_con.setFixedWidth(190)
-        line1_layout.addWidget(last_con)
-
         section_layout.addLayout(line1_layout)
 
         line2_layout = QHBoxLayout()
         line2_layout.addWidget(QLabel("Average Price:"))
         avg_price = QLineEdit()
+        avg_price.setText("TBD") # todo:
         avg_price.setObjectName("READ_ONLY")
-        avg_price.setPlaceholderText("$")
         avg_price.setReadOnly(True)
         avg_price.setMaxLength(30)
         avg_price.setFixedWidth(190)
@@ -148,8 +136,19 @@ class ProductsTab(BaseTab):
 
         line2_layout.addWidget(QLabel("last Price:"))
         last_price = QLineEdit()
+        last_price.setText("TBD")
         last_price.setObjectName("READ_ONLY")
-        last_price.setPlaceholderText("$")
+        last_price.setReadOnly(True)
+        last_price.setMaxLength(30)
+        last_price.setFixedWidth(190)
+        line2_layout.addWidget(last_price)
+
+        line2_layout.addStretch()
+
+        line2_layout.addWidget(QLabel("Rate:"))
+        last_price = QLineEdit()
+        last_price.setText(str(prod_data['rate']))
+        last_price.setObjectName("READ_ONLY")
         last_price.setReadOnly(True)
         last_price.setMaxLength(30)
         last_price.setFixedWidth(190)
@@ -177,7 +176,6 @@ class ProductsTab(BaseTab):
 
         # Add to container
         self.products_layout.addWidget(section_widget)
-        self.products_section.append(prods_section)
 
     def remove_product_section(self):
         """
@@ -210,7 +208,7 @@ class ProductsTab(BaseTab):
             log.error("No products found")
         else:
             for product in products:
-                self.add_product_section()
+                self.add_product_section(product)
 
     def fetch(self):
         """
@@ -222,7 +220,7 @@ class ProductsTab(BaseTab):
             container = self.db_connection.connect("Entities")
 
             query = """
-            SELECT c.id, c.product_id, c.product_name, c.notes
+            SELECT *
             FROM c
             WHERE c.type = 'product'
             ORDER BY c.product_id ASC
@@ -238,6 +236,8 @@ class ProductsTab(BaseTab):
                 products.append({
                     'product_id': item.get('product_id', ''),
                     'product_name': item.get('product_name', ''),
+                    'product_type': item.get('product_type', ''),
+                    'rate': item.get('rate', ''),
                 })
             return products
 
@@ -327,7 +327,8 @@ class ProductsTab(BaseTab):
             "product_id": dialog.findChild(QLineEdit, "product_id_input").text(),
             "product_name": dialog.findChild(QLineEdit, "product_name_input").text(),
             "product_type": dialog.findChild(QComboBox, "product_type_input").currentText(),
-            "rate": dialog.findChild(QLineEdit, "rate_input").text()
+            "rate": dialog.findChild(QLineEdit, "rate_input").text(),
+            "type": "product"
         }
         return raw_product_data
 
