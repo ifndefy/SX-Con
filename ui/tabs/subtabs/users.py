@@ -63,7 +63,6 @@ class UsersTab(BaseTab):
 
         users_section = QHBoxLayout()
         layout.addLayout(users_section)
-
         layout.addStretch()
 
         btn_section = QHBoxLayout()
@@ -89,14 +88,12 @@ class UsersTab(BaseTab):
 
         self.setup_button_connections()
 
-    def add_user_section(self):
+    def add_user_section(self, user_data):
         """
         :purpose: adds user items
         :return: None
         :author(s): Joe Lee
         """
-        users_section = {}
-
         # Users section container
         section_widget = QWidget()
         section_layout = QVBoxLayout(section_widget)
@@ -105,8 +102,8 @@ class UsersTab(BaseTab):
         line1_layout = QHBoxLayout()
         line1_layout.addWidget(QLabel("UserID:"))
         user_id = QLineEdit()
+        user_id.setText(str(user_data['user_id']))
         user_id.setObjectName("READ_ONLY")
-        user_id.setPlaceholderText("30 CHAR")
         user_id.setReadOnly(True)
         user_id.setMaxLength(30)
         user_id.setFixedWidth(55)
@@ -114,32 +111,21 @@ class UsersTab(BaseTab):
 
         line1_layout.addWidget(QLabel("Username:"))
         username = QLineEdit()
+        username.setText(str(user_data['username']))
         username.setObjectName("READ_ONLY")
-        username.setPlaceholderText("30 CHAR")
         username.setReadOnly(True)
         username.setMaxLength(30)
         username.setFixedWidth(265)
         line1_layout.addWidget(username)
 
         line1_layout.addStretch()
-
-        # last consignment
-        line1_layout.addWidget(QLabel("Last Consignment:"))
-        last_con = QLineEdit()
-        last_con.setObjectName("READ_ONLY")
-        last_con.setPlaceholderText("datetime")
-        last_con.setReadOnly(True)
-        last_con.setMaxLength(30)
-        last_con.setFixedWidth(190)
-        line1_layout.addWidget(last_con)
-
         section_layout.addLayout(line1_layout)
 
         line2_layout = QHBoxLayout()
         line2_layout.addWidget(QLabel("First Name:"))
         first_name = QLineEdit()
+        first_name.setText(str(user_data['first_name']))
         first_name.setObjectName("READ_ONLY")
-        first_name.setPlaceholderText("30 CHAR")
         first_name.setReadOnly(True)
         first_name.setMaxLength(30)
         first_name.setFixedWidth(265)
@@ -148,8 +134,8 @@ class UsersTab(BaseTab):
         # last name
         line2_layout.addWidget(QLabel("Last Name:"))
         last_name = QLineEdit()
+        last_name.setText(str(user_data['last_name']))
         last_name.setObjectName("READ_ONLY")
-        last_name.setPlaceholderText("OPEN")
         last_name.setReadOnly(True)
         last_name.setMaxLength(30)
         last_name.setFixedWidth(265)
@@ -179,7 +165,23 @@ class UsersTab(BaseTab):
 
         # Add to container
         self.users_layout.addWidget(section_widget)
-        self.users_section.append(users_section)
+
+    def remove_user_section(self):
+        """
+        :purpose: clears subtab widget that holds vendor items
+        :author(s): Joe Lee
+        """
+        # Remove all widgets from the layout
+        for i in reversed(range(self.users_layout.count())):
+            widget = self.users_layout.itemAt(i).widget()
+            if widget:
+                self.users_layout.removeWidget(widget)
+                widget.deleteLater()
+
+        self.users_section.clear()
+
+        # Update status
+        status_bar_instance.send_message("All products cleared")
 
     def fetch_on_clicked(self):
         """
@@ -192,7 +194,7 @@ class UsersTab(BaseTab):
             log.error("No users found")
         else:
             for user in users:
-                self.add_user_section()
+                self.add_user_section(user)
 
     def fetch(self):
         """
@@ -200,6 +202,7 @@ class UsersTab(BaseTab):
         :return: list of users
         :author(s): Joe Lee
         """
+        self.remove_user_section()
         try:
             container = self.db_connection.connect("Entities")
 
@@ -207,7 +210,6 @@ class UsersTab(BaseTab):
             SELECT *
             FROM c
             WHERE c.type = 'user'
-            ORDER BY c.username ASC
             """
 
 
@@ -224,6 +226,9 @@ class UsersTab(BaseTab):
                     'first_name': item.get('first_name', ''),
                     'last_name': item.get('last_name', '')
                 })
+
+            users.sort(key=lambda v: int(v['user_id']))
+
             return users
 
         except Exception as e:
@@ -367,6 +372,8 @@ class UsersTab(BaseTab):
             "q1_a": dialog.findChild(QLineEdit, "response1").text(),
             "q2_q": dialog.findChild(QComboBox, "question2").currentText(),
             "q2_a": dialog.findChild(QLineEdit, "response2").text(),
+            "admin": False,
+            "type": "user"
         }
         return raw_user_data
 

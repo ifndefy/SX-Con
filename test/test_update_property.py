@@ -1,5 +1,7 @@
 import random
-
+import time
+from services.delete_item import delete_item
+from services.get_item import get_item
 from services.get_property import get_property
 from services.insert_item import insert_item
 from services.update_property import update_property
@@ -12,14 +14,14 @@ def test_update_property():
     Authors: Joe lee
     """
 
-    seed = random.randint(5000, 10000)
+    seed = str(random.randint(5000, 10000))
     new_val = str(random.randint(1, 100))
 
     user_id = str(f"user_{seed}")
     vendor_id = str(f"vendor_{seed}")
 
     user_doc = {
-        "user_id": user_id,
+        "user_id": seed,
         "username": "Smiley's Second Cousin",
         "first_name": "Twice Removed",
         "last_name": "No Cap",
@@ -61,11 +63,11 @@ def test_update_property():
             return -1
 
         # update prop
-        update_property("Entities", "user", user_id, "last_name", str(new_val))
+        update_property("Entities", "user", str(seed), "last_name", str(new_val))
         update_property("Entities", "vendor", str(seed), "city", str(new_val))
 
         # get properties after update for comparison
-        user_comp = get_property("Entities", "last_name", "user", user_id)
+        user_comp = get_property("Entities", "last_name", "user", str(seed))
         vendor_comp = get_property("Entities", "city", "vendor", str(seed))
 
         # Compare after updating
@@ -74,7 +76,16 @@ def test_update_property():
         if new_val != vendor_comp:
             return -1
 
+        del1 = delete_item("Entities", "user", seed)
+        if del1 == -1:
+            return -1
+        del2 = delete_item("Entities", "vendor", seed)
+        if del2 == -1:
+            return -1
+
         return 0
 
     except Exception:
         return -1
+
+print(test_update_property())
