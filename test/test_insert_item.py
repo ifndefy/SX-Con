@@ -4,7 +4,7 @@ from services.connect_database import db_connection
 from services.delete_item import delete_item
 from services.insert_item import insert_item
 
-def test_inesrt_item():
+def test_insert_item():
     """
     purpose: tests data insert_item method, then deletes the inserted item
     return: 0 on success, else -1
