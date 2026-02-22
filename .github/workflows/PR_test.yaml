@@ -39,7 +39,19 @@ jobs:
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-#    - name: Tests -> disabled since there are no tests yet
+    - name: Create config.ini
+      shell: powershell
+      env:
+        CONFIG_B64: ${{ secrets.CONFIG_INI_BASE64 }}
+      run: |
+        $bytes = [Convert]::Frombase64String($env:CONFIG_B64)
+        [IO.File]::WriteAllBytes("services/config.ini", $bytes)
+
+    - name: Test with pytest
+      shell: powershell
+      run: |
+        New-Item -ItemType Directory -Force -Path test-results
+        python -m pytest --verbose --junitxml=test-results/junit.xml
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
