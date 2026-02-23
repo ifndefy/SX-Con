@@ -175,7 +175,7 @@ class CreateNewTab(BaseTab):
         self.address_input = QLineEdit()
         self.address_input.setPlaceholderText("Street address")
         self.address_input.setMaxLength(255)
-        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 .,#-]+"))
+        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9]+"))
         self.address_input.setValidator(address_validator)
         vendor_section_row_3.addWidget(self.address_input)
 
