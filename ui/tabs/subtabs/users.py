@@ -133,15 +133,6 @@ class UsersTab(BaseTab):
         layout.addLayout(users_section)
         layout.addStretch()
 
-        # btn_section = QHBoxLayout()
-        #
-        # btn_section.addStretch()
-        #
-        # # HR Line to separate buttons at the bottom
-        # hr3 = QLabel()
-        # hr3.setObjectName("hr")
-        # layout.addWidget(hr3)
-
         # Set up the scroll area
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
@@ -151,8 +142,7 @@ class UsersTab(BaseTab):
 
     def clear(self):
         """
-        :purpose: clears all input fields, resets the product lines to 2
-        :return: None
+        :purpose: clears all input fields and fetched items
         :author(s): Joe Lee, Colin Henderson
         """
         self.search_timer.stop()
@@ -426,7 +416,6 @@ class UsersTab(BaseTab):
         question1.setObjectName("question1")
         question1.setCurrentIndex(-1)
         layout.addWidget(question1)
-
 
         res1_label = QLabel("Response for Question 1:")
         res1_label.setObjectName("label")
