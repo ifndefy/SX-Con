@@ -1,4 +1,5 @@
-
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QVBoxLayout, QDialog
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -20,6 +21,10 @@ class VendorsTab(BaseTab):
         self.db_connection = db_connection
         super().__init__(api_handler, "vendors")
 
+        self.search_timer = QTimer()
+        self.search_timer.setSingleShot(True)
+        self.search_timer.timeout.connect(self.build_and_search)
+
     def setup_ui(self):
         """
         :purpose: initializes the "vendors subtab" tab
@@ -36,11 +41,117 @@ class VendorsTab(BaseTab):
         title.setObjectName("post_title")
         header_section.addWidget(title)
         header_section.addStretch() # Push to the left
+
+        self.create_btn = QPushButton("Create New Vendor")
+        header_section.addWidget(self.create_btn)
+
         layout.addLayout(header_section) # Ends creation and adds header_section to window
 
         hr1 = QLabel()# HR Line
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
+
+        search_section_row_1 = QHBoxLayout()
+
+        search_section_row_1.addWidget(QLabel("VendorID:"))
+        self.vendor_id_input = QLineEdit()
+        self.vendor_id_input.setPlaceholderText("V ID")
+        self.vendor_id_input.setMaxLength(4)
+        self.vendor_id_input.setFixedWidth(80)
+        self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
+        self.vendor_id_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.vendor_id_input)
+
+        search_section_row_1.addWidget(QLabel("Phone Number:"))
+        self.phone_number_input = QLineEdit()
+        self.phone_number_input.setPlaceholderText("Phone")
+        self.phone_number_input.setMaxLength(12)
+        self.phone_number_input.setFixedWidth(150)
+        self.phone_number_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.phone_number_input)
+
+        search_section_row_1.addStretch()
+        layout.addLayout(search_section_row_1)
+
+        search_section_row_2 = QHBoxLayout()
+
+        search_section_row_2.addWidget(QLabel("First Name:"))
+        self.first_name_input = QLineEdit()
+        self.first_name_input.setPlaceholderText("First Name")
+        self.first_name_input.setMaxLength(30)
+        self.first_name_input.setFixedWidth(263)
+        self.first_name_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_2.addWidget(self.first_name_input)
+
+        search_section_row_2.addWidget(QLabel("Middle Name:"))
+        self.middle_name_input = QLineEdit()
+        self.middle_name_input.setPlaceholderText("M. Name")
+        self.middle_name_input.setMaxLength(10)
+        self.middle_name_input.setFixedWidth(103)
+        self.middle_name_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_2.addWidget(self.middle_name_input)
+
+        search_section_row_2.addWidget(QLabel("Last Name:"))
+        self.last_name_input = QLineEdit()
+        self.last_name_input.setPlaceholderText("Last Name")
+        self.last_name_input.setMaxLength(30)
+        self.last_name_input.setFixedWidth(263)
+        self.last_name_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_2.addWidget(self.last_name_input)
+
+        search_section_row_2.addStretch()
+        layout.addLayout(search_section_row_2)
+
+        search_section_row_3 = QHBoxLayout()
+
+        search_section_row_3.addWidget(QLabel("Address:"))
+        self.address_input = QLineEdit()
+        self.address_input.setPlaceholderText("Address")
+        self.address_input.setMaxLength(255)
+        self.address_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_3.addWidget(self.address_input)
+
+        search_section_row_3.addWidget(QLabel("City:"))
+        self.city_input = QLineEdit()
+        self.city_input.setPlaceholderText("City")
+        self.city_input.setMaxLength(30)
+        self.city_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_3.addWidget(self.city_input)
+
+        search_section_row_3.addWidget(QLabel("State:"))
+        self.state_input = QLineEdit()
+        self.state_input.setPlaceholderText("ST")
+        self.state_input.setMaxLength(2)
+        self.state_input.setFixedWidth(50)
+        self.state_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_3.addWidget(self.state_input)
+
+        search_section_row_3.addWidget(QLabel("Zip:"))
+        self.zip_input = QLineEdit()
+        self.zip_input.setPlaceholderText("ST")
+        self.zip_input.setMaxLength(5)
+        self.zip_input.setFixedWidth(70)
+        self.zip_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_3.addWidget(self.zip_input)
+
+        search_section_row_3.addStretch()
+        layout.addLayout(search_section_row_3)
+
+        search_section_row_4 = QHBoxLayout()
+        self.clear_btn = QPushButton("Clear")
+        self.clear_btn.setFixedWidth(200)
+        search_section_row_4.addWidget(self.clear_btn)
+        layout.addLayout(search_section_row_4)
+
+        search_section_row_4.addStretch()
+        self.search_btn = QPushButton("Search")
+        self.search_btn.setFixedWidth(200)
+        search_section_row_4.addWidget(self.search_btn)
+        layout.addLayout(search_section_row_4)
+
+        hr2 = QLabel()  # HR Line to clear header
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
 
         self.vendors_layout = QVBoxLayout() # Vendors container
         layout.addLayout(self.vendors_layout)
@@ -49,27 +160,150 @@ class VendorsTab(BaseTab):
         layout.addLayout(vendors_section)
         layout.addStretch()
 
-        btn_section = QHBoxLayout()
-        self.create_btn = QPushButton("Create New Vendor")
-        btn_section.addWidget(self.create_btn)
-        self.create_btn.clicked.connect(self.create_new_vendor_prompt)
-
-        btn_section.addStretch()
-
-        self.update_btn = QPushButton("Update")
-        btn_section.addWidget(self.update_btn)
-        layout.addLayout(btn_section)
-
-        hr3 = QLabel()
-        hr3.setObjectName("hr")
-        layout.addWidget(hr3)
-
         # Set up the scroll area
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
 
         self.setup_button_connections()
+
+    def clear(self):
+        """
+        :purpose: clears all input fields and fetched items
+        :author(s): Joe Lee, Colin Henderson
+        """
+        self.search_timer.stop()
+        self.remove_vendor_section()
+        fields = [
+            self.vendor_id_input,
+            self.phone_number_input,
+            self.first_name_input,
+            self.middle_name_input,
+            self.last_name_input,
+        ]
+        for field in fields:
+            field.blockSignals(True)
+            field.clear()
+            field.setReadOnly(False)
+            field.setObjectName("DEFAULT")
+            field.blockSignals(False)
+            field.style().unpolish(field)
+            field.style().polish(field)
+
+        status_bar_instance.send_message("Query and Results cleared")
+
+    def on_search_input_changed(self):
+        """
+        :Purpose: forces a wait
+        :Author(s): Joe Lee
+        """
+        self.search_timer.start(300)
+
+    def build_and_search(self):
+        """
+        :Purpose: Gathers properties to build a query then calls query_db
+        :Author(s): Joe Lee
+        """
+        self.remove_vendor_section()
+
+        conditions = ["c.type = 'vendor'"]
+        properties = []
+
+        def add_property(props, value, operator="="):
+            """
+            :Purpose: appends query conditions
+            :Author(s): Joe Lee
+            """
+            if value:
+                prop_name = props
+                if operator == "CONTAINS":
+                    conditions.append(f"CONTAINS(LOWER(c.{props}), LOWER(@{prop_name}))")
+                else:
+                    conditions.append(f"c.{props} {operator} @{prop_name}")
+                properties.append({"name": f"@{prop_name}", "value": value})
+
+        vendor_id = self.vendor_id_input.text().strip()
+        if vendor_id:
+            try:
+                vendor_id_int = int(vendor_id)
+                add_property("vendor_id", vendor_id_int, "=")
+            except ValueError:
+                pass
+
+        phone = self.phone_number_input.text().strip()
+        if phone:
+            add_property("phone", phone, "CONTAINS")
+
+        first_name = self.first_name_input.text().strip()
+        if first_name:
+            add_property("first_name", first_name, "CONTAINS")
+
+        middle_name = self.middle_name_input.text().strip()
+        if middle_name:
+            add_property("middle_name", middle_name, "CONTAINS")
+
+        last_name = self.last_name_input.text().strip()
+        if last_name:
+            add_property("last_name", last_name, "CONTAINS")
+
+        if len(conditions) == 1:
+            self.fetch()
+            return
+
+        where_clause = " AND ".join(conditions)
+        search_query = f"SELECT * FROM c WHERE {where_clause}"
+        self.query_db(search_query, properties)
+
+    def query_db(self, query: str, properties: list = None):
+        """
+        :Purpose: Queries against the database
+        :Author(s): Joe Lee
+        """
+        self.remove_vendor_section()
+        try:
+            container = self.db_connection.connect("Entities")
+            results = list(container.query_items(
+                query=query,
+                parameters=properties if properties else [],
+                enable_cross_partition_query=True
+            ))
+
+            vendors = []
+            for item in results:
+                vendors.append({
+                    'vendor_id': item.get('vendor_id'),
+                    'phone': item.get('phone', ''),
+                    'first_name': item.get('first_name', ''),
+                    'middle_name': item.get('middle_name', ''),
+                    'last_name': item.get('last_name', ''),
+                    'address': item.get('address', ''),
+                    'city': item.get('city', ''),
+                    'state': item.get('state', ''),
+                    'zip': item.get('zip', '')
+                })
+
+            vendors.sort(key=lambda v: int(v['vendor_id']))
+
+            for vendor in vendors:
+                self.add_vendor_section(vendor)
+
+            if not vendors:
+                status_bar_instance.send_message("No vendors found")
+            else:
+                status_bar_instance.send_message(f"Found {len(vendors)} vendors(s)")
+
+        except Exception as e:
+            log.error(f"Error executing query: {e}")
+            status_bar_instance.send_message("Query failed")
+
+    def fetch(self):
+        """
+        :purpose: fetches all users from Entities container
+        :return: list of users
+        :author(s): Joe Lee
+        """
+        get_all_query = "SELECT * FROM c WHERE c.type = 'vendor'"
+        self.query_db(get_all_query)
 
     def add_vendor_section(self, vendor):
         """
@@ -236,57 +470,6 @@ class VendorsTab(BaseTab):
             for vendor in vendors:
                 self.add_vendor_section(vendor)
 
-    def fetch(self):
-        """
-        :purpose: fetches all vendors from Entities container
-        :return: list of vendors
-        :author(s): Joe Lee
-        """
-        self.remove_vendor_section()
-        try:
-            container = self.db_connection.connect("Entities")
-
-            query = """
-            SELECT *
-            FROM c
-            WHERE c.type = 'vendor'
-            """
-
-            results = list(container.query_items(
-                query=query,
-                enable_cross_partition_query=True
-            ))
-
-            vendors = []
-            for item in results:
-                vendors.append({
-                    'vendor_id': item.get('vendor_id', ''),
-                    'phone': item.get('phone', ''),
-                    'first_name': item.get('first_name', ''),
-                    'middle_name': item.get('middle_name', ''),
-                    'last_name': item.get('last_name', ''),
-                    'address': item.get('address', ''),
-                    'city': item.get('city', ''),
-                    'state': item.get('state', ''),
-                    'zip': item.get('zip', '')
-                })
-
-            vendors.sort(key=lambda v: int(v['vendor_id']))
-
-            return vendors
-
-        except Exception as e:
-            log.error(f"Error fetching vendors: {e}")
-            return []
-
-    def setup_button_connections(self):
-        """
-        :purpose: links buttons with methods
-        :return: None
-        :author(s): Joe Lee
-        """
-        self.update_btn.clicked.connect(self.fetch_on_clicked)
-
     def create_new_vendor_prompt(self):
         '''
         :purpose: Sets up the UI and uses helper methods to create a user and insert it into the db
@@ -362,6 +545,16 @@ class VendorsTab(BaseTab):
         result = dialog.exec()
         if result == QDialog.DialogCode.Accepted:
             self.handle_dialog_accepted(dialog)
+
+    def setup_button_connections(self):
+        """
+        :purpose: links buttons with methods
+        :return: None
+        :author(s): Joe Lee
+        """
+        self.clear_btn.clicked.connect(self.clear)
+        self.search_btn.clicked.connect(self.build_and_search)
+        self.create_btn.clicked.connect(self.create_new_vendor_prompt)
 
     def on_create_clicked(self, dialog):
         """
