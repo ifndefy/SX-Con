@@ -38,7 +38,7 @@ class UsersTab(BaseTab):
 
         self.search_timer = QTimer()
         self.search_timer.setSingleShot(True)
-        self.search_timer.timeout.connect(self.perform_search)
+        self.search_timer.timeout.connect(self.build_and_search)
 
     def setup_ui(self):
         """
@@ -111,6 +111,11 @@ class UsersTab(BaseTab):
         layout.addLayout(search_section_row_2)
 
         search_section_row_3 = QHBoxLayout()
+        self.clear_btn = QPushButton("Clear")
+        self.clear_btn.setFixedWidth(200)
+        search_section_row_3.addWidget(self.clear_btn)
+        layout.addLayout(search_section_row_3)
+
         search_section_row_3.addStretch()
         self.search_btn = QPushButton("Search")
         self.search_btn.setFixedWidth(200)
@@ -144,6 +149,31 @@ class UsersTab(BaseTab):
 
         self.setup_button_connections()
 
+    def clear(self):
+        """
+        :purpose: clears all input fields, resets the product lines to 2
+        :return: None
+        :author(s): Joe Lee, Colin Henderson
+        """
+        self.search_timer.stop()
+        self.remove_user_section()
+        fields = [
+            self.user_id_input,
+            self.username_input,
+            self.first_name_input,
+            self.last_name_input,
+        ]
+        for field in fields:
+            field.blockSignals(True)
+            field.clear()
+            field.setReadOnly(False)
+            field.setObjectName("DEFAULT")
+            field.blockSignals(False)
+            field.style().unpolish(field)
+            field.style().polish(field)
+
+        status_bar_instance.send_message("Query and Results cleared")
+
     def on_search_input_changed(self):
         """
         :Purpose: forces a wait
@@ -151,9 +181,9 @@ class UsersTab(BaseTab):
         """
         self.search_timer.start(300)
 
-    def perform_search(self):
+    def build_and_search(self):
         """
-        :Purpose: Gathers properties and searches for them
+        :Purpose: Gathers properties to build a query then calls query_db
         :Author(s): Joe Lee
         """
         self.remove_user_section()
@@ -456,7 +486,8 @@ class UsersTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        self.search_btn.clicked.connect(self.perform_search)
+        self.clear_btn.clicked.connect(self.clear)
+        self.search_btn.clicked.connect(self.build_and_search)
         self.create_btn.clicked.connect(self.create_new_user_prompt)
 
     def on_create_clicked(self, dialog):
