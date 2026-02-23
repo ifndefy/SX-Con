@@ -14,7 +14,7 @@ class PDF:
         os.makedirs(self.tickets_dir, exist_ok=True)
 
         self.width, self.height = letter
-        self.y = self.height - 60
+        self.y = self.height - 30
 
         self.ticket_num = ticket_num
         self.pdf_filename = None
@@ -182,9 +182,3 @@ class PDF:
         c.rect(112, y - 3, 173, 15)
         c.drawString(112 + 3, y + 1, "123456789012345678901234567890") # todo: popoulate with user data
         c.drawString(300, y, "Employee Signature: _________________________")
-
-test = PDF(100025)
-test.create_supermarket_ticket()
-
-test2 = PDF(100026)
-test2.create_supermarket_ticket()
