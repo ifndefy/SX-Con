@@ -1,4 +1,9 @@
-from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget, QLineEdit, QComboBox, QPushButton
+from PyQt6.QtWidgets import QHBoxLayout
+from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtWidgets import QComboBox
+from PyQt6.QtWidgets import QPushButton
+
 from services.get_item import get_item
 from services.update_property import update_property
 from ui.core.revenue_generation import RevenueGeneration
@@ -88,8 +93,9 @@ class ViewTicket:
 
             # Price
             line2_layout.addWidget(QLabel("Price:"))
-            price = float(product.get('price', 0)) if product.get('price') else 0
-            price_input = QLineEdit(f"${price:.2f}")
+            price = (product.get('price', 0)) if product.get('price') else 0
+            price = fix_price(price)
+            price_input = QLineEdit(price)
             price_input.setFixedWidth(100)
             price_input.setObjectName("READ_ONLY")
             price_input.setReadOnly(True)
@@ -107,21 +113,21 @@ class ViewTicket:
 
             product_layout.addLayout(line2_layout)
 
-            def make_update_handler(product_index, sold_widget):
-                def handler():
-                    sold_value = sold_widget.text()
-                    try:
-                        sold_int = int(sold_value)
-                        result = update_property("Consignments", "consignment", "100000",
-                                                 f"price_data.products[{product_index}].sold", sold_int)
-                        if result == 0:
-                            print(f"Successfully updated sold quantity to {sold_int}")
-                        else:
-                            print(f"Failed to update sold quantity")
-                    except ValueError:
-                        print(f"Invalid sold value: {sold_value}. Please enter a valid number.")
+        def make_update_handler(product_index, sold_widget):
+            def handler():
+                sold_value = sold_widget.text()
+                try:
+                    sold_int = int(sold_value)
+                    result = update_property("Consignments", "consignment", "100000",
+                                             f"price_data.products[{product_index}].sold", sold_int)
+                    if result == 0:
+                        print(f"Successfully updated sold quantity to {sold_int}")
+                    else:
+                        print(f"Failed to update sold quantity")
+                except ValueError:
+                    print(f"Invalid sold value: {sold_value}. Please enter a valid number.")
 
-                return handler
+            return handler
 
             update_btn.clicked.connect(make_update_handler(index, sold_input))
 
@@ -134,3 +140,15 @@ class ViewTicket:
             revenue_widget.set_revenue_data(revenue_sharing)
             revenue_container_layout.addWidget(revenue_widget)
             product_layout.addLayout(revenue_container_layout)
+
+def fix_price(price_val):
+    """
+    :Purpose: inserts dollar sign in front of price should it not have it (this is due to how older records did not insert $"
+    :Parameter: price
+    :Return: $ + price if not startswith("$")
+    :Author(s): Joe Lee
+    """
+    price_str = str(price_val)
+    if not price_str.startswith('$'):
+        price_str = '$' + price_str
+    return price_str
