@@ -76,9 +76,6 @@ class LoginScreen(QDialog):
         login_btn.clicked.connect(self.attempt_login)
         layout.addWidget(login_btn)
 
-        # Enter key also triggers login
-        self.password_input.returnPressed.connect(login_btn.click)
-
         # Forgot Password button
         forgot_pw_btn = QPushButton("Forgot Password")
         forgot_pw_btn.setObjectName("red_btn")
