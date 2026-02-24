@@ -16,9 +16,11 @@ from handlers import handler_print
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
 from services.message_bus import status_bar_instance
+from src.core import generate_agg_data
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
+from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone, format_price, excel
 from utils.core import generate_excel as xls_gen
@@ -256,6 +258,15 @@ class CreateNewTab(BaseTab):
 
         clear_section = QVBoxLayout()
         # Clear Form button on left bottom
+
+        rev_by_prod_widget = QWidget()
+        rev_by_prod_title = QLabel("Revenue by Product Type")
+        rev_by_prod_title.setObjectName("post_title")
+        clear_section.addWidget(rev_by_prod_title, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.rev_by_prod = RevenueByProdType()
+        clear_section.addWidget(self.rev_by_prod)
+
         clear_section.addStretch()
         self.clear_btn = QPushButton("Clear Form")
         self.clear_btn.setObjectName("crit_large_btn")
@@ -263,6 +274,8 @@ class CreateNewTab(BaseTab):
 
         combo_section_row_0.addLayout(clear_section)
         combo_section_row_0.addStretch()
+
+        combo_section_row_0.addWidget(rev_by_prod_widget)
 
         # Revenue Sharing section
         revenue_widget = QWidget()
@@ -348,7 +361,7 @@ class CreateNewTab(BaseTab):
         line1_layout.addWidget(product_type_label)
 
         product_type_input = QComboBox()
-        product_types = ["Hot Food", "General Item", "Produce"]
+        product_types = ["Hot Food", "General", "Produce"]
         product_type_input.addItems(product_types)
         product_type_input.setCurrentIndex(-1)
         product_type_input.setPlaceholderText("SELECT")
@@ -388,12 +401,12 @@ class CreateNewTab(BaseTab):
         # Rate - integer only, placed to the right of Notes
         line2_layout.addWidget(QLabel("Rate:"))
         rate_input = QLineEdit()
+        rate_input.setReadOnly(True)
         rate_input.setObjectName("READ_ONLY")
         rate_input.setPlaceholderText(str(BASE_RATE))
         rate_input.setFixedWidth(80)
         rate_input.setValidator(QIntValidator(0, 100, self))
         # Default to BASE_RATE until type indicates otherwise
-        rate_input.setText(str(BASE_RATE))
         line2_layout.addWidget(rate_input)
         product_section['rate'] = rate_input
 
@@ -404,6 +417,7 @@ class CreateNewTab(BaseTab):
         price_input.setFixedWidth(100)
         price_input.setMaxLength(9)
         price_input.setValidator(QIntValidator(0, 2147483647, self))
+        price_input.textChanged.connect(self.handle_total)
 
         line2_layout.addWidget(price_input)
         product_section['price'] = price_input
@@ -414,8 +428,19 @@ class CreateNewTab(BaseTab):
         quantity_input.setPlaceholderText("0")
         quantity_input.setFixedWidth(100)
         quantity_input.setValidator(QIntValidator(0, 9999, self))
+        quantity_input.textChanged.connect(self.handle_total)
         line2_layout.addWidget(quantity_input)
         product_section['quantity'] = quantity_input
+
+        # Total - Fixed width (same as price)
+        line2_layout.addWidget(QLabel("Total:"))
+        total_input = QLineEdit()
+        total_input.setPlaceholderText("$0.00")
+        total_input.setReadOnly(True)
+        total_input.setObjectName("READ_ONLY")
+        total_input.setFixedWidth(100)
+        line2_layout.addWidget(total_input)
+        product_section['total'] = total_input
 
         section_layout.addLayout(line2_layout)
 
@@ -428,6 +453,44 @@ class CreateNewTab(BaseTab):
         self.product_sections.append(product_section)
         self.product_counter += 1
         status_bar_instance.send_message(f"Added product line. Total: {len(self.product_sections)}")
+
+    def handle_total(self):
+        widget = self.sender()
+        if not widget:
+            return
+
+        section = self.get_sending_widget(widget)
+        if section:
+            self.on_price_qty_changed(section)
+
+    def get_sending_widget(self, widget):
+        for section in self.product_sections:
+            if (section['price'] is widget or section['quantity'] is widget):
+                return section
+        return None
+
+    def on_price_qty_changed(self, section):
+        price_text = section['price'].text().strip()
+        qty_text = section['quantity'].text().strip()
+
+        if not price_text or not qty_text:
+            # prevent invalid data, require both fields be populated
+            section['total'].setText("$0.00")
+            return
+
+        fixed_price = generate_agg_data.convert_price(price_text)
+        if fixed_price is None:
+            section['total'].setText("$0.00")
+            return
+
+        try:
+            qty = int(qty_text)
+        except ValueError:
+            section['total'].setText("$0.00")
+            return
+
+        total = round(fixed_price * qty, 2)
+        section['total'].setText(f"${total:.2f}")
 
     def _on_product_type_changed(self, product_section: dict):
         try:
@@ -501,7 +564,7 @@ class CreateNewTab(BaseTab):
         self.create_btn.clicked.connect(self.create_record)
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
-        self.calc_btn.clicked.connect(self.update_revenue_fields)
+        self.calc_btn.clicked.connect(self.handle_calc_btn)
         self.pdf_btn.clicked.connect(self.on_pdf_clicked)
         self.print_btn.clicked.connect(self.on_print_clicked)
 
@@ -568,8 +631,8 @@ class CreateNewTab(BaseTab):
             record_id = self._post_to_database(record_data)
 
             if record_id != -1:
-                status_bar_instance.send_message(f"Record created successfully! ID: {record_id}")
                 self.clear_form()
+                status_bar_instance.send_message(f"Record created successfully! ID: {record_id}")
                 return record_id
             else:
                 log.error("Failed to create record")
@@ -617,19 +680,23 @@ class CreateNewTab(BaseTab):
                 'notes': product_section['notes'].text().strip() or "NULL",
                 'rate': product_section.get('rate').text().strip() if product_section.get('rate') else "NULL",
                 'price': product_section['price'].text().strip() or "NULL",
-                'quantity': product_section['quantity'].text().strip() or "NULL"
+                'quantity': product_section['quantity'].text().strip() or "NULL",
+                'total': product_section['total'].text().strip() or "NULL"
             }
             products_data.append(product_data)
         return products_data
 
     def _gather_revenue_data(self):
         """
-        :author(s): Alexander Bubienko
         :purpose: Gather revenue data and convert empty strings to NULL
-        :return: Dictionary containing revenue data
+        :return: Dictionary containing shared revenue and grouped revenue
+        :author(s): Alexander Bubienko, Joe Lee
         """
         # Revenue sharing data
-        return self.revenue_generation.get_revenue_data()
+        return {
+            'shared': self.revenue_generation.get_revenue_data(),
+            'grouped': self.rev_by_prod.get_revenue_data()
+        }
 
     def _validate_required_fields(self, vendor_data, products_data=None):
         """
@@ -769,7 +836,10 @@ class CreateNewTab(BaseTab):
                         if self._has_product_data(product)
                     ]
                 },
-                'revenue_sharing': record_data['revenue']
+                'revenue': {
+                    'shared': record_data['revenue']['shared'],
+                    'grouped': record_data['revenue']['grouped']
+                }
             }
 
             log.info(f"Creating consignment document with ID: {ticket_number}")
@@ -905,6 +975,7 @@ class CreateNewTab(BaseTab):
         :return: None
         :author(s): Joe Lee, Colin Henderson
         """
+        self.rev_by_prod.clear()
         self.ticket_input.clear()
 
         fields = [
@@ -968,6 +1039,10 @@ class CreateNewTab(BaseTab):
             )
         except Exception:
             return False
+
+    def handle_calc_btn(self):
+        self.update_revenue_fields()
+        self.rev_by_prod.update_from_products(self.product_sections)
 
     def update_revenue_fields(self) -> int:
         """
