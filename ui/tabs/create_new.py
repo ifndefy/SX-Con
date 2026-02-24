@@ -793,6 +793,7 @@ class CreateNewTab(BaseTab):
                         'product_name': self._convert_null(product['product_name']),
                         'product_type': self._convert_null(product['product_type']),
                         'rate': rate_value,
+                        'total': product['total'],
                     }
                     log.info(f"Creating product document: product_{product_id}")
                     try:
@@ -830,7 +831,9 @@ class CreateNewTab(BaseTab):
                             ),
                             'price': self._convert_null(product['price']),
                             'quantity': self._convert_quantity(product['quantity']),
+                            'total': product['total'],
                             'sold': 0,
+                            'remaining': self._convert_quantity(product['quantity'])
                         }
                         for product in record_data['products']
                         if self._has_product_data(product)
