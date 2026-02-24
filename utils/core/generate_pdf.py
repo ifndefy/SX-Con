@@ -32,6 +32,9 @@ class PDF:
             self.set_pdf_filename()
             self.set_cursor(self.pdf_filename)
 
+        self.num_prods = len(self.ticket_data["price_data"]["products"])
+        print(self.num_prods)
+
     def set_ticket_data(self):
         self.ticket_data = get_item_by_property("Consignments", "consignment", "ticket_number", self.ticket_num)
 
@@ -54,10 +57,9 @@ class PDF:
     # todo: def get_current_user()
 
     def create_supermarket_ticket(self):
-        self.draw_header(self.cursor, self.y)
-        self.draw_ticket_content(self.cursor, self.y)
-        num_prods = len(self.ticket_data["price_data"]["products"])
-        if num_prods <= 5:
+        if self.num_prods <= 8:
+            self.draw_header(self.cursor, self.y)
+            self.draw_ticket_content(self.cursor, self.y)
             self.draw_footer(self.cursor, self.y)
             self.cursor.line(30, self.height / 2, self.width - 30, self.height / 2)
             self.y = self.height / 2 - 30
@@ -65,6 +67,9 @@ class PDF:
             self.draw_ticket_content(self.cursor, self.y)
             self.draw_footer(self.cursor, self.y)
         else:
+            self.draw_header(self.cursor, self.y)
+            self.draw_ticket_content(self.cursor, self.y)
+            self.draw_footer(self.cursor, self.y)
             self.cursor.showPage()
             self.y = self.height - 30
             self.draw_header(self.cursor, self.y)
@@ -99,7 +104,7 @@ class PDF:
         c.line(30, y, self.width - 30, y)
         y -= 20
 
-        self.y = y
+        self.save_y(y)
 
     def draw_ticket_content(self, cursor, y_axis):
         y_prod = y_axis
@@ -125,7 +130,13 @@ class PDF:
             c.drawString(533 + 3, y_prod + 1, prod.get("total", ""))
             y_prod -= 20
             count += 1
-            if count == 24:
+            if count == 27 and self.num_prods < 33: # can fit 27 items per page with tables and footing
+                self.cursor.line(30, y_prod, self.width - 30, y_prod)
+                self.cursor.showPage()
+                self.y = self.height - 30
+                self.draw_header(self.cursor, self.y)
+                y_prod = self.y
+            if count == 33 and self.num_prods >= 38: # fits 33 max per page with no tables nor footing
                 self.cursor.line(30, y_prod, self.width - 30, y_prod)
                 self.cursor.showPage()
                 self.y = self.height - 30
@@ -134,10 +145,35 @@ class PDF:
         y = y_prod
         c.line(30, y + 5, self.width - 30, y + 5)
         y -= 15
+        y_type = y
+        self.save_y(y)
 
         c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(275, y, "Revenue by Type")
-        y_type = y - 15
+        c.drawCentredString(118, y, "Shared Revenues")
+        y_pot = y - 15
+
+        c.setFont("Helvetica-Bold", 10)
+        c.drawCentredString(60, y_pot, "Vendor")
+        c.drawCentredString(118, y_pot, "Percentage")
+        c.drawCentredString(175, y_pot, "Super X")
+        y_pot -= 18
+
+        for cut in self.ticket_data["revenue"]["shared"]:
+            c.setFont("Helvetica", 10)
+            c.drawString(34, y_pot, str(cut.get("vendor")))
+            c.rect(34 - 3, y_pot - 3, 60, 15)
+            c.drawCentredString(118, y_pot, str(cut.get("percentage")))
+            c.drawString(148, y_pot, str(cut.get("super_x")))
+            c.rect(148 - 3, y_pot - 3, 60, 15)
+            y_pot -= 18
+
+        c.setFont("Helvetica-Bold", 10)
+        c.drawCentredString(285, y_type, "Revenue by Type")
+        y_type -= 15
+        c.setFont("Helvetica-Bold", 10)
+        c.drawCentredString(241, y_type, "Type")
+        c.drawCentredString(315, y_type, "Total")
+        y_type -= 18
 
         rev_groups = self.ticket_data.get('revenue', {}).get('grouped', [])
         prod_type_total = {}
@@ -148,48 +184,36 @@ class PDF:
         for type in ["Hot Food", "General", "Produce"]:
             total = prod_type_total.get(type, "$0.00")
             c.setFont("Helvetica", 10)
-            c.drawString(206, y_type, str(type))
-            c.rect(206 - 3, y_type - 3, 60, 15)
-            c.drawString(280, y_type, total)
-            c.rect(280 - 3, y_type - 3, 60, 15)
+            c.drawString(216, y_type, str(type))
+            c.rect(216 - 3, y_type - 3, 60, 15)
+            c.drawString(290, y_type, total)
+            c.rect(290 - 3, y_type - 3, 60, 15)
             y_type -= 18
-
-        c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(475, y, "Potential Revenues")
-        y_pot = y - 15
-
-        c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(412, y_pot, "You")
-        c.drawCentredString(470, y_pot, "Percentage")
-        c.drawCentredString(528, y_pot, "Super X")
-        y_pot -= 18
-
-        for cut in self.ticket_data["revenue"]["shared"]:
-            c.setFont("Helvetica", 10)
-            c.drawString(386, y_pot, str(cut.get("vendor")))
-            c.rect(386 - 3, y_pot - 3, 60, 15)
-            c.drawCentredString(470, y_pot, str(cut.get("percentage")))
-            c.drawString(500, y_pot, str(cut.get("super_x")))
-            c.rect(500 - 3, y_pot - 3, 60, 15)
-            y_pot -= 18
-        y = y_pot - 30
-        self.y = y
 
     def draw_footer(self, cursor, y_axis):
         c = cursor
-        y = y_axis
+        y = y_axis - 18
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(30, y, "Vendor Name:")
-        c.rect(100, y - 3, 185, 15)
-        c.drawString(100 + 3, y + 1, (" ".join([self.vendor_data["first_name"], self.vendor_data["last_name"]])))
-        c.drawString(300, y, "Vendor Signature: ___________________________")
+        c.drawString(360, y, "Vendor Name:")
+        c.rect(429, y - 3, 153, 15)
+        c.drawString(432, y + 1, (" ".join([self.vendor_data["first_name"], self.vendor_data["last_name"]])))
+        y -= 18
+        c.drawString(360, y, "Vendor Signature:")
+        c.line(447, y, 582, y)
         y -= 20
 
         # todo: populate employee fields
-        c.drawString(30, y, "Employee Name:")
-        c.rect(112, y - 3, 173, 15)
-        c.drawString(112 + 3, y + 1, "123456789012345678901234567890") # todo: popoulate with user data
-        c.drawString(300, y, "Employee Signature: _________________________")
+        c.drawString(360, y, "Employee Name:")
+        c.rect(442, y - 3, 140, 15)
+        c.drawString(445, y + 1, "123456789012345678901234") # todo: popoulate with user data
+        y -= 18
+        c.drawString(360, y, "Employee Signature: ")
+        c.line(460, y, 582, y)
+        y -= 18
+        c.drawString(395, y, "** Not Official unless signed **")
 
-test = PDF(100041)
+    def save_y(self, y_axis):
+        self.y = y_axis
+
+test = PDF(100039)
 test.create_supermarket_ticket()
