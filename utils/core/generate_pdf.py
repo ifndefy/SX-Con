@@ -2,7 +2,9 @@ import os
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+
 from services.get_item_by_property import get_item_by_property
+from src.core.generate_agg_data import convert_price
 
 
 class PDF:
@@ -120,7 +122,7 @@ class PDF:
             c.drawString(473 + 3, y_prod + 1, str(prod.get("quantity", "")))
             c.drawString(505, y_prod, "Total:")
             c.rect(533, y_prod - 3, 48, 15)
-            c.drawString(533 + 3, y_prod + 1, "$2000.00") # todo: populate this field properly
+            c.drawString(533 + 3, y_prod + 1, prod.get("total", ""))
             y_prod -= 20
             count += 1
             if count == 24:
@@ -137,12 +139,18 @@ class PDF:
         c.drawCentredString(275, y, "Revenue by Type")
         y_type = y - 15
 
+        rev_groups = self.ticket_data.get('revenue', {}).get('grouped', [])
+        prod_type_total = {}
+        for group in rev_groups:
+            prod_type_total[group['product_type']] = group['total']
+
         c.setFont("Helvetica-Bold", 10)
-        for type in ["Hot Foods", "General", "Produce"]: # todo: parse list to be inserted into consignment item
+        for type in ["Hot Food", "General", "Produce"]:
+            total = prod_type_total.get(type, "$0.00")
             c.setFont("Helvetica", 10)
             c.drawString(206, y_type, str(type))
             c.rect(206 - 3, y_type - 3, 60, 15)
-            c.drawString(280, y_type, "place_holder") # todo: parse list to be inserted into consignment item
+            c.drawString(280, y_type, total)
             c.rect(280 - 3, y_type - 3, 60, 15)
             y_type -= 18
 
@@ -156,7 +164,7 @@ class PDF:
         c.drawCentredString(528, y_pot, "Super X")
         y_pot -= 18
 
-        for cut in self.ticket_data["revenue_sharing"]:
+        for cut in self.ticket_data["revenue"]["shared"]:
             c.setFont("Helvetica", 10)
             c.drawString(386, y_pot, str(cut.get("vendor")))
             c.rect(386 - 3, y_pot - 3, 60, 15)
@@ -182,3 +190,6 @@ class PDF:
         c.rect(112, y - 3, 173, 15)
         c.drawString(112 + 3, y + 1, "123456789012345678901234567890") # todo: popoulate with user data
         c.drawString(300, y, "Employee Signature: _________________________")
+
+test = PDF(100041)
+test.create_supermarket_ticket()
