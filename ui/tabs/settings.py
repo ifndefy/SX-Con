@@ -7,20 +7,27 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QMessageBox
 
 from ui.core.theme_manager import ThemeManager
 from ui.tabs.base import BaseTab
+from ui.login import LoginScreen
+from src.user import current_user
+from services.update_property import update_property
 import utils.logger.logger as log
 
 class SettingsTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, main_window=None):
         self.save_btn = None
         self.load_btn = None
         self.theme_dropdown_menu = None
         self.ticket_counter = None
         self.tickets_layout = None
-
+        self.current_username_input = None
+        self.change_username_btn = None
         self.theme_manager = ThemeManager()
+        self.main_window = main_window
 
         super().__init__(api_handler, "settings")
 
@@ -66,12 +73,13 @@ class SettingsTab(BaseTab):
         user_title.setObjectName("post_title")
         user_layout_line_0.addWidget(user_title)
 
-        current_username_input = QLineEdit("test")
-        current_username_input.setReadOnly(True)
-        user_layout_line_0.addWidget(current_username_input)
+        self.current_username_input = QLineEdit("test")
+        self.current_username_input.setText(current_user.get_username() or "Not logged in")
+        self.current_username_input.setReadOnly(True)
+        user_layout_line_0.addWidget(self.current_username_input)
 
-        change_username_btn = QPushButton("Change Username")
-        user_layout_line_0.addWidget(change_username_btn)
+        self.change_username_btn = QPushButton("Change Username")
+        user_layout_line_0.addWidget(self.change_username_btn)
 
         layout.addLayout(user_layout_line_0)
 
@@ -189,8 +197,10 @@ class SettingsTab(BaseTab):
         """
         :purpose: links buttons with methods
         :return: None
-        :author(s): Joe Lee
+        :author(s): Joe Lee, Alexander Bubienko
         """
+
+        self.change_username_btn.clicked.connect(self.on_change_username_clicked)
         # self.update_btn.clicked.connect(self.fetch_on_clicked)
         # self.view_btn.clicked.connect()
         # self.excel_btn.clicked.connect()
@@ -201,3 +211,146 @@ class SettingsTab(BaseTab):
         pass
         # todo: add new pw line
         # todo: change current pw field to READONLY=FALSE
+
+    def on_change_username_clicked(self):
+        """
+        :purpose: Handle username change button clicks (toggles between Change/Update modes)
+        :author(s): Alexander Bubienko
+        """
+        if self.current_username_input.isReadOnly():
+            # Currently in "Change Username" mode - verify credentials first
+            self.verify_credentials_for_username_change()
+        else:
+            # Currently in "Update" mode - perform the username update
+            self.perform_username_update()
+
+    def verify_credentials_for_username_change(self):
+        """
+        :purpose: Show login dialog to verify user credentials before allowing username change
+        :author(s): Alexander Bubienko
+        """
+        # Create a login dialog for verification
+        login_dialog = LoginScreen(self.theme_manager, self)
+        
+        # Modify the dialog appearance to show it's for verification
+        login_dialog.setWindowTitle("Verify Credentials")
+        
+        # Show the dialog and check if authentication succeeded
+        if login_dialog.exec() == QDialog.DialogCode.Accepted:
+            # Credentials verified - enable username editing
+            self.current_username_input.setReadOnly(False)
+            self.current_username_input.setFocus()
+            self.current_username_input.selectAll()
+            self.change_username_btn.setText("Update")
+            log.info("Credentials verified, username edit enabled")
+        else:
+            # Verification failed
+            QMessageBox.warning(self, "Verification Failed", 
+                               "Invalid credentials. Username cannot be changed.")
+            log.warning("Username change verification failed")
+
+    def perform_username_update(self):
+        """
+        :purpose: Update the username in the database using update_property.py
+        :author(s): Alexander Bubienko
+        """
+        new_username = self.current_username_input.text().strip()
+        old_username = current_user.get_username()
+        
+        # Validate new username
+        if not new_username:
+            QMessageBox.warning(self, "Invalid Input", "Username cannot be empty")
+            return
+            
+        if new_username == old_username:
+            QMessageBox.information(self, "No Change", "New username is the same as current username")
+            # Reset to read-only mode
+            self.cancel_username_update()
+            return
+        
+        confirm = QMessageBox.question(
+            self, 
+            "Confirm Username Change",
+            f"Are you sure you want to change your username from '{old_username}' to '{new_username}'?\n\n"
+            "You will be logged out after this change.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            user_id = self.get_user_id_from_username(old_username)
+            
+            if not user_id:
+                QMessageBox.critical(self, "Error", "Could not determine user ID")
+                return
+            
+            # Use update_property to change the username
+            result = update_property(
+                container_name='Entities',
+                entity_type='user',
+                entity_id=str(user_id),
+                property_name='username',
+                property_value=new_username
+            )
+            
+            if result == 0:  # Success
+                log.info(f"Username successfully changed from {old_username} to {new_username}")
+                
+                # Update the user class with new username
+                current_user.set_user(new_username, current_user.is_admin())
+                
+                QMessageBox.information(self, "Success", 
+                                    "Username changed successfully. You will now be logged out.")
+                
+                if hasattr(self, 'main_window') and self.main_window:
+                    self.main_window.logout()
+                else:
+                    # If no main_window reference, try to find it
+                    parent = self.parent()
+                    while parent:
+                        if hasattr(parent, 'logout'):
+                            parent.logout()
+                            break
+                        parent = parent.parent()
+                
+            else:
+                QMessageBox.critical(self, "Error", "Failed to update username in database")
+                log.error(f"Username update failed with result: {result}")
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+            log.error(f"Username update exception: {e}")
+
+    def get_user_id_from_username(self, username):
+        """
+        :purpose: Helper method to get user ID from username
+        :author(s): Alexander Bubienko
+        """
+        try:
+            from services.connect_database import db_connection
+            container = db_connection.connect('Entities')
+            
+            # Query for user by username
+            query = f"SELECT * FROM c WHERE c.username = '{username}' AND c.type = 'user'"
+            users = list(container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            
+            if users:
+                return users[0].get('user_id') or users[0].get('id')
+            return None
+        except Exception as e:
+            log.error(f"Error getting user ID: {e}")
+            return None
+
+    def cancel_username_update(self):
+        """
+        :purpose: Cancel username update and return to read-only state
+        :author(s): Alexander Bubienko
+        """
+        self.current_username_input.setText(current_user.get_username() or "")
+        self.current_username_input.setReadOnly(True)
+        self.change_username_btn.setText("Change Username")
