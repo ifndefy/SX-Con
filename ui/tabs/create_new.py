@@ -1042,7 +1042,7 @@ class CreateNewTab(BaseTab):
 
     def handle_calc_btn(self):
         self.update_revenue_fields()
-        self.rev_by_prod.update_from_products(self.product_sections)
+        self.rev_by_prod.handle_updating(self.product_sections)
 
     def update_revenue_fields(self) -> int:
         """
