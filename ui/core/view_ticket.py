@@ -47,7 +47,7 @@ class ViewTicket:
             # Product Type
             line1_layout.addWidget(QLabel("Type:"))
             product_type_input = QComboBox()
-            product_types = ["SELECT", "Hot Food", "General Item", "Produce"]
+            product_types = ["SELECT", "Hot Food", "General", "Produce"]
             product_type_input.addItems(product_types)
             product_type_from_db = product.get('product_type', '')
             if product_type_from_db in product_types:
