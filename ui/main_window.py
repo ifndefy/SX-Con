@@ -39,8 +39,8 @@ class MainWindow(QWidget):
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
-        self.setGeometry(0, 0, 1100, 762)
-        self.setMinimumSize(1100, 762)
+        self.setGeometry(0, 0, 1100, 770)
+        self.setMinimumSize(1100, 770)
 
     def setup_ui(self):
         layout = QVBoxLayout(self)

@@ -344,13 +344,6 @@ class CreateNewTab(BaseTab):
         combo_section_row_0.addLayout(action_layout)
         layout.addLayout(combo_section_row_0)
 
-        # HR Line to separate buttons at the bottom
-        hr3 = QFrame()
-        hr3.setFrameShape(QFrame.Shape.HLine)
-        hr3.setFrameShadow(QFrame.Shadow.Sunken)
-        hr3.setObjectName("hr")
-        layout.addWidget(hr3)
-
         # Set up the scroll area
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
