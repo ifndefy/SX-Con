@@ -574,7 +574,8 @@ class CreateNewTab(BaseTab):
         return {
             'vendor_info': vendor_info,
             'prod_info': product_info,
-            'revenue_info': revenue_data
+            'revenue_shared': revenue_data['shared'],
+            'revenue_grouped': revenue_data['grouped']
         }
 
     def setup_button_connections(self):
