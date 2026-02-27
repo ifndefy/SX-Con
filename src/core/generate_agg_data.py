@@ -18,11 +18,12 @@ def agg_total_product_type(product_doc: list, product_type: str) -> float:
             continue
         price = prod.get('price', '0')
         qty = int(prod.get('quantity', '0'))
+        rate = 1 - (prod.get('rate', '0'))
         if not val_price(price):
             fixed_price = convert_price(price)
         else:
             fixed_price = price
-        total += fixed_price * qty
+        total += fixed_price * qty * rate
     return round(total, 2)
 
 def avg_product_price(product_id: int|str) -> float:
