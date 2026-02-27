@@ -10,7 +10,7 @@ from src import SPOT
 from ui.forgot_pw import ForgotPasswordScreen
 from src.core.authenticate import authenticate_password
 from services.connect_database import db_connection
-
+import utils.logger.logger as log
 
 class LoginScreen(QDialog):
     """
@@ -134,7 +134,7 @@ class LoginScreen(QDialog):
             ))
             
             if not users:
-                print(f"No user found with username: {username}")
+                log.info(f"No user found with username: {username}")
                 return False
                 
             # Get the stored hash and authenticate
@@ -148,5 +148,5 @@ class LoginScreen(QDialog):
             return result == "1"
             
         except Exception as e:
-            print(f"Authentication error: {e}")
+            log.error(f"Authentication error: {e}")
             return False

@@ -1,6 +1,3 @@
-"""
-Defines methods to generate aggregate data
-"""
 import utils.logger.logger as log
 from services.connect_database import db_connection
 
@@ -8,7 +5,8 @@ from services.connect_database import db_connection
 def agg_total_product_type(product_doc: list, product_type: str) -> float:
     """
     :Purpose: generates aggregate data for all products in an item grouped by product type
-    :Parameter: product_doc: product document
+    :Parameter: product_doc, a dictionary holding details of product(s)
+    :Parameter: product_type, a string holding product type
     :Method: takes product doc list which nests dictionaries, then groups by product type, then finds aggregate totals
     :Author(s): Joe Lee
     """
@@ -31,7 +29,7 @@ def avg_product_price(product_id: int|str) -> float:
     """
     :Purpose: generates aggregate data for a single product by product_id
     :Method: fetches the DB for the prices of product_id, then finds average
-    :Return: average price
+    :Return: average price rounded to two decimals
     :Author(s): Joe Lee
     """
     try:
@@ -68,6 +66,7 @@ def avg_product_price(product_id: int|str) -> float:
 def val_price(price) -> bool:
     """
     :Purpose: Verifies that price is a float
+    :Author(s): Joe Lee
     """
     if isinstance(price, float):
         return True
@@ -77,6 +76,7 @@ def val_price(price) -> bool:
 def convert_price(price) -> float|None:
     """
     :Purpose: converts price to float
+    :Author(s): Joe Lee
     """
     try:
         if isinstance(price, int):
@@ -89,9 +89,15 @@ def convert_price(price) -> float|None:
         return None
 
 def fetch_product_prices(container, product_id):
+    """
+    :Purpose: fetches prices for a product by product_id
+    :Parameter: container, a database connection
+    :Parameter: product_id, a string holding product id
+    :Author(s): Joe Lee
+    """
     query = """
             SELECT p.price
-            FROM c 
+            FROM c
             JOIN p IN c.price_data.products
             WHERE c.type = 'consignment' AND p.product_id = @product_id
             """

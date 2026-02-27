@@ -1,5 +1,8 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QApplication, QComboBox
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QComboBox
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
@@ -212,7 +215,9 @@ class CreateNewTab(BaseTab):
         layout.addLayout(vendor_section_row_3)
 
         # HR Line between Vendor and Product sections
-        hr1 = QLabel()
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
@@ -249,7 +254,9 @@ class CreateNewTab(BaseTab):
         layout.addStretch(1)
 
         # HR Line between Product and Revenue sections
-        hr2 = QLabel()
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         layout.addWidget(hr2)
 
@@ -259,23 +266,36 @@ class CreateNewTab(BaseTab):
         clear_section = QVBoxLayout()
         # Clear Form button on left bottom
 
-        rev_by_prod_widget = QWidget()
-        rev_by_prod_title = QLabel("Revenue by Product Type")
-        rev_by_prod_title.setObjectName("post_title")
-        clear_section.addWidget(rev_by_prod_title, alignment=Qt.AlignmentFlag.AlignRight)
-
-        self.rev_by_prod = RevenueByProdType()
-        clear_section.addWidget(self.rev_by_prod)
-
         clear_section.addStretch()
         self.clear_btn = QPushButton("Clear Form")
         self.clear_btn.setObjectName("crit_large_btn")
         clear_section.addWidget(self.clear_btn)
 
         combo_section_row_0.addLayout(clear_section)
+
+        # HR Line to separate clear button from revenue fields
+        vr1 = QFrame()
+        vr1.setFrameShape(QFrame.Shape.VLine)
+        vr1.setFrameShadow(QFrame.Shadow.Sunken)
+        vr1.setObjectName("hr")
+        combo_section_row_0.addWidget(vr1)
         combo_section_row_0.addStretch()
 
+        rev_by_prod_widget = QWidget()
+        rev_prod_section = QVBoxLayout(rev_by_prod_widget)
+        rev_by_prod_title = QLabel("Revenue by Product Type")
+        rev_by_prod_title.setObjectName("post_title")
+        rev_prod_section.addWidget(rev_by_prod_title, alignment=Qt.AlignmentFlag.AlignRight)
+        self.rev_by_prod = RevenueByProdType()
+        rev_prod_section.addWidget(self.rev_by_prod)
         combo_section_row_0.addWidget(rev_by_prod_widget)
+
+        # HR Line to separate revenue fields
+        vr2 = QFrame()
+        vr2.setFrameShape(QFrame.Shape.VLine)
+        vr2.setFrameShadow(QFrame.Shadow.Sunken)
+        vr2.setObjectName("hr")
+        combo_section_row_0.addWidget(vr2)
 
         # Revenue Sharing section
         revenue_widget = QWidget()
@@ -295,6 +315,13 @@ class CreateNewTab(BaseTab):
 
         combo_section_row_0.addWidget(revenue_widget)
         combo_section_row_0.addStretch()
+
+        # HR Line to separate revenue fields from action buttons
+        vr3 = QFrame()
+        vr3.setFrameShape(QFrame.Shape.VLine)
+        vr3.setFrameShadow(QFrame.Shadow.Sunken)
+        vr3.setObjectName("hr")
+        combo_section_row_0.addWidget(vr3)
 
         # Action buttons
         action_layout = QVBoxLayout()
@@ -318,7 +345,9 @@ class CreateNewTab(BaseTab):
         layout.addLayout(combo_section_row_0)
 
         # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
+        hr3 = QFrame()
+        hr3.setFrameShape(QFrame.Shape.HLine)
+        hr3.setFrameShadow(QFrame.Shadow.Sunken)
         hr3.setObjectName("hr")
         layout.addWidget(hr3)
 
@@ -760,7 +789,6 @@ class CreateNewTab(BaseTab):
 
             log.info(f"Creating vendor document with ID: vendor_{vendor_id}")
 
-            # todo: need a ticket to check if vendor_id already exists
             try:
                 vendor_response = entities_container.upsert_item(body=vendor_document)
                 log.info("Vendor document created successfully")
@@ -768,7 +796,6 @@ class CreateNewTab(BaseTab):
                 log.error(f"Error creating vendor document: {e}")
                 return -1
 
-            # todo: need a ticket to check if product_id already exists
             product_ids = []
             for i, product in enumerate(record_data['products']):
                 if self._has_product_data(product):

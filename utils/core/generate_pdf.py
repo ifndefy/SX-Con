@@ -4,7 +4,6 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
 from services.get_item_by_property import get_item_by_property
-from src.core.generate_agg_data import convert_price
 
 
 class PDF:
@@ -33,7 +32,6 @@ class PDF:
             self.set_cursor(self.pdf_filename)
 
         self.num_prods = len(self.ticket_data["price_data"]["products"])
-        print(self.num_prods)
 
     def set_ticket_data(self):
         self.ticket_data = get_item_by_property("Consignments", "consignment", "ticket_number", self.ticket_num)
@@ -214,6 +212,3 @@ class PDF:
 
     def save_y(self, y_axis):
         self.y = y_axis
-
-test = PDF(100039)
-test.create_supermarket_ticket()

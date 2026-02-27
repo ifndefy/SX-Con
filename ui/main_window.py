@@ -121,10 +121,10 @@ class MainWindow(QWidget):
 
             self.login_window = LoginWindow()
             self.login_window.show()
-            print("Logged out: returning to login screen.")
+            log.info("Logged out: returning to login screen.")
         except ImportError:
             # Fallback behavior until login is implemented
-            print("LoginWindow not implemented yet. Closing application on logout.")
+            log.info("LoginWindow not implemented yet. Closing application on logout.")
 
         # Close the main window either way
         self.close()
