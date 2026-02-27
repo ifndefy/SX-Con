@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtCore import Qt
 
 from src.core import generate_agg_data
+import utils.logger.logger as log
 
 class RevenueByProdType(QWidget):
     def __init__(self, parent=None):
@@ -34,7 +35,7 @@ class RevenueByProdType(QWidget):
         revenue_layout.addLayout(header_layout)
 
         # Rows for each product type
-        product_types = ["Hot Food", "General", "Produce"]
+        product_types = ["Hot Food", "General", "Produce", "Total"]
         for prod_type in product_types:
             row_layout = QHBoxLayout()
             row_layout.setSpacing(5)
@@ -75,26 +76,34 @@ class RevenueByProdType(QWidget):
         for section in product_sections:
             price_text = section['price'].text().strip()
             qty_text = section['quantity'].text().strip()
-            if not price_text or not qty_text:
+            rate_text = section['rate'].text().strip()
+            if not price_text or not qty_text or not rate_text:
                 # only calculate if both fields have a value
                 continue
             fixed_price = generate_agg_data.convert_price(price_text)
             if fixed_price is None:
                 continue
             qty = int(qty_text)
+            if rate_text is None:
+                continue
+            rate = int(rate_text) / 100
             prod_type = section['product_type'].currentText()
             if not prod_type or prod_type == "SELECT": # -1 is generally set as "SELECT" in code
                 continue
             product_doc.append({
                 'product_type': prod_type,
                 'price': price_text,
-                'quantity': qty
+                'quantity': qty,
+                'rate': rate
             })
 
         totals = {}
+        sum = 0
         for rec in self.revenue_records:
             pt = rec['product_type']
             totals[pt] = generate_agg_data.agg_total_product_type(product_doc, pt)
+            sum += totals[pt]
+        totals['Total'] = sum
         return totals
 
     def update_display_values(self, totals):
