@@ -429,6 +429,7 @@ class CreateNewTab(BaseTab):
         rate_input.setFixedWidth(80)
         rate_input.setValidator(QIntValidator(0, 100, self))
         # Default to BASE_RATE until type indicates otherwise
+        rate_input.textChanged.connect(self.handle_total)
         line2_layout.addWidget(rate_input)
         product_section['rate'] = rate_input
 
@@ -487,16 +488,17 @@ class CreateNewTab(BaseTab):
 
     def get_sending_widget(self, widget):
         for section in self.product_sections:
-            if (section['price'] is widget or section['quantity'] is widget):
+            if (section['price'] is widget or section['quantity'] is widget or section['rate'] is widget):
                 return section
         return None
 
     def on_price_qty_changed(self, section):
         price_text = section['price'].text().strip()
         qty_text = section['quantity'].text().strip()
+        rate_text = section['rate'].text().strip()
 
-        if not price_text or not qty_text:
-            # prevent invalid data, require both fields be populated
+        if not price_text or not qty_text or not rate_text:
+            # require all fields, prevent invalid data
             section['total'].setText("$0.00")
             return
 
@@ -511,7 +513,8 @@ class CreateNewTab(BaseTab):
             section['total'].setText("$0.00")
             return
 
-        total = round(fixed_price * qty, 2)
+        total = RevenueGeneration.calculate_total(fixed_price, qty, rate_text)
+        print(total)
         section['total'].setText(f"${total:.2f}")
 
     def _on_product_type_changed(self, product_section: dict):
@@ -1065,8 +1068,23 @@ class CreateNewTab(BaseTab):
             return False
 
     def handle_calc_btn(self):
+        self.val_prod_sections()
+        self.handle_total()
         self.update_revenue_fields()
         self.rev_by_prod.handle_updating(self.product_sections)
+
+    def val_prod_sections(self):
+        for prod in self.product_sections:
+            if prod['price'] is None:
+                log.error("Invalid price")
+                return False
+            if prod['quantity'] is None:
+                log.error("Invalid quantity")
+                return False
+            if prod['rate'] is None:
+                log.error("Invalid rate")
+                return False
+        return True
 
     def update_revenue_fields(self) -> int:
         """
