@@ -152,7 +152,7 @@ class PDF:
 
         c.setFont("Helvetica-Bold", 10)
         c.drawCentredString(60, y_pot, "Vendor")
-        c.drawCentredString(118, y_pot, "Percentage")
+        c.drawCentredString(118, y_pot, "Amount Sold")
         c.drawCentredString(175, y_pot, "Super X")
         y_pot -= 18
 
@@ -179,7 +179,7 @@ class PDF:
             prod_type_total[group['product_type']] = group['total']
 
         c.setFont("Helvetica-Bold", 10)
-        for type in ["Hot Food", "General", "Produce"]:
+        for type in ["Hot Food", "General", "Produce", "Total"]:
             total = prod_type_total.get(type, "$0.00")
             c.setFont("Helvetica", 10)
             c.drawString(216, y_type, str(type))
@@ -190,7 +190,7 @@ class PDF:
 
     def draw_footer(self, cursor, y_axis):
         c = cursor
-        y = y_axis - 18
+        y = y_axis - 15
         c.setFont("Helvetica-Bold", 10)
         c.drawString(360, y, "Vendor Name:")
         c.rect(429, y - 3, 153, 15)
