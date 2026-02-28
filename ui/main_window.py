@@ -75,10 +75,10 @@ class MainWindow(QWidget):
         status_section.addStretch()
 
         layout.addWidget(status_container)
-        logout_button = QPushButton("Logout")
-        logout_button.setObjectName("logout_button")
-        logout_button.clicked.connect(self.logout)
-        title_layout.addWidget(logout_button)
+        self.logout_button = QPushButton("Logout")
+        self.logout_button.setObjectName("logout_button")
+        self.logout_button.clicked.connect(self.logout)
+        title_layout.addWidget(self.logout_button)
 
     def setup_tabs(self):
         self.tabs = QTabWidget()
@@ -87,7 +87,7 @@ class MainWindow(QWidget):
         self.create_new_tab = CreateNewTab(self.api_handler, self.db_connection)
         self.vendor_tickets_tab = VendorTicketsTab(self.api_handler, self.db_connection)
         self.open_tickets_tab = OpenTicketsTab(self.api_handler, self.db_connection)
-        self.settings_tab = SettingsTab(self.api_handler)
+        self.settings_tab = SettingsTab(self.api_handler, main_window=self)
         self.admin_settings_tab = AdminSettingsTab(self.api_handler, self.db_connection)
 
         self.tabs.addTab(self.create_new_tab, "Create New")
@@ -114,6 +114,7 @@ class MainWindow(QWidget):
           - close this main window
 
         For now, it safely handles the case where LoginWindow doesn't exist yet.
+        Author(s): Kyle Valdez, Joe Lee
         """
         try:
             # Adjust the import path to wherever your LoginWindow will live

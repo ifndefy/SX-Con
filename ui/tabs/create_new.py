@@ -25,7 +25,7 @@ from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
-from ui.core import format_phone, format_price, excel
+from ui.core import format_phone, format_price, format_state, excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 
@@ -180,7 +180,7 @@ class CreateNewTab(BaseTab):
         self.address_input = QLineEdit()
         self.address_input.setPlaceholderText("Street address")
         self.address_input.setMaxLength(255)
-        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 .,#-]+"))
+        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 ]+"))
         self.address_input.setValidator(address_validator)
         vendor_section_row_3.addWidget(self.address_input)
 
@@ -194,8 +194,7 @@ class CreateNewTab(BaseTab):
 
         # State
         vendor_section_row_3.addWidget(QLabel("State:"))
-        self.state_input = QLineEdit()
-        self.state_input.setPlaceholderText("ST")
+        self.state_input = format_state.FormatState()
         self.state_input.setMaxLength(2)
         self.state_input.setFixedWidth(50)
         self.state_input.setValidator(alpha_validator)
