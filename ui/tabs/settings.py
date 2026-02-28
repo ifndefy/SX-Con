@@ -15,8 +15,6 @@ from ui.tabs.base import BaseTab
 from ui.login import LoginScreen
 from src.user import current_user
 from services.update_property import update_property
-from ui.tabs.password_dialog import PasswordChangeDialog
-from src.core.hash_password import hash_password
 import utils.logger.logger as log
 
 class SettingsTab(BaseTab):
@@ -95,8 +93,10 @@ class SettingsTab(BaseTab):
         pw_title.setObjectName("post_title")
         pw_layout_line_0.addWidget(pw_title)
 
-        self.change_pw_btn = QPushButton("Change Password")
-        pw_layout_line_0.addWidget(self.change_pw_btn)
+        view_pw_btn = QPushButton("View Password")
+        pw_layout_line_0.addWidget(view_pw_btn)
+        change_pw_btn = QPushButton("Change Password")
+        pw_layout_line_0.addWidget(change_pw_btn)
 
         layout.addLayout(pw_layout_line_0)
 
@@ -201,10 +201,6 @@ class SettingsTab(BaseTab):
         """
 
         self.change_username_btn.clicked.connect(self.on_change_username_clicked)
-
-        if hasattr(self, 'change_pw_btn'):
-            self.change_pw_btn.clicked.connect(self.on_change_password_clicked)
-            log.info("Change password button connected")
         # self.update_btn.clicked.connect(self.fetch_on_clicked)
         # self.view_btn.clicked.connect()
         # self.excel_btn.clicked.connect()
@@ -215,98 +211,6 @@ class SettingsTab(BaseTab):
         pass
         # todo: add new pw line
         # todo: change current pw field to READONLY=FALSE
-
-    def verify_credentials_for_password_change(self):
-        """
-        :purpose: Show login dialog to verify user credentials before allowing password change
-        :author(s): Alexander Bubienko
-        """
-        login_dialog = LoginScreen(self.theme_manager, self)
-        login_dialog.setWindowTitle("Verify Credentials")
-        
-        if login_dialog.exec() == QDialog.DialogCode.Accepted:
-            # Credentials verified - open password change dialog
-            self.show_password_change_dialog()
-        else:
-            QMessageBox.warning(self, "Verification Failed", 
-                            "Invalid credentials. Password cannot be changed.")
-            log.warning("Password change verification failed")
-
-    def show_password_change_dialog(self):
-        """
-        :purpose: Show dialog to enter and confirm new password
-        :author(s): Alexander Bubienko
-        """
-        dialog = PasswordChangeDialog(self.theme_manager, self)
-        
-        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.new_password:
-            self.perform_password_update(dialog.new_password)
-
-    def perform_password_update(self, new_password):
-        """
-        :purpose: Update the password in the database using update_property.py
-        :author(s): Alexander Bubienko
-        """
-        username = current_user.get_username()
-        
-        if not username:
-            QMessageBox.critical(self, "Error", "No user logged in")
-            return
-        
-        try:
-            # Hash the new password
-            hashed_password = hash_password(new_password)
-            
-            if hashed_password == "-1":
-                QMessageBox.critical(self, "Error", "Failed to hash password")
-                return
-            
-            # Get user ID
-            user_id = self.get_user_id_from_username(username)
-            
-            if not user_id:
-                QMessageBox.critical(self, "Error", "Could not determine user ID")
-                return
-            
-            # Update password in database
-            result = update_property(
-                container_name='Entities',
-                entity_type='user',
-                entity_id=str(user_id),
-                property_name='password',
-                property_value=hashed_password
-            )
-            
-            if result == 0:  # Success
-                log.info(f"Password successfully changed for user: {username}")
-                
-                QMessageBox.information(self, "Success", 
-                                    "Password changed successfully. You will now be logged out.")
-                
-                # Log out the user
-                if hasattr(self, 'main_window') and self.main_window:
-                    self.main_window.logout()
-                else:
-                    parent = self.parent()
-                    while parent:
-                        if hasattr(parent, 'logout'):
-                            parent.logout()
-                            break
-                        parent = parent.parent()
-            else:
-                QMessageBox.critical(self, "Error", "Failed to update password in database")
-                log.error(f"Password update failed with result: {result}")
-                
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
-            log.error(f"Password update exception: {e}")
-
-    def on_change_password_clicked(self):
-        """
-        :purpose: Handle password change button click
-        :author(s): Alexander Bubienko
-        """
-        self.verify_credentials_for_password_change()
 
     def on_change_username_clicked(self):
         """
