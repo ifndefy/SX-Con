@@ -50,9 +50,6 @@ def test_autogen_date():
         now = now.strftime(format)
         auto_time = generate_host_datetime(include_seconds=True)
 
-        print(now)
-        print(auto_time)
-
         if now == auto_time:
             return 0
 

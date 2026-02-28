@@ -222,7 +222,8 @@ class OpenTicketsTab(BaseTab):
             return {
                 'ticket_info': ticket_header,
                 'product_data': unpacked_ticket['price_data']['products'],
-                'revenue_sharing': unpacked_ticket['revenue_sharing']
+                'revenue_shared': unpacked_ticket['revenue']['shared'],
+                'revenue_grouped': unpacked_ticket['revenue']['grouped']
             }
 
         return gather_ticket

@@ -10,6 +10,8 @@ from src import SPOT
 from ui.forgot_pw import ForgotPasswordScreen
 from src.core.authenticate import authenticate_password
 from services.connect_database import db_connection
+import utils.logger.logger as log
+from src.user import current_user
 
 
 class LoginScreen(QDialog):
@@ -97,6 +99,27 @@ class LoginScreen(QDialog):
         password = self.password_input.text()
 
         if self.authenticate(username, password):
+            try:
+                users_container = db_connection.connect('Entities')
+                query = f"SELECT * FROM c WHERE c.username = '{username}'"
+                users = list(users_container.query_items(
+                    query=query,
+                    enable_cross_partition_query=True
+                ))
+                
+                if users:
+                    admin_status = users[0].get('admin', False)
+                    # Set the user in the global user class
+                    current_user.set_user(username, admin_status)
+                    print(f"User set: {current_user.get_username()}, Admin: {current_user.is_admin()}")
+                else:
+                    print("Error: User found in auth but not in user query?")
+                    
+            except Exception as e:
+                print(f"Error: Error setting user data: {e}")
+                # Still set basic user info even if admin status fails
+                current_user.set_user(username, False)
+            
             self.username = username
             self.accept()
         else:
@@ -134,7 +157,7 @@ class LoginScreen(QDialog):
             ))
             
             if not users:
-                print(f"No user found with username: {username}")
+                log.info(f"No user found with username: {username}")
                 return False
                 
             # Get the stored hash and authenticate
@@ -148,5 +171,5 @@ class LoginScreen(QDialog):
             return result == "1"
             
         except Exception as e:
-            print(f"Authentication error: {e}")
+            log.error(f"Authentication error: {e}")
             return False
