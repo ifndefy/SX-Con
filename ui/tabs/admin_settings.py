@@ -24,24 +24,11 @@ class AdminSettingsTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        sub_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
 
         # Setup tabs
         self.setup_subtabs()
-        sub_layout.addWidget(self.tabs)
-
-        # Set up the scroll area
-        scroll.setWidget(scroll_content)
-        sub_layout.addWidget(scroll)
-
-        # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
-        hr3.setObjectName("hr")
-        sub_layout.addWidget(hr3)
+        main_layout.addWidget(self.tabs)
 
     def setup_subtabs(self):
         self.tabs = QTabWidget()
