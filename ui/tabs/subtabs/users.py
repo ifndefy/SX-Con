@@ -501,14 +501,14 @@ class UsersTab(BaseTab):
         """
         raw_user_data = {
             "user_id": self.generate_new_user_id(),
-            "username": dialog.findChild(QLineEdit, "username_input").text(),
-            "first_name": dialog.findChild(QLineEdit, "first_name_input").text(),
-            "last_name": dialog.findChild(QLineEdit, "last_name_input").text(),
-            "password": hash_password(dialog.findChild(QLineEdit, "password_input").text()),
-            "q1_q": dialog.findChild(QComboBox, "question1").currentText(),
-            "q1_a": dialog.findChild(QLineEdit, "response1").text(),
-            "q2_q": dialog.findChild(QComboBox, "question2").currentText(),
-            "q2_a": dialog.findChild(QLineEdit, "response2").text(),
+            "username": dialog.findChild(QLineEdit, "username_input").text().strip(),
+            "first_name": dialog.findChild(QLineEdit, "first_name_input").text().strip(),
+            "last_name": dialog.findChild(QLineEdit, "last_name_input").text().strip(),
+            "password": hash_password(dialog.findChild(QLineEdit, "password_input").text().strip()),
+            "q1_q": dialog.findChild(QComboBox, "question1").currentText().strip(),
+            "q1_a": dialog.findChild(QLineEdit, "response1").text().strip(),
+            "q2_q": dialog.findChild(QComboBox, "question2").currentText().strip(),
+            "q2_a": dialog.findChild(QLineEdit, "response2").text().strip(),
             "admin": False,
             "type": "user"
         }
