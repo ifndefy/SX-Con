@@ -1,6 +1,6 @@
 def val_username(username: str) -> int:
     # Set conditions
-    max_length = 15
+    max_length = 18
     min_length = 4
 
     # Allows username to include upper and lowercase letters, numbers, underscore (_), and period (.)
@@ -13,5 +13,4 @@ def val_username(username: str) -> int:
         return -1
 
     return 0
-
 
