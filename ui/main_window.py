@@ -87,7 +87,7 @@ class MainWindow(QWidget):
         self.create_new_tab = CreateNewTab(self.api_handler, self.db_connection)
         self.vendor_tickets_tab = VendorTicketsTab(self.api_handler, self.db_connection)
         self.open_tickets_tab = OpenTicketsTab(self.api_handler, self.db_connection)
-        self.settings_tab = SettingsTab(self.api_handler)
+        self.settings_tab = SettingsTab(self.api_handler, main_window=self)
         self.admin_settings_tab = AdminSettingsTab(self.api_handler, self.db_connection)
 
         self.tabs.addTab(self.create_new_tab, "Create New")
