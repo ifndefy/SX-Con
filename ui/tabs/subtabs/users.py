@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QMessageBox
 
 from ui.tabs.base import BaseTab
+from src import SPOT
 
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
@@ -29,12 +30,7 @@ class UsersTab(BaseTab):
         self.db_connection = db_connection
         super().__init__(api_handler, "users")
 
-        self.questionList = [
-            "What is your mother's maiden name?",
-            "What color was your first car?",
-            "Who was your best friend in the third grade?"
-            # todo: add 2 more questions
-        ]
+        self.questionList = SPOT.QUESTIONS_LIST
 
         self.search_timer = QTimer()
         self.search_timer.setSingleShot(True)
