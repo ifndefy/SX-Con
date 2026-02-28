@@ -141,7 +141,6 @@ class VendorsTab(BaseTab):
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setFixedWidth(200)
         search_section_row_4.addWidget(self.clear_btn)
-        layout.addLayout(search_section_row_4)
 
         search_section_row_4.addStretch()
         self.search_btn = QPushButton("Search")

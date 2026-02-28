@@ -93,7 +93,6 @@ class ProductsTab(BaseTab):
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setFixedWidth(200)
         search_section_1.addWidget(self.clear_btn)
-        layout.addLayout(search_section_1)
 
         search_section_1.addStretch()
         self.search_btn = QPushButton("Search")

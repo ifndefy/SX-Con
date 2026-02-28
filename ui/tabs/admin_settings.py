@@ -36,7 +36,6 @@ class AdminSettingsTab(BaseTab):
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
-        sub_layout = QVBoxLayout(self)
         sub_layout.addWidget(scroll)
 
         # HR Line to separate buttons at the bottom
