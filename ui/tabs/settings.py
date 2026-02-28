@@ -149,10 +149,8 @@ class SettingsTab(BaseTab):
         layout.addLayout(qa_layout_line_4)
 
         q_line_5 = QHBoxLayout()
-        view_qa_btn = QPushButton("View Questions")
-        q_line_5.addWidget(view_qa_btn)
-        change_qa_btn = QPushButton("Change Questions")
-        q_line_5.addWidget(change_qa_btn)
+        self.change_qa_btn = QPushButton("Change Q/A")
+        q_line_5.addWidget(self.change_qa_btn)
 
         layout.addLayout(q_line_5)
 
