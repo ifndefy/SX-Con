@@ -37,7 +37,6 @@ class AdminSettingsTab(BaseTab):
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
-        sub_layout = QVBoxLayout(self)
         sub_layout.addWidget(scroll)
 
         # HR Line to separate buttons at the bottom
@@ -54,7 +53,7 @@ class AdminSettingsTab(BaseTab):
         self.vendors_tab = VendorsTab(self.api_handler, self.db_connection)
         self.products_tab = ProductsTab(self.api_handler, self.db_connection)
         self.records_tab = RecordsTab(self.api_handler, self.db_connection)
-        self.cr_tab = CRTab(self.api_handler, None)
+        self.cr_tab = CRTab(self.api_handler, "Rates")
 
         self.tabs.addTab(self.users_tab, "Users")
         self.tabs.addTab(self.vendors_tab, "Vendors")
