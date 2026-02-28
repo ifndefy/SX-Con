@@ -33,6 +33,5 @@ def test_get_item() -> int:
         return 0
 
     except Exception as e:
-        print(f"Exception occurred: {e}")
         return -1
 

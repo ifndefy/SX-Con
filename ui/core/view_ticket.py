@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QPushButton
 from services.get_item import get_item
 from services.update_property import update_property
 from ui.core.revenue_generation import RevenueGeneration
-
+import utils.logger.logger as log
 
 class ViewTicket:
     @staticmethod
@@ -47,7 +47,7 @@ class ViewTicket:
             # Product Type
             line1_layout.addWidget(QLabel("Type:"))
             product_type_input = QComboBox()
-            product_types = ["SELECT", "Hot Food", "General Item", "Produce"]
+            product_types = ["SELECT", "Hot Food", "General", "Produce"]
             product_type_input.addItems(product_types)
             product_type_from_db = product.get('product_type', '')
             if product_type_from_db in product_types:
@@ -121,14 +121,15 @@ class ViewTicket:
                     result = update_property("Consignments", "consignment", "100000",
                                              f"price_data.products[{product_index}].sold", sold_int)
                     if result == 0:
-                        print(f"Successfully updated sold quantity to {sold_int}")
+                        log.info(f"Successfully updated sold quantity to {sold_int}")
                     else:
-                        print(f"Failed to update sold quantity")
+                        log.error(f"Failed to update sold quantity")
                 except ValueError:
-                    print(f"Invalid sold value: {sold_value}. Please enter a valid number.")
+                    log.error(f"Invalid sold value: {sold_value}. Please enter a valid number.")
 
             return handler
 
+            # todo: sxc-266
             update_btn.clicked.connect(make_update_handler(index, sold_input))
 
         # Revenue Sharing section
