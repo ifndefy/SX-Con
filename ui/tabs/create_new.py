@@ -20,7 +20,7 @@ from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_generation import RevenueGeneration
-from ui.core import format_phone, format_price, excel
+from ui.core import format_phone, format_price, format_state, excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 
@@ -189,8 +189,7 @@ class CreateNewTab(BaseTab):
 
         # State
         vendor_section_row_3.addWidget(QLabel("State:"))
-        self.state_input = QLineEdit()
-        self.state_input.setPlaceholderText("ST")
+        self.state_input = format_state.FormatState()
         self.state_input.setMaxLength(2)
         self.state_input.setFixedWidth(50)
         self.state_input.setValidator(alpha_validator)
