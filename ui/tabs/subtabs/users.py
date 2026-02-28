@@ -1,3 +1,5 @@
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
@@ -21,7 +23,6 @@ from services.message_bus import status_bar_instance
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
         self.new_user_data = None
-        self.update_btn = None
         self.users_layout = None
         self.create_btn = None
         self.users_section = []
@@ -34,6 +35,10 @@ class UsersTab(BaseTab):
             "Who was your best friend in the third grade?"
             # todo: add 2 more questions
         ]
+
+        self.search_timer = QTimer()
+        self.search_timer.setSingleShot(True)
+        self.search_timer.timeout.connect(self.build_and_search)
 
     def setup_ui(self):
         """
@@ -48,38 +53,85 @@ class UsersTab(BaseTab):
         layout = QVBoxLayout(scroll_content)
 
         header_section = QHBoxLayout()
-        title = QLabel("View Users") # Subtab header
+        title = QLabel("View Users")  # Subtab header
         title.setObjectName("post_title")
         header_section.addWidget(title)
-        header_section.addStretch() # Push to the left
-        layout.addLayout(header_section) # Ends creation and adds header_section to window
+        header_section.addStretch()  # Push to the left
 
-        hr1 = QLabel() # HR Line to clear header
+        self.create_btn = QPushButton("Create New User")
+        header_section.addWidget(self.create_btn)
+
+        layout.addLayout(header_section)  # Ends creation and adds header_section to window
+
+        hr1 = QLabel()  # HR Line to clear header
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
-        self.users_layout = QVBoxLayout() # Users container
+        search_section_row_1 = QHBoxLayout()
+
+        search_section_row_1.addWidget(QLabel("UserID:"))
+        self.user_id_input = QLineEdit()
+        self.user_id_input.setPlaceholderText("U ID")
+        self.user_id_input.setMaxLength(30)
+        self.user_id_input.setFixedWidth(55)
+        self.user_id_input.setValidator(QIntValidator(0, 9999, self))
+        self.user_id_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.user_id_input)
+
+        search_section_row_1.addWidget(QLabel("Username:"))
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Username")
+        self.username_input.setMaxLength(30)
+        self.username_input.setFixedWidth(265)
+        self.username_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.username_input)
+
+        search_section_row_1.addStretch()
+        layout.addLayout(search_section_row_1)
+
+        search_section_row_2 = QHBoxLayout()
+
+        search_section_row_2.addWidget(QLabel("First Name:"))
+        self.first_name_input = QLineEdit()
+        self.first_name_input.setPlaceholderText("First Name")
+        self.first_name_input.setMaxLength(30)
+        self.first_name_input.setFixedWidth(265)
+        self.first_name_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_2.addWidget(self.first_name_input)
+
+        search_section_row_2.addWidget(QLabel("Last Name:"))
+        self.last_name_input = QLineEdit()
+        self.last_name_input.setPlaceholderText("Last Name")
+        self.last_name_input.setMaxLength(30)
+        self.last_name_input.setFixedWidth(265)
+        self.last_name_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_2.addWidget(self.last_name_input)
+
+        search_section_row_2.addStretch()
+        layout.addLayout(search_section_row_2)
+
+        search_section_row_3 = QHBoxLayout()
+        self.clear_btn = QPushButton("Clear")
+        self.clear_btn.setFixedWidth(200)
+        search_section_row_3.addWidget(self.clear_btn)
+        layout.addLayout(search_section_row_3)
+
+        search_section_row_3.addStretch()
+        self.search_btn = QPushButton("Search")
+        self.search_btn.setFixedWidth(200)
+        search_section_row_3.addWidget(self.search_btn)
+        layout.addLayout(search_section_row_3)
+
+        hr2 = QLabel()  # HR Line to clear header
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
+
+        self.users_layout = QVBoxLayout()  # Users container
         layout.addLayout(self.users_layout)
 
         users_section = QHBoxLayout()
         layout.addLayout(users_section)
         layout.addStretch()
-
-        btn_section = QHBoxLayout()
-        self.create_btn = QPushButton("Create New User")
-        btn_section.addWidget(self.create_btn)
-        self.create_btn.clicked.connect(self.create_new_user_prompt)
-
-        btn_section.addStretch()
-
-        self.update_btn = QPushButton("Update")
-        btn_section.addWidget(self.update_btn)
-        layout.addLayout(btn_section)
-
-        # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
-        hr3.setObjectName("hr")
-        layout.addWidget(hr3)
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
@@ -87,6 +139,134 @@ class UsersTab(BaseTab):
         main_layout.addWidget(scroll)
 
         self.setup_button_connections()
+
+    def clear(self):
+        """
+        :purpose: clears all input fields and fetched items
+        :author(s): Joe Lee, Colin Henderson
+        """
+        self.search_timer.stop()
+        self.remove_user_section()
+        fields = [
+            self.user_id_input,
+            self.username_input,
+            self.first_name_input,
+            self.last_name_input,
+        ]
+        for field in fields:
+            field.blockSignals(True)
+            field.clear()
+            field.setReadOnly(False)
+            field.setObjectName("DEFAULT")
+            field.blockSignals(False)
+            field.style().unpolish(field)
+            field.style().polish(field)
+
+        status_bar_instance.send_message("Query and Results cleared")
+
+    def on_search_input_changed(self):
+        """
+        :Purpose: forces a wait
+        :Author(s): Joe Lee
+        """
+        self.search_timer.start(300)
+
+    def build_and_search(self):
+        """
+        :Purpose: Gathers properties to build a query then calls query_db
+        :Author(s): Joe Lee
+        """
+        self.remove_user_section()
+
+        conditions = ["c.type = 'user'"]
+        properties = []
+
+        def add_property(props, value, operator="="):
+            """
+            :Purpose: appends query conditions
+            :Author(s): Joe Lee
+            """
+            if value:
+                prop_name = props
+                if operator == "CONTAINS":
+                    conditions.append(f"CONTAINS(LOWER(c.{props}), LOWER(@{prop_name}))")
+                else:
+                    conditions.append(f"c.{props} {operator} @{prop_name}")
+                properties.append({"name": f"@{prop_name}", "value": value})
+
+        user_id = self.user_id_input.text().strip()
+        if user_id:
+            try:
+                user_id_int = int(user_id)
+                add_property("user_id", user_id_int, "=")
+            except ValueError:
+                pass
+
+        username = self.username_input.text().strip()
+        if username:
+            add_property("username", username, "CONTAINS")
+
+        first_name = self.first_name_input.text().strip()
+        if first_name:
+            add_property("first_name", first_name, "CONTAINS")
+
+        last_name = self.last_name_input.text().strip()
+        if last_name:
+            add_property("last_name", last_name, "CONTAINS")
+
+        if len(conditions) == 1:
+            self.fetch()
+            return
+
+        where_clause = " AND ".join(conditions)
+        search_query = f"SELECT * FROM c WHERE {where_clause}"
+        self.query_db(search_query, properties)
+
+    def query_db(self, query: str, properties: list = None):
+        """
+        :Purpose: Queries against the database
+        :Author(s): Joe Lee
+        """
+        self.remove_user_section()
+        try:
+            container = self.db_connection.connect("Entities")
+            results = list(container.query_items(
+                query=query,
+                parameters=properties if properties else [],
+                enable_cross_partition_query=True
+            ))
+
+            users = []
+            for item in results:
+                users.append({
+                    'user_id': item.get('user_id'),
+                    'username': item.get('username', ''),
+                    'first_name': item.get('first_name', ''),
+                    'last_name': item.get('last_name', '')
+                })
+
+            users.sort(key=lambda v: int(v['user_id']))
+
+            for user in users:
+                self.add_user_section(user)
+
+            if not users:
+                status_bar_instance.send_message("No users found")
+            else:
+                status_bar_instance.send_message(f"Found {len(users)} user(s)")
+
+        except Exception as e:
+            log.error(f"Error executing query: {e}")
+            status_bar_instance.send_message("Query failed")
+
+    def fetch(self):
+        """
+        :purpose: fetches all users from Entities container
+        :return: list of users
+        :author(s): Joe Lee
+        """
+        get_all_query = "SELECT * FROM c WHERE c.type = 'user'"
+        self.query_db(get_all_query)
 
     def add_user_section(self, user_data):
         """
@@ -181,7 +361,7 @@ class UsersTab(BaseTab):
         self.users_section.clear()
 
         # Update status
-        status_bar_instance.send_message("All products cleared")
+        status_bar_instance.send_message("All users cleared")
 
     def fetch_on_clicked(self):
         """
@@ -195,45 +375,6 @@ class UsersTab(BaseTab):
         else:
             for user in users:
                 self.add_user_section(user)
-
-    def fetch(self):
-        """
-        :purpose: fetches all users from Entities container
-        :return: list of users
-        :author(s): Joe Lee
-        """
-        self.remove_user_section()
-        try:
-            container = self.db_connection.connect("Entities")
-
-            query = """
-            SELECT *
-            FROM c
-            WHERE c.type = 'user'
-            """
-
-
-            results = list(container.query_items(
-                query=query,
-                enable_cross_partition_query=True
-            ))
-
-            users = []
-            for item in results:
-                users.append({
-                    'user_id': item.get('user_id'),
-                    'username': item.get('username', ''),
-                    'first_name': item.get('first_name', ''),
-                    'last_name': item.get('last_name', '')
-                })
-
-            users.sort(key=lambda v: int(v['user_id']))
-
-            return users
-
-        except Exception as e:
-            log.error(f"Error fetching users: {e}")
-            return []
 
     def create_new_user_prompt(self):
         '''
@@ -275,7 +416,6 @@ class UsersTab(BaseTab):
         question1.setObjectName("question1")
         question1.setCurrentIndex(-1)
         layout.addWidget(question1)
-
 
         res1_label = QLabel("Response for Question 1:")
         res1_label.setObjectName("label")
@@ -335,7 +475,9 @@ class UsersTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        self.update_btn.clicked.connect(self.fetch_on_clicked)
+        self.clear_btn.clicked.connect(self.clear)
+        self.search_btn.clicked.connect(self.build_and_search)
+        self.create_btn.clicked.connect(self.create_new_user_prompt)
 
     def on_create_clicked(self, dialog):
         """

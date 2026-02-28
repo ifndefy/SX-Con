@@ -1,3 +1,5 @@
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
@@ -16,10 +18,14 @@ import utils.logger.logger as log
 
 class ProductsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
-        self.product_type = ['Hot_Food', 'General', 'Produce']
+        self.list_prod_types = ['Hot_Food', 'General', 'Produce']
         self.products_section = []
         self.db_connection = db_connection
         super().__init__(api_handler, "products")
+
+        self.search_timer = QTimer()
+        self.search_timer.setSingleShot(True)
+        self.search_timer.timeout.connect(self.build_and_search)
 
     def setup_ui(self):
         """
@@ -40,9 +46,10 @@ class ProductsTab(BaseTab):
         title = QLabel("View Products")
         title.setObjectName("post_title")
         header_section.addWidget(title)
+        header_section.addStretch() # push to the left
 
-        # Push to the left
-        header_section.addStretch()
+        self.create_btn = QPushButton("Create New Product")
+        header_section.addWidget(self.create_btn)
 
         # Ends creation and adds header_section to window
         layout.addLayout(header_section)
@@ -52,30 +59,58 @@ class ProductsTab(BaseTab):
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
-        # Product Line 1: Products sections container
+        product_section_row_1 = QHBoxLayout()
+
+        product_section_row_1.addWidget(QLabel("ProductID:"))
+        self.product_id_input = QLineEdit()
+        self.product_id_input.setPlaceholderText("P ID")
+        self.product_id_input.setMaxLength(30)
+        self.product_id_input.setFixedWidth(102)
+        self.product_id_input.setValidator(QIntValidator(0, 9999, self))
+        self.product_id_input.textChanged.connect(self.on_search_input_changed)
+        product_section_row_1.addWidget(self.product_id_input)
+
+        product_section_row_1.addWidget(QLabel("Product Name:"))
+        self.product_name_input = QLineEdit()
+        self.product_name_input.setPlaceholderText("Produce Name")
+        self.product_name_input.setMaxLength(30)
+        self.product_name_input.setFixedWidth(265)
+        self.product_name_input.textChanged.connect(self.on_search_input_changed)
+        product_section_row_1.addWidget(self.product_name_input)
+
+        product_section_row_1.addWidget(QLabel("Product Type:"))
+        self.product_type_input = QComboBox()
+        self.product_type_input.addItems(self.list_prod_types)
+        self.product_type_input.setPlaceholderText("Produce Type")
+        self.product_type_input.setCurrentIndex(-1)
+        self.product_type_input.currentIndexChanged.connect(self.on_search_input_changed)
+        product_section_row_1.addWidget(self.product_type_input)
+
+        product_section_row_1.addStretch()
+        layout.addLayout(product_section_row_1)
+
+        search_section_1 = QHBoxLayout()
+        self.clear_btn = QPushButton("Clear")
+        self.clear_btn.setFixedWidth(200)
+        search_section_1.addWidget(self.clear_btn)
+        layout.addLayout(search_section_1)
+
+        search_section_1.addStretch()
+        self.search_btn = QPushButton("Search")
+        self.search_btn.setFixedWidth(200)
+        search_section_1.addWidget(self.search_btn)
+        layout.addLayout(search_section_1)
+
+        hr2 = QLabel()
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
+
+        # Products sections container
         self.products_layout = QVBoxLayout()
-
         layout.addLayout(self.products_layout)
-
         products_section = QHBoxLayout()
-
         layout.addLayout(products_section)
         layout.addStretch()
-
-        product_section_row_3 = QHBoxLayout()
-        self.create_btn = QPushButton("Create New Product")
-        product_section_row_3.addWidget(self.create_btn)
-
-        product_section_row_3.addStretch()
-
-        self.update_btn = QPushButton("Update")
-        product_section_row_3.addWidget(self.update_btn)
-        layout.addLayout(product_section_row_3)
-
-        # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
-        hr3.setObjectName("hr")
-        layout.addWidget(hr3)
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
@@ -83,6 +118,135 @@ class ProductsTab(BaseTab):
         main_layout.addWidget(scroll)
 
         self.setup_button_connections()
+
+    def clear(self):
+        """
+        :purpose: clears all input fields and fetched items
+        :author(s): Joe Lee, Colin Henderson
+        """
+        self.search_timer.stop()
+        self.remove_product_section()
+        fields = [
+            self.product_id_input,
+            self.product_name_input,
+        ]
+
+        for field in fields:
+            field.blockSignals(True)
+            field.clear()
+            field.setReadOnly(False)
+            field.setObjectName("DEFAULT")
+            field.blockSignals(False)
+            field.style().unpolish(field)
+            field.style().polish(field)
+
+        self.product_type_input.blockSignals(True)
+        self.product_type_input.setCurrentIndex(-1)
+        self.product_type_input.blockSignals(False)
+        self.product_type_input.style().unpolish(self.product_type_input)
+        self.product_type_input.style().polish(self.product_type_input)
+
+        status_bar_instance.send_message("Query and Results cleared")
+
+    def on_search_input_changed(self):
+        """
+        :Purpose: forces a wait
+        :Author(s): Joe Lee
+        """
+        self.search_timer.start(300)
+
+    def build_and_search(self):
+        """
+        :Purpose: Gathers properties to build a query then calls query_db
+        :Author(s): Joe Lee
+        """
+        self.remove_product_section()
+
+        conditions = ["c.type = 'product'"]
+        properties = []
+
+        def add_property(props, value, operator="="):
+            """
+            :Purpose: appends query conditions
+            :Author(s): Joe Lee
+            """
+            if value:
+                prop_name = props
+                if operator == "CONTAINS":
+                    conditions.append(f"CONTAINS(LOWER(c.{props}), LOWER(@{prop_name}))")
+                else:
+                    conditions.append(f"c.{props} {operator} @{prop_name}")
+                properties.append({"name": f"@{prop_name}", "value": value})
+
+        product_id = self.product_id_input.text().strip()
+        if product_id:
+            try:
+                product_id_int = int(product_id)
+                add_property("product_id", product_id_int, "=")
+            except ValueError:
+                pass
+
+        product_name = self.product_name_input.text().strip()
+        if product_name:
+            add_property("product_name", product_name, "CONTAINS")
+
+        product_type = self.product_type_input.currentText().strip()
+        if product_type:
+            add_property("product_type", product_type, "=")
+
+        if len(conditions) == 1:
+            self.fetch()
+            return
+
+        where_clause = " AND ".join(conditions)
+        search_query = f"SELECT * FROM c WHERE {where_clause}"
+        self.query_db(search_query, properties)
+
+    def query_db(self, query: str, properties: list = None):
+        """
+        :Purpose: Queries against the database
+        :Author(s): Joe Lee
+        """
+        self.remove_product_section()
+        try:
+            container = self.db_connection.connect("Entities")
+            results = list(container.query_items(
+                query=query,
+                parameters=properties if properties else [],
+                enable_cross_partition_query=True
+            ))
+
+            products = []
+            for item in results:
+                products.append({
+                    'product_id': item.get('product_id'),
+                    'product_name': item.get('product_name', ''),
+                    'product_type': item.get('product_type', ''),
+                    'rate': item.get('rate', 'NA'),
+                })
+
+            products.sort(key=lambda v: int(v['product_id']))
+
+            for prod in products:
+                self.add_product_section(prod)
+
+            if not products:
+                status_bar_instance.send_message("No products found")
+            else:
+                status_bar_instance.send_message(f"Found {len(products)} products(s)")
+
+        except Exception as e:
+            log.error(f"Error executing query: {e}")
+            status_bar_instance.send_message("Query failed")
+
+    def fetch(self):
+        """
+        :purpose: fetches all products from Entities container
+        :return: list of products
+        :author(s): Joe Lee
+        """
+        get_all_query = "SELECT * FROM c WHERE c.type = 'product'"
+        self.query_db(get_all_query)
 
     def add_product_section(self, prod_data):
         """
@@ -210,41 +374,6 @@ class ProductsTab(BaseTab):
             for product in products:
                 self.add_product_section(product)
 
-    def fetch(self):
-        """
-        :purpose: fetches all products from Entities container
-        :return: list of products
-        :author(s): Joe Lee
-        """
-        try:
-            container = self.db_connection.connect("Entities")
-
-            query = """
-            SELECT *
-            FROM c
-            WHERE c.type = 'product'
-            ORDER BY c.product_id ASC
-            """
-
-            results = list(container.query_items(
-                query=query,
-                enable_cross_partition_query=True
-            ))
-
-            products = []
-            for item in results:
-                products.append({
-                    'product_id': item.get('product_id', ''),
-                    'product_name': item.get('product_name', ''),
-                    'product_type': item.get('product_type', ''),
-                    'rate': item.get('rate', ''),
-                })
-            return products
-
-        except Exception as e:
-            log.error(f"Error fetching products: {e}")
-            return []
-
     def create_new_product_prompt(self):
         '''
         :purpose: Sets up the UI and uses helper methods to create a product and insert it into the db
@@ -269,7 +398,7 @@ class ProductsTab(BaseTab):
         prompt_label = QLabel("Product Type:")
         layout.addWidget(prompt_label)
         product_type_input= QComboBox()
-        product_type_input.addItems(self.product_type)
+        product_type_input.addItems(self.list_prod_types)
         product_type_input.setObjectName("product_type_input")
         product_type_input.setCurrentIndex(-1)
         layout.addWidget(product_type_input)
@@ -298,6 +427,16 @@ class ProductsTab(BaseTab):
         result = dialog.exec()
         if result == QDialog.DialogCode.Accepted:
             self.handle_dialog_accepted(dialog)
+
+    def setup_button_connections(self):
+        """
+        :purpose: links buttons with methods
+        :return: None
+        :author(s): Joe Lee
+        """
+        self.clear_btn.clicked.connect(self.clear)
+        self.search_btn.clicked.connect(self.build_and_search)
+        self.create_btn.clicked.connect(self.create_new_product_prompt)
 
     def on_create_clicked(self, dialog):
         """
@@ -334,12 +473,3 @@ class ProductsTab(BaseTab):
 
     def validate_product_data(self, dialog):
         return True
-
-    def setup_button_connections(self):
-        """
-        :purpose: links buttons with methods
-        :return: None
-        :author(s): Joe Lee
-        """
-        self.update_btn.clicked.connect(self.fetch_on_clicked)
-        self.create_btn.clicked.connect(self.create_new_product_prompt)

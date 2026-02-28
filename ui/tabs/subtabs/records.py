@@ -98,7 +98,7 @@ class RecordsTab(BaseTab):
         ticket_num_input.setObjectName("READ_ONLY")
         ticket_num_input.setReadOnly(True)
         ticket_num_input.setMaxLength(6)
-        ticket_num_input.setFixedWidth(85)
+        ticket_num_input.setFixedWidth(80)
         line1_layout.addWidget(ticket_num_input)
 
         # datetime
@@ -107,7 +107,7 @@ class RecordsTab(BaseTab):
         datetime_input.setText(str(rec_data['datetime']))
         datetime_input.setObjectName("READ_ONLY")
         datetime_input.setReadOnly(True)
-        datetime_input.setFixedWidth(190)
+        datetime_input.setFixedWidth(165)
         line1_layout.addWidget(datetime_input)
 
         # status
@@ -133,9 +133,9 @@ class RecordsTab(BaseTab):
         self.edit_btn = QPushButton("Edit")
         self.edit_btn.setObjectName("red_btn")
         line1_layout.addWidget(self.edit_btn)
-        self.del_btn = QPushButton("Delete")
-        self.del_btn.setObjectName("red_btn")
-        line1_layout.addWidget(self.del_btn)
+        self.close_btn = QPushButton("Close")
+        self.close_btn.setObjectName("red_btn")
+        line1_layout.addWidget(self.close_btn)
 
         section_layout.addLayout(line1_layout)
 

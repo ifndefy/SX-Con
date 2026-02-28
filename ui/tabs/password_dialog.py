@@ -85,10 +85,6 @@ class PasswordChangeDialog(QDialog):
             QMessageBox.warning(self, "Password Mismatch", "Passwords do not match")
             self.confirm_password_input.clear()
             return
-            
-        if len(new_pass) < 8:
-            QMessageBox.warning(self, "Invalid Password", "Password must be at least 8 characters")
-            return
         
         self.new_password = new_pass
         self.accept()

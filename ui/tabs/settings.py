@@ -17,7 +17,6 @@ from src.user import current_user
 from services.update_property import update_property
 from ui.tabs.password_dialog import PasswordChangeDialog
 from src.core.hash_password import hash_password
-from ui.tabs.security_dialog import SecurityQuestionsDialog
 import utils.logger.logger as log
 
 class SettingsTab(BaseTab):
@@ -204,10 +203,6 @@ class SettingsTab(BaseTab):
         if hasattr(self, 'change_pw_btn'):
             self.change_pw_btn.clicked.connect(self.on_change_password_clicked)
             log.info("Change password button connected")
-
-        if hasattr(self, 'change_qa_btn'):
-            self.change_qa_btn.clicked.connect(self.on_change_security_clicked)
-            log.info("Change security questions button connected")
         # self.update_btn.clicked.connect(self.fetch_on_clicked)
         # self.view_btn.clicked.connect()
         # self.excel_btn.clicked.connect()
@@ -218,123 +213,6 @@ class SettingsTab(BaseTab):
         pass
         # todo: add new pw line
         # todo: change current pw field to READONLY=FALSE
-
-    def verify_credentials_for_security_change(self):
-        """
-        :purpose: Show login dialog to verify user credentials before allowing security questions change
-        :author(s): Alexander Bubienko
-        """
-        login_dialog = LoginScreen(self.theme_manager, self)
-        login_dialog.setWindowTitle("Verify Credentials")
-        
-        if login_dialog.exec() == QDialog.DialogCode.Accepted:
-            # Credentials verified - open security questions dialog
-            self.show_security_questions_dialog()
-        else:
-            QMessageBox.warning(self, "Verification Failed", 
-                            "Invalid credentials. Security questions cannot be changed.")
-            log.warning("Security questions change verification failed")
-
-    def show_security_questions_dialog(self):
-        """
-        :purpose: Show dialog to enter new security questions and answers
-        :author(s): Alexander Bubienko
-        """
-        dialog = SecurityQuestionsDialog(self.theme_manager, self)
-        
-        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.hashed_questions_answers:
-            self.perform_security_update(dialog.hashed_questions_answers)
-
-    def perform_security_update(self, hashed_qa_dict):
-        """
-        :purpose: Update security questions in the database using update_property.py
-        :author(s): Alexander Bubienko
-        """
-        username = current_user.get_username()
-        
-        if not username:
-            QMessageBox.critical(self, "Error", "No user logged in")
-            return
-        
-        try:
-            # Get user ID
-            user_id = self.get_user_id_from_username(username)
-            
-            if not user_id:
-                QMessageBox.critical(self, "Error", "Could not determine user ID")
-                return
-            
-            # Update question 1 (hashed question and answer)
-            items = list(hashed_qa_dict.items())
-            if len(items) >= 1:
-                q1_hashed, a1_hashed = items[0]
-                
-                # Update question 1 text (hashed)
-                result1 = update_property(
-                    container_name='Entities',
-                    entity_type='user',
-                    entity_id=str(user_id),
-                    property_name='q1_q',  # Adjust field name as needed
-                    property_value=q1_hashed
-                )
-                
-                # Update answer 1 (hashed)
-                result2 = update_property(
-                    container_name='Entities',
-                    entity_type='user',
-                    entity_id=str(user_id),
-                    property_name='q1_a',  # Adjust field name as needed
-                    property_value=a1_hashed
-                )
-            
-            # Update question 2
-            if len(items) >= 2:
-                q2_hashed, a2_hashed = items[1]
-                
-                # Update question 2 text (hashed)
-                result3 = update_property(
-                    container_name='Entities',
-                    entity_type='user',
-                    entity_id=str(user_id),
-                    property_name='q2_q',  # Adjust field name as needed
-                    property_value=q2_hashed
-                )
-                
-                # Update answer 2 (hashed)
-                result4 = update_property(
-                    container_name='Entities',
-                    entity_type='user',
-                    entity_id=str(user_id),
-                    property_name='q2_a',  # Adjust field name as needed
-                    property_value=a2_hashed
-                )
-            
-            log.info(f"Security questions successfully changed for user: {username}")
-            
-            QMessageBox.information(self, "Success", 
-                                "Security questions changed successfully. You will now be logged out.")
-            
-            # Log out the user
-            if hasattr(self, 'main_window') and self.main_window:
-                self.main_window.logout()
-            else:
-                parent = self.parent()
-                while parent:
-                    if hasattr(parent, 'logout'):
-                        parent.logout()
-                        break
-                    parent = parent.parent()
-                
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
-            log.error(f"Security questions update exception: {e}")
-
-    def on_change_security_clicked(self):
-        """
-        :purpose: Handle security questions change button click
-        :author(s): Alexander Bubienko
-        """
-        self.verify_credentials_for_security_change()
 
     def verify_credentials_for_password_change(self):
         """
