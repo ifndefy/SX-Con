@@ -166,9 +166,9 @@ class VendorTicketsTab(BaseTab):
         main_layout.addWidget(scroll)
 
         vendor_section_row_3 = QHBoxLayout()
-        vendor_section_row_3.addStretch()
+        # vendor_section_row_3.addStretch()
         self.fetch_btn = QPushButton("Fetch")
-        self.fetch_btn.setFixedWidth(200)
+        # self.fetch_btn.setFixedWidth(200)
         vendor_section_row_3.addWidget(self.fetch_btn)
         main_layout.addLayout(vendor_section_row_3)
 
