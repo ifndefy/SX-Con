@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QComboBox
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -9,13 +10,19 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QMessageBox
 
+import json
+
 from ui.core.theme_manager import ThemeManager
 from ui.tabs.base import BaseTab
 from ui.prompts.login import LoginScreen
-from src.user import current_user
-from services.update_property import update_property
 from ui.prompts.password_dialog import PasswordChangeDialog
+from src.user import current_user
+
+from services.get_property import get_property
+from services.update_property import update_property
 from src.core.hash_password import hash_password
+from utils.core.json_helpers import json_to_dict
+
 import utils.logger.logger as log
 
 class SettingsTab(BaseTab):
@@ -65,7 +72,9 @@ class SettingsTab(BaseTab):
         layout.addLayout(theme_layout)
 
         # HR Line
-        hr0 = QLabel()
+        hr0 = QFrame()
+        hr0.setFrameShape(QFrame.Shape.HLine)
+        hr0.setFrameShadow(QFrame.Shadow.Sunken)
         hr0.setObjectName("hr")
         layout.addWidget(hr0)
 
@@ -85,7 +94,9 @@ class SettingsTab(BaseTab):
         layout.addLayout(user_layout_line_0)
 
         # HR Line
-        hr1 = QLabel()
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
@@ -100,91 +111,48 @@ class SettingsTab(BaseTab):
         layout.addLayout(pw_layout_line_0)
 
         # HR Line
-        hr2 = QLabel()
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         layout.addWidget(hr2)
 
-        qa_layout_line_0 = QHBoxLayout()
-        qa_title = QLabel("Security Questions:")
-        qa_title.setObjectName("post_title")
-        qa_layout_line_0.addWidget(qa_title)
+        q_line = QHBoxLayout()
+        qa_layout_line_0 = QLabel("Security Questions:")
+        qa_layout_line_0.setObjectName("post_title")
+        q_line.addWidget(qa_layout_line_0)
 
-        layout.addLayout(qa_layout_line_0)
-
-        qa_layout_line_1 = QHBoxLayout()
-        qa_1 = QLabel("Question 1:")
-        qa_1_input = QLineEdit()
-        qa_1_input.setReadOnly(True)
-        qa_layout_line_1.addWidget(qa_1)
-        qa_layout_line_1.addWidget(qa_1_input)
-
-        layout.addLayout(qa_layout_line_1)
-
-        qa_layout_line_2 = QHBoxLayout()
-        qa_2 = QLabel("Answer 1:")
-        qa_2_input = QLineEdit()
-        qa_2_input.setReadOnly(True)
-        qa_layout_line_2.addWidget(qa_2)
-        qa_layout_line_2.addWidget(qa_2_input)
-
-        layout.addLayout(qa_layout_line_2)
-
-        qa_layout_line_3 = QHBoxLayout()
-        qa_3 = QLabel("Question 2:")
-        qa_3_input = QLineEdit()
-        qa_3_input.setReadOnly(True)
-        qa_layout_line_3.addWidget(qa_3)
-        qa_layout_line_3.addWidget(qa_3_input)
-
-        layout.addLayout(qa_layout_line_3)
-
-        qa_layout_line_4 = QHBoxLayout()
-        qa_4 = QLabel("Answer 2:")
-        qa_4_input = QLineEdit()
-        qa_4_input.setReadOnly(True)
-        qa_layout_line_4.addWidget(qa_4)
-        qa_layout_line_4.addWidget(qa_4_input)
-
-        layout.addLayout(qa_layout_line_4)
-
-        q_line_5 = QHBoxLayout()
         self.change_qa_btn = QPushButton("Change Q/A")
-        q_line_5.addWidget(self.change_qa_btn)
+        q_line.addWidget(self.change_qa_btn)
 
-        layout.addLayout(q_line_5)
+        layout.addLayout(q_line)
 
         # Push buttons to the bottom
         layout.addStretch()
 
         # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
+        hr3 = QFrame()
+        hr3.setFrameShape(QFrame.Shape.HLine)
+        hr3.setFrameShadow(QFrame.Shadow.Sunken)
         hr3.setObjectName("hr")
         layout.addWidget(hr3)
-
-        btn_layout = QHBoxLayout()
-        self.load_btn = QPushButton("Load Settings")
-        layout.addWidget(self.load_btn)
-        btn_layout.addWidget(self.load_btn)
-
-        btn_layout.addStretch()
-
-        self.save_btn = QPushButton("Save Settings")
-        layout.addWidget(self.save_btn)
-        btn_layout.addWidget(self.save_btn)
-
-        layout.addLayout(btn_layout)
-
-        # HR Line to separate buttons at the bottom
-        hr4 = QLabel()
-        hr4.setObjectName("hr")
-        layout.addWidget(hr4)
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
 
+        btn_layout = QHBoxLayout()
+        self.load_btn = QPushButton("Load Settings")
+        btn_layout.addWidget(self.load_btn)
+
+        self.save_btn = QPushButton("Save Settings")
+        btn_layout.addWidget(self.save_btn)
+
+        main_layout.addLayout(btn_layout)
+
         self.setup_button_connections()
+        self.load_user_preferences(silent=True)
 
     def on_theme_changed(self, theme_name):
         self.theme_manager.apply_theme(theme_name, self)
@@ -196,12 +164,19 @@ class SettingsTab(BaseTab):
         :return: None
         :author(s): Joe Lee, Alexander Bubienko
         """
-
         self.change_username_btn.clicked.connect(self.on_change_username_clicked)
+        self.change_pw_btn.clicked.connect(self.on_change_password_clicked)
+        # self.change_qa_btn.clicked.connect(self.on_change_qa_clicked)
+        self.load_btn.clicked.connect(self.load_user_preferences)
+        self.save_btn.clicked.connect(self.save_user_preferences)
 
-        if hasattr(self, 'change_pw_btn'):
-            self.change_pw_btn.clicked.connect(self.on_change_password_clicked)
-            log.info("Change password button connected")
+    def on_change_password_clicked(self):
+        """
+        :purpose: Handle password change button click
+        :author(s): Alexander Bubienko
+        """
+        self.verify_credentials_for_password_change()
+
 
     def verify_credentials_for_password_change(self):
         """
@@ -437,3 +412,148 @@ class SettingsTab(BaseTab):
         self.current_username_input.setText(current_user.get_username() or "")
         self.current_username_input.setReadOnly(True)
         self.change_username_btn.setText("Change Username")
+
+    def load_user_preferences(self, silent=False):
+        """
+        Purpose: loads the user's preferences from DB, defaults to Super if not found
+        Author(s): Joe Lee
+        """
+        user_id = self._get_current_user_id()
+        if user_id is None:
+            return
+
+        user_prefs = self._get_user_preferences(user_id)
+        if user_prefs is None:
+            return
+
+        preferences = json_to_dict(user_prefs)
+        self._apply_theme_from_preferences(preferences)
+
+        if not silent:
+            QMessageBox.information(self, "Settings Loaded", "Preferences loaded successfully.")
+
+    def _get_current_user_id(self):
+        """
+        :Purpose: Wraps get_user_id_from_username to retrieve current user ID
+        :Return: User ID
+        :Author(s): Joe Lee
+        """
+        username = current_user.get_username()
+        if not username:
+            QMessageBox.warning(self, "Not Logged In", "No user is currently logged in.")
+            return None
+
+        user_id = self.get_user_id_from_username(username)
+        if not user_id:
+            QMessageBox.critical(self, "Error", "Could not determine user ID.")
+            return None
+
+        return user_id
+
+    def _get_user_preferences(self, user_id):
+        """
+        :Purpose: Wraps get_property to retrieve user's preferences json
+        :param: user_id: User ID
+        :Return: user pref
+        """
+        try:
+            preferences_json = get_property(
+                container_name='Entities',
+                attribute='preferences',
+                entity_type='user',
+                id_value=str(user_id)
+            )
+            # get_property returns "-1" on error, otherwise the string value
+            if preferences_json == "-1":
+                log.warning(f"No preferences found for user ID {user_id}; using empty object.")
+                return "{}"
+            return preferences_json
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to fetch preferences: {str(e)}")
+            log.error(f"Error in _fetch_preferences_json: {e}")
+            return None
+
+    @staticmethod
+    def json_to_dict(json_string):
+        """
+        :Purpose: parse a json string and converts it into a dictionary
+        :param: preferences_json: json string to parse
+        :Return: dictionary of input json string
+        :Author(s): Joe Lee
+        """
+        try:
+            return json.loads(json_string)
+        except json.JSONDecodeError:
+            log.error(f"Invalid JSON string: {json_string}. Resetting to empty.")
+            return {}
+
+    def _apply_theme_from_preferences(self, preferences):
+        """
+        :Purpose: Applies theme from preferences
+        :param: preferences: preferences dictionary
+        :Author(s): Joe Lee
+        """
+        theme = preferences.get('theme')
+        if theme and theme in self.theme_manager.get_available_themes():
+            self.theme_dropdown_menu.blockSignals(True)
+            self.theme_dropdown_menu.setCurrentText(theme)
+            self.theme_dropdown_menu.blockSignals(False)
+            self.theme_manager.apply_theme(theme, self)
+            log.info(f"Applied theme '{theme}' from preferences.")
+        else:
+            log.info("No valid theme preference found. Applying default theme.")
+            self.theme_dropdown_menu.blockSignals(True)
+            self.theme_dropdown_menu.setCurrentText("Super")
+            self.theme_dropdown_menu.blockSignals(False)
+            self.theme_manager.apply_theme(theme, self)
+
+    def save_user_preferences(self):
+        """
+        :Purpose: Saves user preferences to database
+        :Author(s): Joe Lee
+        """
+        user_id = self._get_current_user_id()
+        if user_id is None:
+            return
+
+        preferences_json = self._build_preferences_json()
+        if self._save_preferences_to_db(user_id, preferences_json):
+            QMessageBox.information(self, "Success", "Settings saved successfully.")
+        else:
+            QMessageBox.critical(self, "Error", "Failed to save settings to database.")
+
+    def _build_preferences_json(self):
+        """
+        :Purpose: Builds preferences json string
+        :Author(s): Joe Lee
+        """
+        preferences = {
+            'theme': self.theme_dropdown_menu.currentText()
+            # place additional settings here
+        }
+        return json.dumps(preferences)
+
+    def _save_preferences_to_db(self, user_id, preferences_json):
+        """
+        :Purpose: wraps update_property to update preferences property of user item
+        :param: user_id: User ID
+        :param: preferences_json: json string to update
+        :Author(s): Joe Lee
+        """
+        try:
+            result = update_property(
+                container_name='Entities',
+                entity_type='user',
+                entity_id=str(user_id),
+                property_name='preferences',
+                property_value=preferences_json
+            )
+            if result == 0:
+                log.info(f"Preferences saved for user ID {user_id}: {preferences_json}")
+                return True
+            else:
+                log.error(f"Save preferences failed with result: {result}")
+                return False
+        except Exception as e:
+            log.error(f"Save preferences exception: {e}")
+            return False
