@@ -309,13 +309,13 @@ class ProductsTab(BaseTab):
         line2_layout.addStretch()
 
         line2_layout.addWidget(QLabel("Rate:"))
-        last_price = QLineEdit()
-        last_price.setText(str(prod_data['rate']))
-        last_price.setObjectName("READ_ONLY")
-        last_price.setReadOnly(True)
-        last_price.setMaxLength(30)
-        last_price.setFixedWidth(190)
-        line2_layout.addWidget(last_price)
+        rate_input = QLineEdit()
+        rate_input.setText(str(prod_data['rate']))
+        rate_input.setObjectName("READ_ONLY")
+        rate_input.setReadOnly(True)
+        rate_input.setMaxLength(30)
+        rate_input.setFixedWidth(190)
+        line2_layout.addWidget(rate_input)
 
         section_layout.addLayout(line2_layout)
 

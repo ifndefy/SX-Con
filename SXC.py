@@ -1,10 +1,9 @@
 import sys
-import utils.logger as log
 
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QDialog
 from ui.main_window import MainWindow
-from ui.login import LoginScreen
+from ui.prompts.login import LoginScreen
 from ui.core.theme_manager import ThemeManager
 
 def main():

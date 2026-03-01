@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QComboBox, QFrame
+from PyQt6.QtWidgets import QComboBox
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -13,8 +14,8 @@ import json
 
 from ui.core.theme_manager import ThemeManager
 from ui.tabs.base import BaseTab
-from ui.tabs.password_dialog import PasswordChangeDialog
-from ui.login import LoginScreen
+from ui.prompts.login import LoginScreen
+from ui.prompts.password_dialog import PasswordChangeDialog
 from src.user import current_user
 
 from services.get_property import get_property
