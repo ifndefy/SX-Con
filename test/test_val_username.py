@@ -7,13 +7,13 @@ def test_val_username() -> int:
     :author(s): Colin Heinselman
     """
 
-    # If val_username returns 0 (pass) for an invalid password, return -1.
+    # If val_username returns 0 (pass) for an invalid username, return -1.
     if val_username("123") == 0:
         return -1
     if val_username("1234567890123456789") == 0:
         return -1
 
-    # If val_username returns -1 (fail) for a valid password, return -1.
+    # If val_username returns -1 (fail) for a valid username, return -1.
     if val_username("1234") == -1:
         return -1
     if val_username("12345") == -1:
