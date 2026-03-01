@@ -40,7 +40,7 @@ class AdminSettingsTab(BaseTab):
         self.vendors_tab = VendorsTab(self.api_handler, self.db_connection)
         self.products_tab = ProductsTab(self.api_handler, self.db_connection)
         self.records_tab = RecordsTab(self.api_handler, self.db_connection)
-        self.cr_tab = CRTab(self.api_handler, "Rates")
+        self.cr_tab = CRTab(self.api_handler)
 
         self.tabs.addTab(self.users_tab, "Users")
         self.tabs.addTab(self.vendors_tab, "Vendors")

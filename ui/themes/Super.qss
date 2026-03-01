@@ -350,3 +350,8 @@ ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
     background-color: #E5C59B;
     color: #000000;
 }
+
+QWidget#ticket_body {
+    background-color: #8A6A52;
+    border: 1px solid #5C4033;
+}
