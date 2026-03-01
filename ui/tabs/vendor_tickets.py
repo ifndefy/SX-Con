@@ -134,13 +134,6 @@ class VendorTicketsTab(BaseTab):
 
         layout.addLayout(vendor_section_row_3)
 
-        vendor_section_row_3 = QHBoxLayout()
-        vendor_section_row_3.addStretch()
-        self.fetch_btn = QPushButton("Fetch")
-        self.fetch_btn.setFixedWidth(200)
-        vendor_section_row_3.addWidget(self.fetch_btn)
-        layout.addLayout(vendor_section_row_3)
-
         hr1 = QLabel()
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
@@ -169,6 +162,13 @@ class VendorTicketsTab(BaseTab):
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
+
+        vendor_section_row_3 = QHBoxLayout()
+        vendor_section_row_3.addStretch()
+        self.fetch_btn = QPushButton("Fetch")
+        self.fetch_btn.setFixedWidth(200)
+        vendor_section_row_3.addWidget(self.fetch_btn)
+        main_layout.addLayout(vendor_section_row_3)
 
         self.setup_button_connections()
 

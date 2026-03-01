@@ -65,11 +65,6 @@ class OpenTicketsTab(BaseTab):
         layout.addLayout(tickets_section)
         layout.addStretch()
 
-        vendor_section_row_3 = QHBoxLayout()
-        self.update_btn = QPushButton("Update")
-        vendor_section_row_3.addWidget(self.update_btn)
-        layout.addLayout(vendor_section_row_3)
-
         # HR Line to separate buttons at the bottom
         hr3 = QLabel()
         hr3.setObjectName("hr")
@@ -79,6 +74,12 @@ class OpenTicketsTab(BaseTab):
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
+
+        # Set up update button separate from the scrollable area
+        vendor_section_row_3 = QHBoxLayout()
+        self.update_btn = QPushButton("Update")
+        vendor_section_row_3.addWidget(self.update_btn)
+        main_layout.addLayout(vendor_section_row_3)
 
         self.setup_button_connections()
 
