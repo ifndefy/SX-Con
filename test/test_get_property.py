@@ -19,23 +19,17 @@ def test_get_property() -> int:
     attribute = "id"
     entity_id = "1"
 
-    try:
-        for container_name, entity_types in test_matrix.items():
-            for entity_type in entity_types:
+    for container_name, entity_types in test_matrix.items():
+        for entity_type in entity_types:
 
-                result = get_property(
-                    container_name=container_name,
-                    attribute=attribute,
-                    entity_type=entity_type,
-                    id_value=entity_id
-                )
+            result = get_property(
+                container_name=container_name,
+                attribute=attribute,
+                entity_type=entity_type,
+                id_value=entity_id
+            )
 
-                expected_value = f"{entity_type}_{entity_id}"
+            expected_value = f"{entity_type}_{entity_id}"
 
-                if result != expected_value:
-                    return -1
-
-        return 0
-
-    except Exception:
-        return -1
+            if result != expected_value:
+                assert False, f"{result} != {expected_value}"

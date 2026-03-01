@@ -8,27 +8,19 @@ def test_get_item_by_property() -> int:
     Author(s): Kyle Valdez
     """
 
-    try:
-        # ---- Adjust these values to match real test data in your DB ----
-        container_name = "Consignments"
-        entity_type = "consignment"
-        property_name = "id"
-        property_value = "consignment_1"
-        # ---------------------------------------------------------------
+    # ---- Adjust these values to match real test data in your DB ----
+    container_name = "Consignments"
+    entity_type = "consignment"
+    property_name = "id"
+    property_value = "consignment_1"
+    # ---------------------------------------------------------------
 
-        result = get_item_by_property(
-            container_name=container_name,
-            entity_type=entity_type,
-            property_name=property_name,
-            property_value=property_value
-        )
+    result = get_item_by_property(
+        container_name=container_name,
+        entity_type=entity_type,
+        property_name=property_name,
+        property_value=property_value
+    )
 
-        if result:
-            return 0
-        else:
-            return -1
-
-    except Exception:
-        return -1
-
-
+    if not result:
+        assert False, f"Could not get item by property {property_name} {property_value} from db"
