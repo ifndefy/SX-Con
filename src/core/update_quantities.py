@@ -83,6 +83,9 @@ def update_quantities(consignment_id: str, product_id: str, new_sold: int):
     products = consignment.get('price_data', {}).get('products', [])
     idx = _find_product_index(products, product_id)
     quantity = products[idx].get('quantity', 0)
+    if not _validate_sold(new_sold, quantity):
+        log.error(f"Sold value exceeds signed value ({idx})")
+        return False
     if not _update_sold(consignment_id, idx, new_sold):
         log.error(f"Failed to update sold ({idx})")
         return False

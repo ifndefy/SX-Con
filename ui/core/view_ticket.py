@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QObject
-from PyQt6.QtWidgets import QHBoxLayout
+from PyQt6.QtWidgets import QHBoxLayout, QMessageBox
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QComboBox
@@ -173,6 +173,14 @@ class ViewTicket(QObject):
 
         new_sold, quantity = self.val_quantities(widgets)
         if new_sold is None or quantity is None:
+            return
+        if new_sold > quantity:
+            QMessageBox.warning(self.sender(), "Invalid Input", f"Sold quantity ({new_sold}) exceeds Signed quantity ({quantity})")
+            log.error(f"Update failed: Sold quantity exceeds signed quantity")
+            return
+        if new_sold < 0:
+            QMessageBox.warning(self.sender(), "Invalid Input", f"Sold quantity ({new_sold}) must be positive")
+            log.error(f"Update failed: Sold quantity must be positive")
             return
 
         success, new_remaining, error = update_quantities(
