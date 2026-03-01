@@ -59,26 +59,20 @@ def test_insert_item():
         'zip': 95820
     }
 
-    try:
-        container = db_connection.connect('Entities')
+    container = db_connection.connect('Entities')
 
-        should_pass = insert_item(container, "vendor", pass_document)
-        if should_pass != 0:
-            return False
+    should_pass = insert_item(container, "vendor", pass_document)
+    if should_pass != 0:
+        assert False, "Failed to insert item into database"
 
-        should_fail = insert_item(container, "vendor", fail_document)
-        if should_fail != -1:
-            # should fail for duplicate unique key
-            return False
+    should_fail = insert_item(container, "vendor", fail_document)
+    if should_fail != -1:
+        # should fail for duplicate unique key
+        assert False, "Failed to insert item into database: duplicate id"
 
-        should_fail2 = insert_item(container, "vendor", fail_document2)
-        if should_fail2 != -1:
-            # should fail for data violation passing int into string field
-            return False
+    should_fail2 = insert_item(container, "vendor", fail_document2)
+    if should_fail2 != -1:
+        # should fail for data violation passing int into string field
+        assert False, "Failed to insert item into database: passing string into int field"
 
-        delete_item(container, "vendor", seed)
-
-        return True
-
-    except Exception:
-        return -1
+    delete_item(container, "vendor", seed)
