@@ -1,4 +1,3 @@
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
@@ -12,10 +11,10 @@ from PyQt6.QtWidgets import QMessageBox
 
 from ui.core.theme_manager import ThemeManager
 from ui.tabs.base import BaseTab
-from ui.login import LoginScreen
+from ui.prompts.login import LoginScreen
 from src.user import current_user
 from services.update_property import update_property
-from ui.tabs.password_dialog import PasswordChangeDialog
+from ui.prompts.password_dialog import PasswordChangeDialog
 from src.core.hash_password import hash_password
 import utils.logger.logger as log
 
@@ -203,16 +202,6 @@ class SettingsTab(BaseTab):
         if hasattr(self, 'change_pw_btn'):
             self.change_pw_btn.clicked.connect(self.on_change_password_clicked)
             log.info("Change password button connected")
-        # self.update_btn.clicked.connect(self.fetch_on_clicked)
-        # self.view_btn.clicked.connect()
-        # self.excel_btn.clicked.connect()
-        # self.pdf_btn.clicked.connect()
-        # self.print_btn.clicked.connect()
-
-    def click_on_change_pw(self):
-        pass
-        # todo: add new pw line
-        # todo: change current pw field to READONLY=FALSE
 
     def verify_credentials_for_password_change(self):
         """

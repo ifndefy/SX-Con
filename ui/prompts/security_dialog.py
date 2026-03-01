@@ -1,6 +1,8 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                             QLineEdit, QPushButton, QMessageBox, QComboBox)
 from PyQt6.QtCore import Qt
+
+import SPOT
 from ui.core.prompts import hash_security_question_answer
 import utils.logger.logger as log
 
@@ -16,16 +18,7 @@ class SecurityQuestionsDialog(QDialog):
         self.setFixedSize(500, 400)
         self.setModal(True)
         
-        self.question_list = [
-            "What was your first pet's name?",
-            "What was your mother's maiden name?",
-            "What city were you born in?",
-            "What was your first car?",
-            "What elementary school did you attend?",
-            "What is your favorite book?",
-            "What is your favorite movie?",
-            "What is your favorite food?"
-        ]
+        self.question_list = SPOT.QUESTIONS_LIST
         
         self.hashed_questions_answers = None
         self.setup_ui()

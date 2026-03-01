@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import Qt
 
 from src import SPOT
-from ui.forgot_pw import ForgotPasswordScreen
+from ui.prompts.forgot_pw import ForgotPasswordScreen
 from src.core.authenticate import authenticate_password
 from services.connect_database import db_connection
 import utils.logger.logger as log
