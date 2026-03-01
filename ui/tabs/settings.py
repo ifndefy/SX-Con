@@ -136,30 +136,19 @@ class SettingsTab(BaseTab):
         hr3.setObjectName("hr")
         layout.addWidget(hr3)
 
-        btn_layout = QHBoxLayout()
-        self.load_btn = QPushButton("Load Settings")
-        layout.addWidget(self.load_btn)
-        btn_layout.addWidget(self.load_btn)
-
-        btn_layout.addStretch()
-
-        self.save_btn = QPushButton("Save Settings")
-        layout.addWidget(self.save_btn)
-        btn_layout.addWidget(self.save_btn)
-
-        layout.addLayout(btn_layout)
-
-        # HR Line to separate buttons at the bottom
-        hr4 = QFrame()
-        hr4.setFrameShape(QFrame.Shape.HLine)
-        hr4.setFrameShadow(QFrame.Shadow.Sunken)
-        hr4.setObjectName("hr")
-        layout.addWidget(hr4)
-
         # Set up the scroll area
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
+
+        btn_layout = QHBoxLayout()
+        self.load_btn = QPushButton("Load Settings")
+        btn_layout.addWidget(self.load_btn)
+
+        self.save_btn = QPushButton("Save Settings")
+        btn_layout.addWidget(self.save_btn)
+
+        main_layout.addLayout(btn_layout)
 
         self.setup_button_connections()
         self.load_user_preferences(silent=True)
