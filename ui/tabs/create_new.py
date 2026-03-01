@@ -513,7 +513,6 @@ class CreateNewTab(BaseTab):
             return
 
         total = RevenueGeneration.calculate_total(fixed_price, qty, rate_text)
-        print(total)
         section['total'].setText(f"${total:.2f}")
 
     def _on_product_type_changed(self, product_section: dict):

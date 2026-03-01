@@ -74,8 +74,6 @@ class ForgotPasswordScreen(QDialog):
 
         if qa_dialog.exec() == QDialog.DialogCode.Accepted:
             self.show_password_change_dialog()
-        else:
-            print("2")
 
     def show_password_change_dialog(self):
         """

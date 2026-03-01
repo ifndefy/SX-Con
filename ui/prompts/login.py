@@ -111,12 +111,12 @@ class LoginScreen(QDialog):
                     admin_status = users[0].get('admin', False)
                     # Set the user in the global user class
                     current_user.set_user(username, admin_status)
-                    print(f"User set: {current_user.get_username()}, Admin: {current_user.is_admin()}")
+                    log.info(f"User set: {current_user.get_username()}, Admin: {current_user.is_admin()}")
                 else:
-                    print("Error: User found in auth but not in user query?")
+                    log.error("Error: User found in auth but not in user query?")
                     
             except Exception as e:
-                print(f"Error: Error setting user data: {e}")
+                log.error(f"Error: Error setting user data: {e}")
                 # Still set basic user info even if admin status fails
                 current_user.set_user(username, False)
             
