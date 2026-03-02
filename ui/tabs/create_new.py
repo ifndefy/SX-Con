@@ -25,7 +25,10 @@ from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
-from ui.core import format_phone, format_price, format_state, excel
+from ui.core import format_phone
+from ui.core import format_price
+from ui.core import format_state
+from ui.core import excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 
@@ -112,7 +115,7 @@ class CreateNewTab(BaseTab):
         vendor_section_row_1.addWidget(QLabel("ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setObjectName("DEFAULT")
-        self.vendor_id_input.setPlaceholderText("4 INTS")
+        self.vendor_id_input.setPlaceholderText("V ID")
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
@@ -144,7 +147,7 @@ class CreateNewTab(BaseTab):
         # First Name
         vendor_section_row_2.addWidget(QLabel("First Name:"))
         self.first_name_input = QLineEdit()
-        self.first_name_input.setPlaceholderText("30 chars")
+        self.first_name_input.setPlaceholderText("First Name")
         self.first_name_input.setMaxLength(30)
         self.first_name_input.setMinimumWidth(263)
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
@@ -154,7 +157,7 @@ class CreateNewTab(BaseTab):
         # Middle Name
         vendor_section_row_2.addWidget(QLabel("Middle Name:"))
         self.middle_name_input = QLineEdit()
-        self.middle_name_input.setPlaceholderText("10 chars")
+        self.middle_name_input.setPlaceholderText("Middle Name")
         self.middle_name_input.setMaxLength(10)
         self.middle_name_input.setMinimumWidth(103)
         self.middle_name_input.setValidator(alpha_validator)
@@ -163,7 +166,7 @@ class CreateNewTab(BaseTab):
         # Last Name
         vendor_section_row_2.addWidget(QLabel("Last Name:"))
         self.last_name_input = QLineEdit()
-        self.last_name_input.setPlaceholderText("30 chars")
+        self.last_name_input.setPlaceholderText("Last Name")
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setMinimumWidth(263)
         self.last_name_input.setValidator(alpha_validator)
@@ -178,7 +181,7 @@ class CreateNewTab(BaseTab):
         # Address
         vendor_section_row_3.addWidget(QLabel("Address:"))
         self.address_input = QLineEdit()
-        self.address_input.setPlaceholderText("Street address")
+        self.address_input.setPlaceholderText("Address")
         self.address_input.setMaxLength(255)
         address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 ]+"))
         self.address_input.setValidator(address_validator)
@@ -203,7 +206,7 @@ class CreateNewTab(BaseTab):
         # Zip Code
         vendor_section_row_3.addWidget(QLabel("Zip Code:"))
         self.zip_input = QLineEdit()
-        self.zip_input.setPlaceholderText("XXXXX")
+        self.zip_input.setPlaceholderText("Zip")
         self.zip_input.setMaxLength(5)
         self.zip_input.setFixedWidth(70)
         zip_validator = QIntValidator(0, 99999, self)
@@ -367,7 +370,7 @@ class CreateNewTab(BaseTab):
         # Product ID - Fixed width for 10 integers
         line1_layout.addWidget(QLabel("ID:"))
         product_id_input = QLineEdit()
-        product_id_input.setPlaceholderText("10 INTS")
+        product_id_input.setPlaceholderText("P ID")
         product_id_input.setMaxLength(10)
         product_id_input.setFixedWidth(120)
         product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
@@ -385,7 +388,7 @@ class CreateNewTab(BaseTab):
         product_types = ["Hot Food", "General", "Produce"]
         product_type_input.addItems(product_types)
         product_type_input.setCurrentIndex(-1)
-        product_type_input.setPlaceholderText("SELECT")
+        product_type_input.setPlaceholderText("Type")
         line1_layout.addWidget(product_type_input)
         product_section['product_type'] = product_type_input
 
@@ -447,7 +450,7 @@ class CreateNewTab(BaseTab):
         # Quantity - Fixed width (same as price)
         line2_layout.addWidget(QLabel("Qty:"))
         quantity_input = QLineEdit()
-        quantity_input.setPlaceholderText("0")
+        quantity_input.setPlaceholderText("Qty")
         quantity_input.setFixedWidth(100)
         quantity_input.setValidator(QIntValidator(0, 9999, self))
         quantity_input.textChanged.connect(self.handle_total)
