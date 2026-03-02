@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QWidget
 from handlers.handler_pdf import handler_db_pdf
 from handlers.handler_print import handler_print
 from services.get_item import get_item
+from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
 
 from ui.core import excel
@@ -67,7 +68,7 @@ class RecordsTab(BaseTab):
         search_section_row_1.addWidget(QLabel("Ticket Number:"))
         self.ticket_number_input = QLineEdit()
         self.ticket_number_input.setPlaceholderText("T Num")
-        self.ticket_number_input.setFixedWidth(80)
+        self.ticket_number_input.setFixedWidth(73)
         self.ticket_number_input.setValidator(QIntValidator(0, 999999, self))
         self.ticket_number_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.ticket_number_input)
@@ -77,7 +78,7 @@ class RecordsTab(BaseTab):
         self.datetime_input = QLineEdit()
         self.datetime_input.setPlaceholderText("Datetime")
         self.datetime_input.setMaxLength(30)
-        self.datetime_input.setFixedWidth(165)
+        self.datetime_input.setFixedWidth(160)
         self.datetime_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.datetime_input)
 
@@ -85,7 +86,7 @@ class RecordsTab(BaseTab):
         self.status_input = QLineEdit()
         self.status_input.setPlaceholderText("Stat")
         self.status_input.setMaxLength(10)
-        self.status_input.setFixedWidth(70)
+        self.status_input.setFixedWidth(69)
         self.status_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.status_input)
 
@@ -366,6 +367,19 @@ class RecordsTab(BaseTab):
 
         section_layout.addLayout(line1_layout)
 
+        details_container = QWidget()
+        details_container.setObjectName("view_bg")
+        details_container.setVisible(False)
+        details_layout = QVBoxLayout(details_container)
+        details_layout.setContentsMargins(20, 10, 10, 10)
+
+        product_details_layout = QVBoxLayout()
+        rec_section['product_details_layout'] = product_details_layout
+        details_layout.addLayout(product_details_layout)
+
+        section_layout.addWidget(details_container)
+        rec_section['details_container'] = details_container
+
         # Add to container
         self.records_layout.addWidget(section_widget)
         ticket_index = len(self.records_section)
@@ -427,8 +441,7 @@ class RecordsTab(BaseTab):
 
     def make_view_handler(self, ticket_index):
         def handler():
-            # self.on_view_clicked(ticket_index)
-            #todo
+            self.on_view_clicked(ticket_index)
             pass
         return handler
 
@@ -464,6 +477,46 @@ class RecordsTab(BaseTab):
         else:
             for record in records:
                 self.add_ticket_section(record)
+
+    def on_view_clicked(self, ticket_index):
+        try:
+            records_section = self.records_section[ticket_index]
+            ticket_number = records_section['ticket_num'].text().strip()
+
+            if not ticket_number:
+                log.warning("No ticket number available")
+                return
+
+            details_container = records_section['details_container']
+            is_visible = details_container.isVisible()
+
+            if not is_visible:
+                ticket_details = self.view(ticket_number)
+                if ticket_details:
+                    ticket_data = ticket_details['ticket_data']
+                    ticket_num_val = ticket_data.get('id', '')
+                    if ticket_num_val and '_' in ticket_num_val:
+                        numeric_id = ticket_num_val.split('_', 1)[-1]
+                    else:
+                        numeric_id = ticket_num_val
+
+                    view_ticket = ViewTicket(numeric_id)
+                    view_ticket.setup_ui(records_section, ticket_details)
+
+                    records_section['view_ticket'] = view_ticket
+
+                    details_container.setVisible(True)
+                    records_section['view_btn'].setText("Hide")
+                    log.info(f"Displaying details for ticket {ticket_number}")
+                else:
+                    log.error(f"No details found for ticket {ticket_number}")
+            else:
+                details_container.setVisible(False)
+                records_section['view_btn'].setText("View")
+                log.info(f"Hidden details for ticket {ticket_number}")
+
+        except Exception as e:
+            log.error(f"Error in on_view_clicked: {e}")
 
     def view(self, ticket_number):
         """
