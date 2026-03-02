@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtCore import Qt
 
-import SPOT
+from src import SPOT
 from services.get_item_by_property import get_item_by_property
 from services.get_property import get_property
 from services.update_property import update_property
