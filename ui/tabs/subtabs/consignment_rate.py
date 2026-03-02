@@ -1,6 +1,7 @@
 import pandas as pd
 
 from ui.tabs.base import BaseTab
+import utils.logger.logger as log
 
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea, QSpacerItem
@@ -70,15 +71,9 @@ class CRTab(BaseTab):
     #Retrieve tha table from SPOT_CR.csv and turn it into tickets
     def populate_tickets_section(self):
         self.ticket_list = c_table.fetch_consignment_data()
-        print(self.ticket_list)
+        log.debug(f"Retrieved consignment rates: {self.ticket_list}")
         for key, value in self.ticket_list.items():
             self.consignments_section_layout.addWidget(_CRTicket(key, value))
-
-        self.consignments_section_layout.addWidget(_CRTicket())
-        self.consignments_section_layout.addWidget(_CRTicket())
-        self.consignments_section_layout.addWidget(_CRTicket())
-        self.consignments_section_layout.addWidget(_CRTicket())
-        self.consignments_section_layout.addWidget(_CRTicket())
 
     #todo: add check in admin_settings to trigger on_active_tab when the tab being switched to has this function, use to populate tickets when needed
     def on_active_tab(self):
@@ -141,8 +136,6 @@ class _CRTicket(QWidget):
         self.ticket_layout.addWidget(self.type_line)
         self.ticket_layout.addWidget(self.product_type_input)
 
-        #self.ticket_layout.addSpacing(45)
-
         self.ticket_layout.addItem(self.middle_spacer)
 
         self.ticket_layout.addWidget(self.rate_line)
@@ -176,15 +169,15 @@ class _CRTicket(QWidget):
     def fetch_field_values(self):
         return {
             "type" : self.get_type(),
-            "rate" : int(self.get_rate())
+            "rate" : self.get_rate()
         }
 
     #Save current values for roll back, unlock fields and swap to other button set
     def edit_btn_handler(self):
         self.old_type = self.get_type()
         self.old_rate = self.get_rate()
+        log.info(f"Editing {self.old_type} ticket, current value: {self.old_rate}")
 
-        #self.product_type_input.setReadOnly(False)
         self.product_rate_input.setReadOnly(False)
         self.product_rate_input.setProperty("state", "READ_WRITE")
 
@@ -198,7 +191,8 @@ class _CRTicket(QWidget):
 
     # lock fields, restore old values to fields and swap to other button set
     def cancel_btn_handler(self):
-        #self.product_type_input.setReadOnly(True)
+
+        log.info(f"Edit Aborted, resetting values {self.get_rate()} -> {self.old_rate}")
         self.product_rate_input.setReadOnly(True)
         self.product_rate_input.setProperty("state", "READ_ONLY")
 
@@ -217,12 +211,12 @@ class _CRTicket(QWidget):
         field_data = self.fetch_field_values()
 
         if field_data["type"] is None or field_data["rate"] is None:
-            #error here
+            log.warning(f"One or more fields is NULL, Aborting save...")
             return
         else:
+            log.info(f"Saving to SPOT, new values: {field_data}")
             _write_to_spot_csv(field_data)
 
-        #self.product_type_input.setReadOnly(True)
         self.product_rate_input.setReadOnly(True)
         self.product_rate_input.setProperty("state", "READ_ONLY")
 
@@ -238,5 +232,5 @@ class _CRTicket(QWidget):
 def _write_to_spot_csv(data):
     dataframe = pd.read_csv("./src/SPOT_CR.csv")
     dataframe = dataframe.set_index("Type")
-    dataframe.loc[data["type"], "Rate"] = data["rate"]
+    dataframe.loc[data["type"], "Rate"] = int(data["rate"])
     dataframe.to_csv("./src/SPOT_CR.csv")
