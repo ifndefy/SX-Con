@@ -66,10 +66,10 @@ class CRTab(BaseTab):
         #Add Canvas to tab
         self.main_layout.addWidget(self.tab_content)
         #todo: move to on_active_tab to avoid fetching until we need the data
-        self.populate_tickets_section()
+        self.populate_consignment_entries()
 
-    #Retrieve tha table from SPOT_CR.csv and turn it into tickets
-    def populate_tickets_section(self):
+    #Retrieve tha table from SPOT_CR.csv and turn it into entries in our widget's section
+    def populate_consignment_entries(self):
         self.ticket_list = c_table.fetch_consignment_data()
         log.debug(f"Retrieved consignment rates: {self.ticket_list}")
         for key, value in self.ticket_list.items():
