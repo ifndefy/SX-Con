@@ -351,7 +351,21 @@ ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
     color: #000000;
 }
 
+/*Ticket QSS : admin_settings->rates*/
 QWidget#ticket_body {
     background-color: #8A6A52;
     border: 1px solid #5C4033;
+}
+
+/*Default Ticket Style: all ticket field objects fall back to here for missing properties/invalid states*/
+QLineEdit#ticket_field{
+    background-color: #E5C59B;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+/*State 01: Read-Only -> we change the background of the field and then fall back to the default style for the rest*/
+QLineEdit#ticket_field[state="READ_ONLY"] {
+    background-color: #B0B0B0;
 }

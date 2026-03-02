@@ -1,14 +1,31 @@
+import pandas as pd
+
 from ui.tabs.base import BaseTab
 
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea, QSpacerItem
 from PyQt6.QtWidgets import QLabel, QLineEdit, QPushButton
+from PyQt6.QtGui import QIntValidator
+
+from services import parse_consignment_table as c_table
 
 class CRTab(BaseTab):
     def __init__(self, api_handler):
         super().__init__(api_handler, "consignment_rates")
-        self.ticket_list = []
+        self.ticket_list = None
+
+        self.scroll_zone = None
+
+        self.consignments_section_layout = None
+        self.consignments_section = None
+
+        self.tab_header = None
+        self.tab_title = None
+
+        self.tab_content_layout = None
+        self.tab_content = None
+
+        self.main_layout = None
     
     def setup_ui(self):
         #Create main layout
@@ -34,7 +51,11 @@ class CRTab(BaseTab):
         self.consignments_section = QWidget()
         self.consignments_section_layout = QVBoxLayout(self.consignments_section)
         self.consignments_section_layout.setSpacing(2)
-        self.setup_consignment_fields()
+
+        #Setup scrolling for ticket box
+        self.scroll_zone = QScrollArea()
+        self.scroll_zone.setWidgetResizable(True)
+        self.scroll_zone.setWidget(self.consignments_section)
 
         #Add objects to content Canvas
         self.tab_content_layout.addLayout(self.tab_header)
@@ -43,45 +64,37 @@ class CRTab(BaseTab):
         
         #Add Canvas to tab
         self.main_layout.addWidget(self.tab_content)
+        #todo: move to on_active_tab to avoid fetching until we need the data
+        self.populate_tickets_section()
 
-    #Parse the consignment ticket list and populate ui with the objects
-    def setup_consignment_fields(self):
-        #Setup scrolling for ticket box
-        self.scroll_zone = QScrollArea()
-        self.scroll_zone.setWidgetResizable(True)
-        self.scroll_zone.setWidget(self.consignments_section)
+    #Retrieve tha table from SPOT_CR.csv and turn it into tickets
+    def populate_tickets_section(self):
+        self.ticket_list = c_table.fetch_consignment_data()
+        print(self.ticket_list)
+        for key, value in self.ticket_list.items():
+            self.consignments_section_layout.addWidget(_CRTicket(key, value))
 
-        #big blob of tickets to test scrolling
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
-        self.consignments_section_layout.addWidget(CRTicket())
+        self.consignments_section_layout.addWidget(_CRTicket())
+        self.consignments_section_layout.addWidget(_CRTicket())
+        self.consignments_section_layout.addWidget(_CRTicket())
+        self.consignments_section_layout.addWidget(_CRTicket())
+        self.consignments_section_layout.addWidget(_CRTicket())
+
+    #todo: add check in admin_settings to trigger on_active_tab when the tab being switched to has this function, use to populate tickets when needed
+    def on_active_tab(self):
+        pass
 
     def setup_button_connections(self):
         pass
 
-    #get consignment list items and store in our ticket list
-    def parse_consignment_file(self):
-        pass
+#private ticket object, should only be used by this subtab
+class _CRTicket(QWidget):
+    def __init__(self, product_type = None, rate = None):
+        super().__init__()
+        #Store constructor data
+        self.old_rate = None
+        self.old_type = None
 
-class CRTicket(QWidget):
-    def __init__(self, type = None, rate = None):
-        super().__init__()  
-        
         #Create 'box' to hold ticket fields/buttons
         self.ticket_container = QWidget()
         self.ticket_container.setObjectName("ticket_body")
@@ -91,8 +104,10 @@ class CRTicket(QWidget):
         self.type_line = QLabel("Type:")
         self.type_line.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         
-        self.product_type_input = QLineEdit()
+        self.product_type_input = QLineEdit(f"{product_type}" if product_type else "")
         self.product_type_input.setPlaceholderText("Produce Type")
+        self.product_type_input.setObjectName("ticket_field")
+        self.product_type_input.setProperty("state", "READ_ONLY")
         self.product_type_input.setMaxLength(30)
         self.product_type_input.setFixedWidth(265)
         self.product_type_input.setReadOnly(True)
@@ -102,10 +117,13 @@ class CRTicket(QWidget):
         self.rate_line = QLabel("Rate:")
         self.rate_line.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
-        self.product_rate_input = QLineEdit()
+        self.product_rate_input = QLineEdit(f"{rate}" if rate else "")
         self.product_rate_input.setPlaceholderText("Produce Rate")
+        self.product_rate_input.setObjectName("ticket_field")
+        self.product_rate_input.setProperty("state", "READ_ONLY")
         self.product_rate_input.setMaxLength(30)
         self.product_rate_input.setFixedWidth(265)
+        self.product_rate_input.setValidator(QIntValidator(0, 100, self))
         self.product_rate_input.setReadOnly(True)
 
         self.end_spacer = QSpacerItem(45, 50, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
@@ -148,32 +166,77 @@ class CRTicket(QWidget):
         self.ticket_cancel_btn.clicked.connect(self.cancel_btn_handler)
         self.ticket_save_btn.clicked.connect(self.save_btn_handler)
 
+    def get_rate(self):
+        return self.product_rate_input.text().strip() or None
+
+    def get_type(self):
+        return self.product_type_input.text().strip() or None
+
+    #retrieves the values of the QlineEdit fields, returns a dict
+    def fetch_field_values(self):
+        return {
+            "type" : self.get_type(),
+            "rate" : int(self.get_rate())
+        }
+
+    #Save current values for roll back, unlock fields and swap to other button set
     def edit_btn_handler(self):
-        #todo: save current ticket values for potential rollback
-        self.product_type_input.setReadOnly(False)
+        self.old_type = self.get_type()
+        self.old_rate = self.get_rate()
+
+        #self.product_type_input.setReadOnly(False)
         self.product_rate_input.setReadOnly(False)
+        self.product_rate_input.setProperty("state", "READ_WRITE")
+
+        #Refresh the widget style to update appearance
+        self.product_rate_input.style().unpolish(self.product_rate_input)
+        self.product_rate_input.style().polish(self.product_rate_input)
 
         self.ticket_cancel_btn.show()
         self.ticket_save_btn.show()
         self.ticket_edit_btn.hide()
 
+    # lock fields, restore old values to fields and swap to other button set
     def cancel_btn_handler(self):
-        #todo:implement state rollback
-        self.product_type_input.setReadOnly(True)
+        #self.product_type_input.setReadOnly(True)
         self.product_rate_input.setReadOnly(True)
+        self.product_rate_input.setProperty("state", "READ_ONLY")
+
+        #Refresh the widget style to update appearance
+        self.product_rate_input.style().unpolish(self.product_rate_input)
+        self.product_rate_input.style().polish(self.product_rate_input)
+
+        self.product_rate_input.setText(self.old_rate)
+        self.product_type_input.setText(self.old_type)
 
         self.ticket_cancel_btn.hide()
         self.ticket_save_btn.hide()
         self.ticket_edit_btn.show()
 
     def save_btn_handler(self):
-        #todo: implement saving to SPOT
-        print(f"hello world from {self}")
-        self.product_type_input.setReadOnly(True)
+        field_data = self.fetch_field_values()
+
+        if field_data["type"] is None or field_data["rate"] is None:
+            #error here
+            return
+        else:
+            _write_to_spot_csv(field_data)
+
+        #self.product_type_input.setReadOnly(True)
         self.product_rate_input.setReadOnly(True)
+        self.product_rate_input.setProperty("state", "READ_ONLY")
+
+        #Refresh the widget style to update appearance, might want to wrap this in a function/ set up a util or service .py file to provide helpers with stuff like this
+        self.product_rate_input.style().unpolish(self.product_rate_input)
+        self.product_rate_input.style().polish(self.product_rate_input)
 
         self.ticket_cancel_btn.hide()
         self.ticket_save_btn.hide()
         self.ticket_edit_btn.show()
 
-
+#might be worth moving this, but ideally this remains private to consignment_rate.py since it should be the only one writing to SPOT
+def _write_to_spot_csv(data):
+    dataframe = pd.read_csv("./src/SPOT_CR.csv")
+    dataframe = dataframe.set_index("Type")
+    dataframe.loc[data["type"], "Rate"] = data["rate"]
+    dataframe.to_csv("./src/SPOT_CR.csv")
