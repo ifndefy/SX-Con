@@ -1,6 +1,6 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import QVBoxLayout, QDialog
+from PyQt6.QtWidgets import QVBoxLayout, QDialog, QFrame
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
@@ -10,6 +10,8 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
 
+from ui.core import format_phone
+from ui.core import format_state
 from services.insert_item import insert_item
 import utils.logger.logger as log
 from services.message_bus import status_bar_instance
@@ -47,7 +49,9 @@ class VendorsTab(BaseTab):
 
         layout.addLayout(header_section) # Ends creation and adds header_section to window
 
-        hr1 = QLabel()# HR Line
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
@@ -63,8 +67,7 @@ class VendorsTab(BaseTab):
         search_section_row_1.addWidget(self.vendor_id_input)
 
         search_section_row_1.addWidget(QLabel("Phone Number:"))
-        self.phone_number_input = QLineEdit()
-        self.phone_number_input.setPlaceholderText("Phone")
+        self.phone_number_input = format_phone.PhoneNumField()
         self.phone_number_input.setMaxLength(12)
         self.phone_number_input.setFixedWidth(150)
         self.phone_number_input.textChanged.connect(self.on_search_input_changed)
@@ -119,16 +122,14 @@ class VendorsTab(BaseTab):
         search_section_row_3.addWidget(self.city_input)
 
         search_section_row_3.addWidget(QLabel("State:"))
-        self.state_input = QLineEdit()
-        self.state_input.setPlaceholderText("ST")
-        self.state_input.setMaxLength(2)
+        self.state_input = format_state.FormatState()
         self.state_input.setFixedWidth(50)
         self.state_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.state_input)
 
         search_section_row_3.addWidget(QLabel("Zip:"))
         self.zip_input = QLineEdit()
-        self.zip_input.setPlaceholderText("ST")
+        self.zip_input.setPlaceholderText("Zip")
         self.zip_input.setMaxLength(5)
         self.zip_input.setFixedWidth(70)
         self.zip_input.textChanged.connect(self.on_search_input_changed)
@@ -148,7 +149,9 @@ class VendorsTab(BaseTab):
         search_section_row_4.addWidget(self.search_btn)
         layout.addLayout(search_section_row_4)
 
-        hr2 = QLabel()  # HR Line to clear header
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         layout.addWidget(hr2)
 
@@ -244,6 +247,22 @@ class VendorsTab(BaseTab):
         last_name = self.last_name_input.text().strip()
         if last_name:
             add_property("last_name", last_name, "CONTAINS")
+
+        address = self.address_input.text().strip()
+        if address:
+            add_property("address", address, "CONTAINS")
+
+        city = self.city_input.text().strip()
+        if city:
+            add_property("city", city, "CONTAINS")
+
+        state = self.state_input.text().strip()
+        if state:
+            add_property("state", state, "CONTAINS")
+
+        zip = self.zip_input.text().strip()
+        if zip:
+            add_property("zip", zip, "CONTAINS")
 
         if len(conditions) == 1:
             self.fetch()

@@ -25,7 +25,10 @@ from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
-from ui.core import format_phone, format_price, format_state, excel
+from ui.core import format_phone
+from ui.core import format_price
+from ui.core import format_state
+from ui.core import excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 
@@ -112,7 +115,7 @@ class CreateNewTab(BaseTab):
         vendor_section_row_1.addWidget(QLabel("ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setObjectName("DEFAULT")
-        self.vendor_id_input.setPlaceholderText("ID")
+        self.vendor_id_input.setPlaceholderText("V ID")
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
@@ -367,7 +370,7 @@ class CreateNewTab(BaseTab):
         # Product ID - Fixed width for 10 integers
         line1_layout.addWidget(QLabel("ID:"))
         product_id_input = QLineEdit()
-        product_id_input.setPlaceholderText("ID")
+        product_id_input.setPlaceholderText("P ID")
         product_id_input.setMaxLength(10)
         product_id_input.setFixedWidth(120)
         product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))

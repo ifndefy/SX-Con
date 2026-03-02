@@ -14,6 +14,7 @@ from handlers.handler_pdf import handler_db_pdf
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
 from ui.core import format_phone
+from ui.core import format_state
 from ui.core import excel
 from ui.core.view_ticket import ViewTicket
 from utils.core import generate_excel as xls_gen
@@ -51,7 +52,7 @@ class VendorTicketsTab(BaseTab):
 
         vendor_section_row_1.addWidget(QLabel("Vendor ID:"))
         self.vendor_id_input = QLineEdit()
-        self.vendor_id_input.setPlaceholderText("Vender ID")
+        self.vendor_id_input.setPlaceholderText("V ID")
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
         self.vendor_id_input.textEdited.connect(self.auto_pop_vend)
@@ -117,9 +118,8 @@ class VendorTicketsTab(BaseTab):
         vendor_section_row_3.addWidget(self.city_input)
 
         vendor_section_row_3.addWidget(QLabel("State:"))
-        self.state_input = QLineEdit()
+        self.state_input = format_state.FormatState()
         self.state_input.setObjectName("READ_ONLY")
-        self.state_input.setPlaceholderText("XX")
         self.state_input.setReadOnly(True)
         self.state_input.setMaxLength(2)
         self.state_input.setFixedWidth(50)
