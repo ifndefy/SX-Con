@@ -1,6 +1,6 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout, QFrame
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -59,7 +59,9 @@ class UsersTab(BaseTab):
 
         layout.addLayout(header_section)  # Ends creation and adds header_section to window
 
-        hr1 = QLabel()  # HR Line to clear header
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
@@ -117,7 +119,9 @@ class UsersTab(BaseTab):
         search_section_row_3.addWidget(self.search_btn)
         layout.addLayout(search_section_row_3)
 
-        hr2 = QLabel()  # HR Line to clear header
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         layout.addWidget(hr2)
 
@@ -334,7 +338,9 @@ class UsersTab(BaseTab):
 
         section_layout.addLayout(line3_layout)
 
-        hr = QLabel() # HR Line between entries
+        hr = QFrame()
+        hr.setFrameShape(QFrame.Shape.HLine)
+        hr.setFrameShadow(QFrame.Shadow.Sunken)
         hr.setObjectName("hr")
         section_layout.addWidget(hr)
 
@@ -421,7 +427,9 @@ class UsersTab(BaseTab):
         question1_response.setMaxLength(255)
         layout.addWidget(question1_response)
 
-        hr2 = QLabel()
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         layout.addWidget(hr2)
 

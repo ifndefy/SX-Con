@@ -48,8 +48,6 @@ class RecordsTab(BaseTab):
         title = QLabel("View Records")
         title.setObjectName("post_title")
         header_section.addWidget(title)
-
-        # Push to the left
         header_section.addStretch()
 
         # Ends creation and adds header_section to window
