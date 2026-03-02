@@ -16,7 +16,7 @@ from src import SPOT
 
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
-from ui.core.prompts import hash_security_question_answer
+from core.hash_qa import hash_security_question_answer
 from src.core.hash_password import hash_password
 import utils.logger.logger as log
 from services.message_bus import status_bar_instance

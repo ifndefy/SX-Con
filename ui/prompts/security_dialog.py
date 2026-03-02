@@ -1,9 +1,15 @@
-from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QLineEdit, QPushButton, QMessageBox, QComboBox)
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QHBoxLayout
+from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtCore import Qt
 
-import SPOT
-from ui.core.prompts import hash_security_question_answer
+from src import SPOT
+from core.hash_qa import hash_security_question_answer
 import utils.logger.logger as log
 
 class SecurityQuestionsDialog(QDialog):
@@ -92,7 +98,7 @@ class SecurityQuestionsDialog(QDialog):
     def on_update_clicked(self):
         """
         purpose: Validate and hash the security questions and answers
-        author(s): Alexander Bubienko
+        author(s): Alexander Bubienko, Joe Lee
         """
         q1 = self.question1_combo.currentText()
         a1 = self.answer1_input.text().strip()
@@ -124,12 +130,22 @@ class SecurityQuestionsDialog(QDialog):
         
         # Hash the questions and answers using the existing function
         try:
-            self.hashed_questions_answers = hash_security_question_answer(qa_dict)
+            hashed_qa = hash_security_question_answer(qa_dict)
             
             if self.hashed_questions_answers == -1:
                 QMessageBox.critical(self, "Error", "Failed to hash security questions")
                 return
-                
+
+            items = list(hashed_qa.items())
+            hashed_q1, hashed_a1 = items[0]
+            hashed_q2, hashed_a2 = items[1]
+
+            self.hashed_questions_answers = {
+                'q1_q': hashed_q1,
+                'q1_a': hashed_a1,
+                'q2_q': hashed_q2,
+                'q2_a': hashed_a2
+            }
             self.accept()
             
         except Exception as e:

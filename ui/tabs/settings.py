@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import QMessageBox
 import json
 
 from ui.core.theme_manager import ThemeManager
+from ui.prompts.security_dialog import SecurityQuestionsDialog
 from ui.tabs.base import BaseTab
 from ui.prompts.login import LoginScreen
 from ui.prompts.password_dialog import PasswordChangeDialog
@@ -166,33 +167,92 @@ class SettingsTab(BaseTab):
         """
         self.change_username_btn.clicked.connect(self.on_change_username_clicked)
         self.change_pw_btn.clicked.connect(self.on_change_password_clicked)
-        # self.change_qa_btn.clicked.connect(self.on_change_qa_clicked)
+        self.change_qa_btn.clicked.connect(self.on_change_qa_clicked)
         self.load_btn.clicked.connect(self.load_user_preferences)
         self.save_btn.clicked.connect(self.save_user_preferences)
+
+    def on_change_qa_clicked(self):
+        """
+        :Purpose: handle security qa hange button click
+        :Author(s): Joe Lee
+        """
+        if self.verify_credentials_for_cred_change():
+            self.show_qa_change_dialog()
+        else:
+            QMessageBox.warning(self, "Verification Failed",
+                                "Invalid credentials. Security Questions and Answers cannot be changed.")
+            log.warning("Security QA change verification failed")
+
+    def show_qa_change_dialog(self):
+        """
+        :purpose: Show dialog to enter and confirm new password
+        :author(s): Alexander Bubienko, Joe Lee
+        """
+        dialog = SecurityQuestionsDialog(self.theme_manager, self)
+
+        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.hashed_questions_answers:
+            self.perform_qa_update(dialog.hashed_questions_answers)
+
+    def perform_qa_update(self, hashed_qa):
+        """
+        :Purpose: wrap user_property to update the user's security q and a
+        :param hashed_qa: hashed questions answers
+        :Author(s): Joe Lee
+        """
+        username = current_user.get_username()
+        if not username:
+            QMessageBox.critical(self, "Unknown Username", "User not logged in")
+            return
+        try:
+            user_id = self.get_user_id_from_username(username)
+            if not user_id:
+                QMessageBox.critical(self, "Error", f"Count not find user_id for {username}")
+                return
+            updated = True
+            for p_name, p_value in hashed_qa.items():
+                result = update_property(
+                    container_name="Entities",
+                    entity_type="user",
+                    entity_id=str(user_id),
+                    property_name=p_name,
+                    property_value=p_value
+                )
+                if result != 0:
+                    log.error(f"Failed to update {p_name} for user {username}")
+                    updated = False
+
+            if updated:
+                log.info(f"Successfully updated Security Questions and Answers for {username}")
+                QMessageBox.information(self, "Success", f"Successfully updated Security Questions and Answers for {username}")
+            else:
+                QMessageBox.critical(self, "Error", f"Failed to update Security Questions and Answers for {username}")
+        except Exception as e:
+            log.error(f"Could not update user security questions and answers {e}")
+            QMessageBox.critical(self, "Error", f"Failed to update user security questions and answers {e}")
 
     def on_change_password_clicked(self):
         """
         :purpose: Handle password change button click
-        :author(s): Alexander Bubienko
+        :author(s): Alexander Bubienko, Joe Lee
         """
-        self.verify_credentials_for_password_change()
+        if self.verify_credentials_for_cred_change():
+            self.show_password_change_dialog()
+        else:
+            QMessageBox.warning(self, "Verification Failed",
+                                "Invalid credentials. Password cannot be changed.")
+            log.warning("Password change verification failed")
 
-
-    def verify_credentials_for_password_change(self):
+    def verify_credentials_for_cred_change(self):
         """
-        :purpose: Show login dialog to verify user credentials before allowing password change
-        :author(s): Alexander Bubienko
+        :purpose: Show login dialog to verify user credentials before allowing credential changes
+        :author(s): Alexander Bubienko, Joe Lee
         """
         login_dialog = LoginScreen(self.theme_manager, self)
         login_dialog.setWindowTitle("Verify Credentials")
         
         if login_dialog.exec() == QDialog.DialogCode.Accepted:
-            # Credentials verified - open password change dialog
-            self.show_password_change_dialog()
-        else:
-            QMessageBox.warning(self, "Verification Failed", 
-                            "Invalid credentials. Password cannot be changed.")
-            log.warning("Password change verification failed")
+            return True
+        return False
 
     def show_password_change_dialog(self):
         """
@@ -262,13 +322,6 @@ class SettingsTab(BaseTab):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
             log.error(f"Password update exception: {e}")
-
-    def on_change_password_clicked(self):
-        """
-        :purpose: Handle password change button click
-        :author(s): Alexander Bubienko
-        """
-        self.verify_credentials_for_password_change()
 
     def on_change_username_clicked(self):
         """
