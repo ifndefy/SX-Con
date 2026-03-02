@@ -3,7 +3,7 @@ How to use:
     delete_item("Entities", "vendor", "1")
 """
 
-from connect_database import db_connection
+from services.connect_database import db_connection
 from src import SPOT
 import utils.logger.logger as log
 
@@ -17,7 +17,7 @@ def delete_item(container_name: str, type: str, id: str) -> int:
     :author(s): Tim Liu, Joe Lee
     """
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return 0
 
     try:

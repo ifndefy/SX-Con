@@ -7,7 +7,11 @@ from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import Qt
 
 from src import SPOT
-from ui.forgot_pw import ForgotPasswordScreen
+from ui.prompts.forgot_pw import ForgotPasswordScreen
+from src.core.authenticate import authenticate_password
+from services.connect_database import db_connection
+import utils.logger.logger as log
+from src.user import current_user
 
 
 class LoginScreen(QDialog):
@@ -74,9 +78,6 @@ class LoginScreen(QDialog):
         login_btn.clicked.connect(self.attempt_login)
         layout.addWidget(login_btn)
 
-        # Enter key also triggers login
-        self.password_input.returnPressed.connect(login_btn.click)
-
         # Forgot Password button
         forgot_pw_btn = QPushButton("Forgot Password")
         forgot_pw_btn.setObjectName("red_btn")
@@ -98,6 +99,27 @@ class LoginScreen(QDialog):
         password = self.password_input.text()
 
         if self.authenticate(username, password):
+            try:
+                users_container = db_connection.connect('Entities')
+                query = f"SELECT * FROM c WHERE c.username = '{username}'"
+                users = list(users_container.query_items(
+                    query=query,
+                    enable_cross_partition_query=True
+                ))
+                
+                if users:
+                    admin_status = users[0].get('admin', False)
+                    # Set the user in the global user class
+                    current_user.set_user(username, admin_status)
+                    log.info(f"User set: {current_user.get_username()}, Admin: {current_user.is_admin()}")
+                else:
+                    log.error("Error: User found in auth but not in user query?")
+                    
+            except Exception as e:
+                log.error(f"Error: Error setting user data: {e}")
+                # Still set basic user info even if admin status fails
+                current_user.set_user(username, False)
+            
             self.username = username
             self.accept()
         else:
@@ -107,12 +129,10 @@ class LoginScreen(QDialog):
 
     def authenticate(self, username, password):
         """
-        purpose: allows anything to login (for now), pass in specific username to cause fail
-        author(s): Joe Lee
+        purpose: requires the username and password to be valid in order to login
+        author(s): Joe Lee, Alexander Bubienko
         """
-        # TODO: replace with Azure DB built in authentication
-
-        # Allow any non-empty credentials to succeed
+        """"
         if username.strip() and password.strip():
             # pass in "testfail" username to intentionally cause fail -- for testing purposes
             if username.strip().lower() == "testfail":
@@ -120,3 +140,36 @@ class LoginScreen(QDialog):
             return True
 
         return False
+        """
+        try:
+            
+            if not username.strip() or not password.strip():
+                return False
+                
+            # Connect to Users container
+            users_container = db_connection.connect('Entities')
+            
+            # Query for user by username
+            query = f"SELECT * FROM c WHERE c.username = '{username}'"
+            users = list(users_container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            
+            if not users:
+                log.info(f"No user found with username: {username}")
+                return False
+                
+            # Get the stored hash and authenticate
+            stored_hash = users[0].get('password')
+            if not stored_hash:
+                return False
+                
+            # Use the existing authenticate_password function
+            result = authenticate_password(password, stored_hash)
+            
+            return result == "1"
+            
+        except Exception as e:
+            log.error(f"Authentication error: {e}")
+            return False

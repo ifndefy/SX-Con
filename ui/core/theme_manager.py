@@ -2,6 +2,8 @@ import os
 from PyQt6.QtCore import QFile
 from PyQt6.QtCore import QTextStream
 
+import utils.logger.logger as log
+
 class ThemeManager:
     def __init__(self):
         self.themes_dir = "ui/themes"
@@ -41,7 +43,7 @@ class ThemeManager:
         theme_path = os.path.join(self.themes_dir, f"{theme_name}.qss")
 
         if not os.path.exists(theme_path):
-            print(f"Theme not found: {theme_path}")
+            log.error(f"Theme not found: {theme_path}")
             return False
 
         style_file = QFile(theme_path)

@@ -6,9 +6,17 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
+
+from handlers.handler_print import handler_print
+from handlers.handler_pdf import handler_db_pdf
+from services.get_item import get_item
+from ui.core import excel
+from ui.core.view_ticket import ViewTicket
+from utils.core import generate_excel as xls_gen
+
 import utils.logger.logger as log
+from services.message_bus import status_bar_instance
 
 class OpenTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -60,11 +68,6 @@ class OpenTicketsTab(BaseTab):
         layout.addLayout(tickets_section)
         layout.addStretch()
 
-        vendor_section_row_3 = QHBoxLayout()
-        self.update_btn = QPushButton("Update")
-        vendor_section_row_3.addWidget(self.update_btn)
-        layout.addLayout(vendor_section_row_3)
-
         # HR Line to separate buttons at the bottom
         hr3 = QLabel()
         hr3.setObjectName("hr")
@@ -74,6 +77,12 @@ class OpenTicketsTab(BaseTab):
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
+
+        # Set up update button separate from the scrollable area
+        vendor_section_row_3 = QHBoxLayout()
+        self.update_btn = QPushButton("Update")
+        vendor_section_row_3.addWidget(self.update_btn)
+        main_layout.addLayout(vendor_section_row_3)
 
         self.setup_button_connections()
 
@@ -144,7 +153,8 @@ class OpenTicketsTab(BaseTab):
         line1_layout.addWidget(view_btn)
         tickets_section['view_btn'] = view_btn
 
-        excel_btn = QPushButton("Excel")
+        #Create excel button without gather function link once index is assigned
+        excel_btn = excel.ExcelButton(None, xls_gen.generate_excel, "Excel")
         line1_layout.addWidget(excel_btn)
         tickets_section['excel_btn'] = excel_btn
 
@@ -175,17 +185,68 @@ class OpenTicketsTab(BaseTab):
         # Add to container
         self.tickets_layout.addWidget(section_widget)
 
-        # Store the index and connect the view button
+        # Store the index
         ticket_index = len(self.tickets_section)
         tickets_section['index'] = ticket_index
+
+        # Connect the view button
         view_btn.clicked.connect(self.make_view_handler(ticket_index))
+        pdf_btn.clicked.connect(self.make_pdf_handler(ticket_number_input.text()))
+        excel_btn.link_gather_function(self.make_form_handler(ticket_index))
+        print_btn.clicked.connect(self.make_print_handler(ticket_number_input.text()))
 
         self.tickets_section.append(tickets_section)
+
+    def make_print_handler(self, ticket_number):
+        def handler():
+            try:
+                handler_db_pdf(int(ticket_number))
+            except Exception as e:
+                log.error(f"Could not generate PDF for ticket {ticket_number}: {e}")
+                return
+
+            handler_print(ticket_number)
+            log.info(f"Print requested for ticket {ticket_number}")
+        return handler
+
+    def make_form_handler(self, ticket_index):
+        def gather_ticket():
+            ticket = self.tickets_section[ticket_index]
+            ticket_number = ticket['ticket_num'].text().strip()
+            ticket_details = self.view(ticket_number)
+            unpacked_ticket = ticket_details['ticket_data']
+
+            ticket_header = {
+                'ticket_number': unpacked_ticket['ticket_number'],
+                'vendor_id': unpacked_ticket['vendor_id'],
+                'created': unpacked_ticket['datetime'],
+                'status': unpacked_ticket['status'],
+            }
+
+            return {
+                'ticket_info': ticket_header,
+                'product_data': unpacked_ticket['price_data']['products'],
+                'revenue_shared': unpacked_ticket['revenue']['shared'],
+                'revenue_grouped': unpacked_ticket['revenue']['grouped']
+            }
+
+        return gather_ticket
+
+    def make_pdf_handler(self, ticket_number):
+        def handler():
+            self.handle_pdf_btn_clicked(int(ticket_number))
+        return handler
+
+    def handle_pdf_btn_clicked(self, ticket_number):
+        try:
+            handler_db_pdf(ticket_number)
+            log.info(f"PDF generated for ticket {ticket_number}")
+        except Exception as e:
+            log.error(f"ERROR generating PDF for ticket {ticket_number}: {e}")
 
     def make_view_handler(self, ticket_index):
         def handler():
             self.on_view_clicked(ticket_index)
-
         return handler
 
     def remove_ticket_section(self):
@@ -205,8 +266,7 @@ class OpenTicketsTab(BaseTab):
         self.tickets_section.clear()
 
         # Update status
-        # self.status_label.setText("All tickets cleared")
-
+        status_bar_instance.send_message("All tickets cleared")
 
     def setup_button_connections(self):
         """
@@ -225,8 +285,7 @@ class OpenTicketsTab(BaseTab):
         self.remove_ticket_section()
         tickets = self.fetch("OPEN")
         if not tickets:
-            # self.status_label.setText(f"No tickets found for Status: OPEN")
-            print("err") # delete when fixed
+            log.warning(f"No tickets found for Status: OPEN")
         else:
             for ticket in tickets:
                 self.add_ticket_section(ticket)  # Pass ticket data to populate fields
@@ -271,7 +330,7 @@ class OpenTicketsTab(BaseTab):
             ticket_number = ticket_section['ticket_num'].text().strip()
 
             if not ticket_number:
-                # self.status_label.setText("No ticket number available")
+                log.warning("No ticket number available")
                 return
 
             details_container = ticket_section['details_container']
@@ -280,80 +339,64 @@ class OpenTicketsTab(BaseTab):
             if not is_visible:
                 ticket_details = self.view(ticket_number)
                 if ticket_details:
-                    self.view_ticket_details(ticket_section, ticket_details)
+                    ticket_data = ticket_details['ticket_data']
+                    ticket_num_val = ticket_data.get('id', '')
+                    if ticket_num_val and '_' in ticket_num_val:
+                        numeric_id = ticket_num_val.split('_', 1)[-1]
+                    else:
+                        numeric_id = ticket_num_val
+
+                    view_ticket = ViewTicket(numeric_id)
+                    view_ticket.setup_ui(ticket_section, ticket_details)
+
+                    ticket_section['view_ticket'] = view_ticket
+
                     details_container.setVisible(True)
                     ticket_section['view_btn'].setText("Hide")
-                    # self.status_label.setText(f"Displaying details for ticket {ticket_number}")
+                    log.info(f"Displaying details for ticket {ticket_number}")
                 else:
-                    # self.status_label.setText(f"No details found for ticket {ticket_number}")
-                    print("err") # delete when fixed
+                    log.error(f"No details found for ticket {ticket_number}")
             else:
                 details_container.setVisible(False)
                 ticket_section['view_btn'].setText("View")
-                # self.status_label.setText(f"Hidden details for ticket {ticket_number}")
+                log.info(f"Hidden details for ticket {ticket_number}")
 
         except Exception as e:
             log.error(f"Error in on_view_clicked: {e}")
-            # self.status_label.setText("Error loading ticket details")
 
     def view(self, ticket_number):
+        """
+        :Purpose: pulls a consignment's data from the db and maps it for display
+        :Param: ticket_number - the ticket number
+        :Returns: ticket data
+        :Author(s): Joe Lee
+        """
         try:
-            consignments_container = self.db_connection.connect("Consignments")
-
-            query = "SELECT * FROM c WHERE c.ticket_number = @ticket_number"
-
-            parameters = [
-                {"name": "@ticket_number", "value": int(ticket_number)}
-            ]
-
-            ticket_results = list(consignments_container.query_items(
-                query=query,
-                parameters=parameters,
-                enable_cross_partition_query=True
-            ))
-
-            if not ticket_results:
+            consignment_data = get_item("Consignments", "consignment", ticket_number)
+            if consignment_data is None:
+                log.error(f"Consignment with ticket number {ticket_number} not found.")
                 return None
 
-            ticket_data = ticket_results[0]
-
-            product_ids = ticket_data.get('product_ids', [])
+            product_ids = consignment_data.get('product_ids', [])
             products = []
-
-            if product_ids:
-                entities_container = self.db_connection.connect("Entities")
-
-                for product_id in product_ids:
-                    product_query = "SELECT * FROM c WHERE c.id = @product_id AND c.type = 'product'"
-
-                    product_parameters = [
-                        {"name": "@product_id", "value": product_id}
-                    ]
-
-                    product_results = list(entities_container.query_items(
-                        query=product_query,
-                        parameters=product_parameters,
-                        enable_cross_partition_query=True
-                    ))
-
-                    if product_results:
-                        product_data = product_results[0]
-                        products.append({
-                            'product_id': product_id,
-                            'product_name': product_data.get('product_name', 'N/A'),
-                            'description': product_data.get('description', ''),
-                            'price': product_data.get('price', 0),
-                            'quantity': product_data.get('quantity', 0)
-                        })
+            for product_id in product_ids:
+                product_data = get_item("Entities", "product", product_id)
+                if product_data:
+                    products.append({
+                        'product_id': product_id,
+                        'product_name': product_data.get('product_name', 'N/A'),
+                        'description': product_data.get('description', ''),
+                        'price': product_data.get('price', 0),
+                        'quantity': product_data.get('quantity', 0)
+                    })
+                else:
+                    log.warning(f"Product {product_id} not found in Entities.")
 
             return {
-                'ticket_data': ticket_data,
+                'ticket_data': consignment_data,
                 'products': products
             }
 
         except Exception as e:
             log.error(f"Error fetching ticket details: {e}")
             return None
-
-    def view_ticket_details(self, ticket_section, ticket_details):
-        ViewTicket.view_ticket_details(ticket_section, ticket_details)

@@ -39,8 +39,8 @@ class MainWindow(QWidget):
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
-        self.setGeometry(0, 0, 1100, 762)
-        self.setMinimumSize(1100, 762)
+        self.setGeometry(0, 0, 1100, 770)
+        self.setMinimumSize(1100, 770)
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -75,10 +75,10 @@ class MainWindow(QWidget):
         status_section.addStretch()
 
         layout.addWidget(status_container)
-        logout_button = QPushButton("Logout")
-        logout_button.setObjectName("logout_button")
-        logout_button.clicked.connect(self.logout)
-        title_layout.addWidget(logout_button)
+        self.logout_button = QPushButton("Logout")
+        self.logout_button.setObjectName("logout_button")
+        self.logout_button.clicked.connect(self.logout)
+        title_layout.addWidget(self.logout_button)
 
     def setup_tabs(self):
         self.tabs = QTabWidget()
@@ -114,17 +114,7 @@ class MainWindow(QWidget):
           - close this main window
 
         For now, it safely handles the case where LoginWindow doesn't exist yet.
+        Author(s): Kyle Valdez, Joe Lee
         """
-        try:
-            # Adjust the import path to wherever your LoginWindow will live
-            from ui.core.login_window import LoginWindow
-
-            self.login_window = LoginWindow()
-            self.login_window.show()
-            print("Logged out: returning to login screen.")
-        except ImportError:
-            # Fallback behavior until login is implemented
-            print("LoginWindow not implemented yet. Closing application on logout.")
-
-        # Close the main window either way
+        self.logout_requested = True
         self.close()

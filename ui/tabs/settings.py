@@ -1,5 +1,5 @@
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QComboBox
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -7,21 +7,35 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QMessageBox
+
+import json
 
 from ui.core.theme_manager import ThemeManager
 from ui.tabs.base import BaseTab
-from services.message_bus import status_bar_instance
+from ui.prompts.login import LoginScreen
+from ui.prompts.password_dialog import PasswordChangeDialog
+from src.user import current_user
+
+from services.get_property import get_property
+from services.update_property import update_property
+from src.core.hash_password import hash_password
+from utils.core.json_helpers import json_to_dict
+
+import utils.logger.logger as log
 
 class SettingsTab(BaseTab):
-    def __init__(self, api_handler):
+    def __init__(self, api_handler, main_window=None):
         self.save_btn = None
         self.load_btn = None
-        # self.status_label = None
         self.theme_dropdown_menu = None
         self.ticket_counter = None
         self.tickets_layout = None
-
+        self.current_username_input = None
+        self.change_username_btn = None
         self.theme_manager = ThemeManager()
+        self.main_window = main_window
 
         super().__init__(api_handler, "settings")
 
@@ -58,7 +72,9 @@ class SettingsTab(BaseTab):
         layout.addLayout(theme_layout)
 
         # HR Line
-        hr0 = QLabel()
+        hr0 = QFrame()
+        hr0.setFrameShape(QFrame.Shape.HLine)
+        hr0.setFrameShadow(QFrame.Shadow.Sunken)
         hr0.setObjectName("hr")
         layout.addWidget(hr0)
 
@@ -67,17 +83,20 @@ class SettingsTab(BaseTab):
         user_title.setObjectName("post_title")
         user_layout_line_0.addWidget(user_title)
 
-        current_username_input = QLineEdit("test")
-        current_username_input.setReadOnly(True)
-        user_layout_line_0.addWidget(current_username_input)
+        self.current_username_input = QLineEdit("test")
+        self.current_username_input.setText(current_user.get_username() or "Not logged in")
+        self.current_username_input.setReadOnly(True)
+        user_layout_line_0.addWidget(self.current_username_input)
 
-        change_username_btn = QPushButton("Change Username")
-        user_layout_line_0.addWidget(change_username_btn)
+        self.change_username_btn = QPushButton("Change Username")
+        user_layout_line_0.addWidget(self.change_username_btn)
 
         layout.addLayout(user_layout_line_0)
 
         # HR Line
-        hr1 = QLabel()
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
@@ -86,123 +105,455 @@ class SettingsTab(BaseTab):
         pw_title.setObjectName("post_title")
         pw_layout_line_0.addWidget(pw_title)
 
-        view_pw_btn = QPushButton("View Password")
-        pw_layout_line_0.addWidget(view_pw_btn)
-        change_pw_btn = QPushButton("Change Password")
-        pw_layout_line_0.addWidget(change_pw_btn)
+        self.change_pw_btn = QPushButton("Change Password")
+        pw_layout_line_0.addWidget(self.change_pw_btn)
 
         layout.addLayout(pw_layout_line_0)
 
         # HR Line
-        hr2 = QLabel()
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         layout.addWidget(hr2)
 
-        qa_layout_line_0 = QHBoxLayout()
-        qa_title = QLabel("Security Questions:")
-        qa_title.setObjectName("post_title")
-        qa_layout_line_0.addWidget(qa_title)
+        q_line = QHBoxLayout()
+        qa_layout_line_0 = QLabel("Security Questions:")
+        qa_layout_line_0.setObjectName("post_title")
+        q_line.addWidget(qa_layout_line_0)
 
-        layout.addLayout(qa_layout_line_0)
+        self.change_qa_btn = QPushButton("Change Q/A")
+        q_line.addWidget(self.change_qa_btn)
 
-        qa_layout_line_1 = QHBoxLayout()
-        qa_1 = QLabel("Question 1:")
-        qa_1_input = QLineEdit()
-        qa_1_input.setReadOnly(True)
-        qa_layout_line_1.addWidget(qa_1)
-        qa_layout_line_1.addWidget(qa_1_input)
-
-        layout.addLayout(qa_layout_line_1)
-
-        qa_layout_line_2 = QHBoxLayout()
-        qa_2 = QLabel("Answer 1:")
-        qa_2_input = QLineEdit()
-        qa_2_input.setReadOnly(True)
-        qa_layout_line_2.addWidget(qa_2)
-        qa_layout_line_2.addWidget(qa_2_input)
-
-        layout.addLayout(qa_layout_line_2)
-
-        qa_layout_line_3 = QHBoxLayout()
-        qa_3 = QLabel("Question 2:")
-        qa_3_input = QLineEdit()
-        qa_3_input.setReadOnly(True)
-        qa_layout_line_3.addWidget(qa_3)
-        qa_layout_line_3.addWidget(qa_3_input)
-
-        layout.addLayout(qa_layout_line_3)
-
-        qa_layout_line_4 = QHBoxLayout()
-        qa_4 = QLabel("Answer 2:")
-        qa_4_input = QLineEdit()
-        qa_4_input.setReadOnly(True)
-        qa_layout_line_4.addWidget(qa_4)
-        qa_layout_line_4.addWidget(qa_4_input)
-
-        layout.addLayout(qa_layout_line_4)
-
-        q_line_5 = QHBoxLayout()
-        view_qa_btn = QPushButton("View Questions")
-        q_line_5.addWidget(view_qa_btn)
-        change_qa_btn = QPushButton("Change Questions")
-        q_line_5.addWidget(change_qa_btn)
-
-        layout.addLayout(q_line_5)
+        layout.addLayout(q_line)
 
         # Push buttons to the bottom
         layout.addStretch()
 
         # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
+        hr3 = QFrame()
+        hr3.setFrameShape(QFrame.Shape.HLine)
+        hr3.setFrameShadow(QFrame.Shadow.Sunken)
         hr3.setObjectName("hr")
         layout.addWidget(hr3)
-
-        btn_layout = QHBoxLayout()
-        self.load_btn = QPushButton("Load Settings")
-        layout.addWidget(self.load_btn)
-        btn_layout.addWidget(self.load_btn)
-
-        btn_layout.addStretch()
-
-        self.save_btn = QPushButton("Save Settings")
-        layout.addWidget(self.save_btn)
-        btn_layout.addWidget(self.save_btn)
-        self.save_btn.clicked.connect(self.test_bus_communication)
-
-        layout.addLayout(btn_layout)
-
-        # HR Line to separate buttons at the bottom
-        hr4 = QLabel()
-        hr4.setObjectName("hr")
-        layout.addWidget(hr4)
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
 
+        btn_layout = QHBoxLayout()
+        self.load_btn = QPushButton("Load Settings")
+        btn_layout.addWidget(self.load_btn)
+
+        self.save_btn = QPushButton("Save Settings")
+        btn_layout.addWidget(self.save_btn)
+
+        main_layout.addLayout(btn_layout)
+
         self.setup_button_connections()
+        self.load_user_preferences(silent=True)
 
     def on_theme_changed(self, theme_name):
         self.theme_manager.apply_theme(theme_name, self)
-        # self.status_label.setText(f"Changed theme to {theme_name}")
+        log.info(f"Changed theme to {theme_name}")
 
     def setup_button_connections(self):
         """
         :purpose: links buttons with methods
         :return: None
-        :author(s): Joe Lee
+        :author(s): Joe Lee, Alexander Bubienko
         """
-        # self.update_btn.clicked.connect(self.fetch_on_clicked)
-        # self.view_btn.clicked.connect()
-        # self.excel_btn.clicked.connect()
-        # self.pdf_btn.clicked.connect()
-        # self.print_btn.clicked.connect()
+        self.change_username_btn.clicked.connect(self.on_change_username_clicked)
+        self.change_pw_btn.clicked.connect(self.on_change_password_clicked)
+        # self.change_qa_btn.clicked.connect(self.on_change_qa_clicked)
+        self.load_btn.clicked.connect(self.load_user_preferences)
+        self.save_btn.clicked.connect(self.save_user_preferences)
 
-    def click_on_change_pw(self):
-        pass
-        # todo: add new pw line
-        # todo: change current pw field to READONLY=FALSE
-    
-    def test_bus_communication(self):
-        status_bar_instance.send_message(f"Hello from settings tab")
+    def on_change_password_clicked(self):
+        """
+        :purpose: Handle password change button click
+        :author(s): Alexander Bubienko
+        """
+        self.verify_credentials_for_password_change()
+
+
+    def verify_credentials_for_password_change(self):
+        """
+        :purpose: Show login dialog to verify user credentials before allowing password change
+        :author(s): Alexander Bubienko
+        """
+        login_dialog = LoginScreen(self.theme_manager, self)
+        login_dialog.setWindowTitle("Verify Credentials")
+        
+        if login_dialog.exec() == QDialog.DialogCode.Accepted:
+            # Credentials verified - open password change dialog
+            self.show_password_change_dialog()
+        else:
+            QMessageBox.warning(self, "Verification Failed", 
+                            "Invalid credentials. Password cannot be changed.")
+            log.warning("Password change verification failed")
+
+    def show_password_change_dialog(self):
+        """
+        :purpose: Show dialog to enter and confirm new password
+        :author(s): Alexander Bubienko
+        """
+        dialog = PasswordChangeDialog(self.theme_manager, self)
+        
+        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.new_password:
+            self.perform_password_update(dialog.new_password)
+
+    def perform_password_update(self, new_password):
+        """
+        :purpose: Update the password in the database using update_property.py
+        :author(s): Alexander Bubienko
+        """
+        username = current_user.get_username()
+        
+        if not username:
+            QMessageBox.critical(self, "Error", "No user logged in")
+            return
+        
+        try:
+            # Hash the new password
+            hashed_password = hash_password(new_password)
+            
+            if hashed_password == "-1":
+                QMessageBox.critical(self, "Error", "Failed to hash password")
+                return
+            
+            # Get user ID
+            user_id = self.get_user_id_from_username(username)
+            
+            if not user_id:
+                QMessageBox.critical(self, "Error", "Could not determine user ID")
+                return
+            
+            # Update password in database
+            result = update_property(
+                container_name='Entities',
+                entity_type='user',
+                entity_id=str(user_id),
+                property_name='password',
+                property_value=hashed_password
+            )
+            
+            if result == 0:  # Success
+                log.info(f"Password successfully changed for user: {username}")
+                
+                QMessageBox.information(self, "Success", 
+                                    "Password changed successfully. You will now be logged out.")
+                
+                # Log out the user
+                if hasattr(self, 'main_window') and self.main_window:
+                    self.main_window.logout()
+                else:
+                    parent = self.parent()
+                    while parent:
+                        if hasattr(parent, 'logout'):
+                            parent.logout()
+                            break
+                        parent = parent.parent()
+            else:
+                QMessageBox.critical(self, "Error", "Failed to update password in database")
+                log.error(f"Password update failed with result: {result}")
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+            log.error(f"Password update exception: {e}")
+
+    def on_change_password_clicked(self):
+        """
+        :purpose: Handle password change button click
+        :author(s): Alexander Bubienko
+        """
+        self.verify_credentials_for_password_change()
+
+    def on_change_username_clicked(self):
+        """
+        :purpose: Handle username change button clicks (toggles between Change/Update modes)
+        :author(s): Alexander Bubienko
+        """
+        if self.current_username_input.isReadOnly():
+            # Currently in "Change Username" mode - verify credentials first
+            self.verify_credentials_for_username_change()
+        else:
+            # Currently in "Update" mode - perform the username update
+            self.perform_username_update()
+
+    def verify_credentials_for_username_change(self):
+        """
+        :purpose: Show login dialog to verify user credentials before allowing username change
+        :author(s): Alexander Bubienko
+        """
+        # Create a login dialog for verification
+        login_dialog = LoginScreen(self.theme_manager, self)
+        
+        # Modify the dialog appearance to show it's for verification
+        login_dialog.setWindowTitle("Verify Credentials")
+        
+        # Show the dialog and check if authentication succeeded
+        if login_dialog.exec() == QDialog.DialogCode.Accepted:
+            # Credentials verified - enable username editing
+            self.current_username_input.setReadOnly(False)
+            self.current_username_input.setFocus()
+            self.current_username_input.selectAll()
+            self.change_username_btn.setText("Update")
+            log.info("Credentials verified, username edit enabled")
+        else:
+            # Verification failed
+            QMessageBox.warning(self, "Verification Failed", 
+                               "Invalid credentials. Username cannot be changed.")
+            log.warning("Username change verification failed")
+
+    def perform_username_update(self):
+        """
+        :purpose: Update the username in the database using update_property.py
+        :author(s): Alexander Bubienko
+        """
+        new_username = self.current_username_input.text().strip()
+        old_username = current_user.get_username()
+        
+        # Validate new username
+        if not new_username:
+            QMessageBox.warning(self, "Invalid Input", "Username cannot be empty")
+            return
+            
+        if new_username == old_username:
+            QMessageBox.information(self, "No Change", "New username is the same as current username")
+            # Reset to read-only mode
+            self.cancel_username_update()
+            return
+        
+        confirm = QMessageBox.question(
+            self, 
+            "Confirm Username Change",
+            f"Are you sure you want to change your username from '{old_username}' to '{new_username}'?\n\n"
+            "You will be logged out after this change.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            user_id = self.get_user_id_from_username(old_username)
+            
+            if not user_id:
+                QMessageBox.critical(self, "Error", "Could not determine user ID")
+                return
+            
+            # Use update_property to change the username
+            result = update_property(
+                container_name='Entities',
+                entity_type='user',
+                entity_id=str(user_id),
+                property_name='username',
+                property_value=new_username
+            )
+            
+            if result == 0:  # Success
+                log.info(f"Username successfully changed from {old_username} to {new_username}")
+                
+                # Update the user class with new username
+                current_user.set_user(new_username, current_user.is_admin())
+                
+                QMessageBox.information(self, "Success", 
+                                    "Username changed successfully. You will now be logged out.")
+                
+                if hasattr(self, 'main_window') and self.main_window:
+                    self.main_window.logout()
+                else:
+                    # If no main_window reference, try to find it
+                    parent = self.parent()
+                    while parent:
+                        if hasattr(parent, 'logout'):
+                            parent.logout()
+                            break
+                        parent = parent.parent()
+                
+            else:
+                QMessageBox.critical(self, "Error", "Failed to update username in database")
+                log.error(f"Username update failed with result: {result}")
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+            log.error(f"Username update exception: {e}")
+
+    def get_user_id_from_username(self, username):
+        """
+        :purpose: Helper method to get user ID from username
+        :author(s): Alexander Bubienko
+        """
+        try:
+            from services.connect_database import db_connection
+            container = db_connection.connect('Entities')
+            
+            # Query for user by username
+            query = f"SELECT * FROM c WHERE c.username = '{username}' AND c.type = 'user'"
+            users = list(container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            
+            if users:
+                return users[0].get('user_id') or users[0].get('id')
+            return None
+        except Exception as e:
+            log.error(f"Error getting user ID: {e}")
+            return None
+
+    def cancel_username_update(self):
+        """
+        :purpose: Cancel username update and return to read-only state
+        :author(s): Alexander Bubienko
+        """
+        self.current_username_input.setText(current_user.get_username() or "")
+        self.current_username_input.setReadOnly(True)
+        self.change_username_btn.setText("Change Username")
+
+    def load_user_preferences(self, silent=False):
+        """
+        Purpose: loads the user's preferences from DB, defaults to Super if not found
+        Author(s): Joe Lee
+        """
+        user_id = self._get_current_user_id()
+        if user_id is None:
+            return
+
+        user_prefs = self._get_user_preferences(user_id)
+        if user_prefs is None:
+            return
+
+        preferences = json_to_dict(user_prefs)
+        self._apply_theme_from_preferences(preferences)
+
+        if not silent:
+            QMessageBox.information(self, "Settings Loaded", "Preferences loaded successfully.")
+
+    def _get_current_user_id(self):
+        """
+        :Purpose: Wraps get_user_id_from_username to retrieve current user ID
+        :Return: User ID
+        :Author(s): Joe Lee
+        """
+        username = current_user.get_username()
+        if not username:
+            QMessageBox.warning(self, "Not Logged In", "No user is currently logged in.")
+            return None
+
+        user_id = self.get_user_id_from_username(username)
+        if not user_id:
+            QMessageBox.critical(self, "Error", "Could not determine user ID.")
+            return None
+
+        return user_id
+
+    def _get_user_preferences(self, user_id):
+        """
+        :Purpose: Wraps get_property to retrieve user's preferences json
+        :param: user_id: User ID
+        :Return: user pref
+        """
+        try:
+            preferences_json = get_property(
+                container_name='Entities',
+                attribute='preferences',
+                entity_type='user',
+                id_value=str(user_id)
+            )
+            # get_property returns "-1" on error, otherwise the string value
+            if preferences_json == "-1":
+                log.warning(f"No preferences found for user ID {user_id}; using empty object.")
+                return "{}"
+            return preferences_json
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to fetch preferences: {str(e)}")
+            log.error(f"Error in _fetch_preferences_json: {e}")
+            return None
+
+    @staticmethod
+    def json_to_dict(json_string):
+        """
+        :Purpose: parse a json string and converts it into a dictionary
+        :param: preferences_json: json string to parse
+        :Return: dictionary of input json string
+        :Author(s): Joe Lee
+        """
+        try:
+            return json.loads(json_string)
+        except json.JSONDecodeError:
+            log.error(f"Invalid JSON string: {json_string}. Resetting to empty.")
+            return {}
+
+    def _apply_theme_from_preferences(self, preferences):
+        """
+        :Purpose: Applies theme from preferences
+        :param: preferences: preferences dictionary
+        :Author(s): Joe Lee
+        """
+        theme = preferences.get('theme')
+        if theme and theme in self.theme_manager.get_available_themes():
+            self.theme_dropdown_menu.blockSignals(True)
+            self.theme_dropdown_menu.setCurrentText(theme)
+            self.theme_dropdown_menu.blockSignals(False)
+            self.theme_manager.apply_theme(theme, self)
+            log.info(f"Applied theme '{theme}' from preferences.")
+        else:
+            log.info("No valid theme preference found. Applying default theme.")
+            self.theme_dropdown_menu.blockSignals(True)
+            self.theme_dropdown_menu.setCurrentText("Super")
+            self.theme_dropdown_menu.blockSignals(False)
+            self.theme_manager.apply_theme(theme, self)
+
+    def save_user_preferences(self):
+        """
+        :Purpose: Saves user preferences to database
+        :Author(s): Joe Lee
+        """
+        user_id = self._get_current_user_id()
+        if user_id is None:
+            return
+
+        preferences_json = self._build_preferences_json()
+        if self._save_preferences_to_db(user_id, preferences_json):
+            QMessageBox.information(self, "Success", "Settings saved successfully.")
+        else:
+            QMessageBox.critical(self, "Error", "Failed to save settings to database.")
+
+    def _build_preferences_json(self):
+        """
+        :Purpose: Builds preferences json string
+        :Author(s): Joe Lee
+        """
+        preferences = {
+            'theme': self.theme_dropdown_menu.currentText()
+            # place additional settings here
+        }
+        return json.dumps(preferences)
+
+    def _save_preferences_to_db(self, user_id, preferences_json):
+        """
+        :Purpose: wraps update_property to update preferences property of user item
+        :param: user_id: User ID
+        :param: preferences_json: json string to update
+        :Author(s): Joe Lee
+        """
+        try:
+            result = update_property(
+                container_name='Entities',
+                entity_type='user',
+                entity_id=str(user_id),
+                property_name='preferences',
+                property_value=preferences_json
+            )
+            if result == 0:
+                log.info(f"Preferences saved for user ID {user_id}: {preferences_json}")
+                return True
+            else:
+                log.error(f"Save preferences failed with result: {result}")
+                return False
+        except Exception as e:
+            log.error(f"Save preferences exception: {e}")
+            return False

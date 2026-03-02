@@ -1,5 +1,7 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QTabWidget, QComboBox
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QIntValidator
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
@@ -9,29 +11,30 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QMessageBox
 
-from services.connect_database import db_connection
-from ui.core.prompts import hash_security_question_answer
 from ui.tabs.base import BaseTab
+from src import SPOT
 
+from services.get_max_value import get_max_value
+from services.insert_item import insert_item
+from ui.core.prompts import hash_security_question_answer
 from src.core.hash_password import hash_password
-from ui.core import prompts
-
-from services import insert_item
-
-from services import user_insert_counter
+import utils.logger.logger as log
+from services.message_bus import status_bar_instance
 
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
-        self.tickets_section = []
+        self.new_user_data = None
+        self.users_layout = None
+        self.create_btn = None
+        self.users_section = []
         self.db_connection = db_connection
         super().__init__(api_handler, "users")
 
-        self.questionList = [
-            "What is your mother's maiden name?",
-            "What color was your first car?",
-            "Who was your best friend in the third grade?"
-            # todo: add 2 more questions
-        ]
+        self.questionList = SPOT.QUESTIONS_LIST
+
+        self.search_timer = QTimer()
+        self.search_timer.setSingleShot(True)
+        self.search_timer.timeout.connect(self.build_and_search)
 
     def setup_ui(self):
         """
@@ -45,50 +48,85 @@ class UsersTab(BaseTab):
         scroll_content = QWidget()
         layout = QVBoxLayout(scroll_content)
 
-        # Line 0 Creation
         header_section = QHBoxLayout()
-
-        # Ticket Header
-        title = QLabel("View Users")
+        title = QLabel("View Users")  # Subtab header
         title.setObjectName("post_title")
         header_section.addWidget(title)
+        header_section.addStretch()  # Push to the left
 
-        # Push to the left
-        header_section.addStretch()
+        self.create_btn = QPushButton("Create New User")
+        header_section.addWidget(self.create_btn)
 
-        # Ends creation and adds header_section to window
-        layout.addLayout(header_section)
+        layout.addLayout(header_section)  # Ends creation and adds header_section to window
 
-        # HR Line between Vendor and Tickets sections
-        hr1 = QLabel()
+        hr1 = QLabel()  # HR Line to clear header
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
-        # Ticket Line 1: Tickets sections container
-        self.tickets_layout = QVBoxLayout()
+        search_section_row_1 = QHBoxLayout()
 
-        layout.addLayout(self.tickets_layout)
+        search_section_row_1.addWidget(QLabel("UserID:"))
+        self.user_id_input = QLineEdit()
+        self.user_id_input.setPlaceholderText("U ID")
+        self.user_id_input.setMaxLength(30)
+        self.user_id_input.setFixedWidth(55)
+        self.user_id_input.setValidator(QIntValidator(0, 9999, self))
+        self.user_id_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.user_id_input)
 
-        tickets_section = QHBoxLayout()
+        search_section_row_1.addWidget(QLabel("Username:"))
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Username")
+        self.username_input.setMaxLength(30)
+        self.username_input.setFixedWidth(265)
+        self.username_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.username_input)
 
-        layout.addLayout(tickets_section)
+        search_section_row_1.addStretch()
+        layout.addLayout(search_section_row_1)
+
+        search_section_row_2 = QHBoxLayout()
+
+        search_section_row_2.addWidget(QLabel("First Name:"))
+        self.first_name_input = QLineEdit()
+        self.first_name_input.setPlaceholderText("First Name")
+        self.first_name_input.setMaxLength(30)
+        self.first_name_input.setFixedWidth(265)
+        self.first_name_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_2.addWidget(self.first_name_input)
+
+        search_section_row_2.addWidget(QLabel("Last Name:"))
+        self.last_name_input = QLineEdit()
+        self.last_name_input.setPlaceholderText("Last Name")
+        self.last_name_input.setMaxLength(30)
+        self.last_name_input.setFixedWidth(265)
+        self.last_name_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_2.addWidget(self.last_name_input)
+
+        search_section_row_2.addStretch()
+        layout.addLayout(search_section_row_2)
+
+        search_section_row_3 = QHBoxLayout()
+        self.clear_btn = QPushButton("Clear")
+        self.clear_btn.setFixedWidth(200)
+        search_section_row_3.addWidget(self.clear_btn)
+
+        search_section_row_3.addStretch()
+        self.search_btn = QPushButton("Search")
+        self.search_btn.setFixedWidth(200)
+        search_section_row_3.addWidget(self.search_btn)
+        layout.addLayout(search_section_row_3)
+
+        hr2 = QLabel()  # HR Line to clear header
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
+
+        self.users_layout = QVBoxLayout()  # Users container
+        layout.addLayout(self.users_layout)
+
+        users_section = QHBoxLayout()
+        layout.addLayout(users_section)
         layout.addStretch()
-
-        vendor_section_row_3 = QHBoxLayout()
-        self.create_btn = QPushButton("Create New User")
-        vendor_section_row_3.addWidget(self.create_btn)
-        self.create_btn.clicked.connect(self.create_new_user_prompt)
-
-        vendor_section_row_3.addStretch()
-
-        self.update_btn = QPushButton("Update")
-        vendor_section_row_3.addWidget(self.update_btn)
-        layout.addLayout(vendor_section_row_3)
-
-        # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
-        hr3.setObjectName("hr")
-        layout.addWidget(hr3)
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
@@ -97,62 +135,172 @@ class UsersTab(BaseTab):
 
         self.setup_button_connections()
 
-    def add_user_section(self):
+    def clear(self):
         """
-        :purpose: adds ticket lines
+        :purpose: clears all input fields and fetched items
+        :author(s): Joe Lee, Colin Henderson
+        """
+        self.search_timer.stop()
+        self.remove_user_section()
+        fields = [
+            self.user_id_input,
+            self.username_input,
+            self.first_name_input,
+            self.last_name_input,
+        ]
+        for field in fields:
+            field.blockSignals(True)
+            field.clear()
+            field.setReadOnly(False)
+            field.setObjectName("DEFAULT")
+            field.blockSignals(False)
+            field.style().unpolish(field)
+            field.style().polish(field)
+
+        status_bar_instance.send_message("Query and Results cleared")
+
+    def on_search_input_changed(self):
+        """
+        :Purpose: forces a wait
+        :Author(s): Joe Lee
+        """
+        self.search_timer.start(300)
+
+    def build_and_search(self):
+        """
+        :Purpose: Gathers properties to build a query then calls query_db
+        :Author(s): Joe Lee
+        """
+        self.remove_user_section()
+
+        conditions = ["c.type = 'user'"]
+        properties = []
+
+        def add_property(props, value, operator="="):
+            """
+            :Purpose: appends query conditions
+            :Author(s): Joe Lee
+            """
+            if value:
+                prop_name = props
+                if operator == "CONTAINS":
+                    conditions.append(f"CONTAINS(LOWER(c.{props}), LOWER(@{prop_name}))")
+                else:
+                    conditions.append(f"c.{props} {operator} @{prop_name}")
+                properties.append({"name": f"@{prop_name}", "value": value})
+
+        user_id = self.user_id_input.text().strip()
+        if user_id:
+            try:
+                user_id_int = int(user_id)
+                add_property("user_id", user_id_int, "=")
+            except ValueError:
+                pass
+
+        username = self.username_input.text().strip()
+        if username:
+            add_property("username", username, "CONTAINS")
+
+        first_name = self.first_name_input.text().strip()
+        if first_name:
+            add_property("first_name", first_name, "CONTAINS")
+
+        last_name = self.last_name_input.text().strip()
+        if last_name:
+            add_property("last_name", last_name, "CONTAINS")
+
+        if len(conditions) == 1:
+            self.fetch()
+            return
+
+        where_clause = " AND ".join(conditions)
+        search_query = f"SELECT * FROM c WHERE {where_clause}"
+        self.query_db(search_query, properties)
+
+    def query_db(self, query: str, properties: list = None):
+        """
+        :Purpose: Queries against the database
+        :Author(s): Joe Lee
+        """
+        self.remove_user_section()
+        try:
+            container = self.db_connection.connect("Entities")
+            results = list(container.query_items(
+                query=query,
+                parameters=properties if properties else [],
+                enable_cross_partition_query=True
+            ))
+
+            users = []
+            for item in results:
+                users.append({
+                    'user_id': item.get('user_id'),
+                    'username': item.get('username', ''),
+                    'first_name': item.get('first_name', ''),
+                    'last_name': item.get('last_name', '')
+                })
+
+            users.sort(key=lambda v: int(v['user_id']))
+
+            for user in users:
+                self.add_user_section(user)
+
+            if not users:
+                status_bar_instance.send_message("No users found")
+            else:
+                status_bar_instance.send_message(f"Found {len(users)} user(s)")
+
+        except Exception as e:
+            log.error(f"Error executing query: {e}")
+            status_bar_instance.send_message("Query failed")
+
+    def fetch(self):
+        """
+        :purpose: fetches all users from Entities container
+        :return: list of users
+        :author(s): Joe Lee
+        """
+        get_all_query = "SELECT * FROM c WHERE c.type = 'user'"
+        self.query_db(get_all_query)
+
+    def add_user_section(self, user_data):
+        """
+        :purpose: adds user items
         :return: None
         :author(s): Joe Lee
         """
-        tickets_section = {}
-
-        # Ticket section container
+        # Users section container
         section_widget = QWidget()
         section_layout = QVBoxLayout(section_widget)
         section_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Line 1: ticket_num + datetime + status + buttons
         line1_layout = QHBoxLayout()
-
-        # user id
         line1_layout.addWidget(QLabel("UserID:"))
         user_id = QLineEdit()
+        user_id.setText(str(user_data['user_id']))
         user_id.setObjectName("READ_ONLY")
-        user_id.setPlaceholderText("30 CHAR")
         user_id.setReadOnly(True)
         user_id.setMaxLength(30)
         user_id.setFixedWidth(55)
         line1_layout.addWidget(user_id)
 
-        # username
         line1_layout.addWidget(QLabel("Username:"))
         username = QLineEdit()
+        username.setText(str(user_data['username']))
         username.setObjectName("READ_ONLY")
-        username.setPlaceholderText("30 CHAR")
         username.setReadOnly(True)
         username.setMaxLength(30)
         username.setFixedWidth(265)
         line1_layout.addWidget(username)
 
         line1_layout.addStretch()
-
-        # last consignment
-        line1_layout.addWidget(QLabel("Last Consignment:"))
-        last_con = QLineEdit()
-        last_con.setObjectName("READ_ONLY")
-        last_con.setPlaceholderText("datetime")
-        last_con.setReadOnly(True)
-        last_con.setMaxLength(30)
-        last_con.setFixedWidth(190)
-        line1_layout.addWidget(last_con)
-
         section_layout.addLayout(line1_layout)
 
         line2_layout = QHBoxLayout()
-        # first name
         line2_layout.addWidget(QLabel("First Name:"))
         first_name = QLineEdit()
+        first_name.setText(str(user_data['first_name']))
         first_name.setObjectName("READ_ONLY")
-        first_name.setPlaceholderText("30 CHAR")
         first_name.setReadOnly(True)
         first_name.setMaxLength(30)
         first_name.setFixedWidth(265)
@@ -161,8 +309,8 @@ class UsersTab(BaseTab):
         # last name
         line2_layout.addWidget(QLabel("Last Name:"))
         last_name = QLineEdit()
+        last_name.setText(str(user_data['last_name']))
         last_name.setObjectName("READ_ONLY")
-        last_name.setPlaceholderText("OPEN")
         last_name.setReadOnly(True)
         last_name.setMaxLength(30)
         last_name.setFixedWidth(265)
@@ -172,45 +320,43 @@ class UsersTab(BaseTab):
         section_layout.addLayout(line2_layout)
 
         line3_layout = QHBoxLayout()
-        # btns
-        self.view_btn = QPushButton("View")
-        line3_layout.addWidget(self.view_btn)
-        self.edit_btn = QPushButton("Edit")
-        self.edit_btn.setObjectName("red_btn")
-        line3_layout.addWidget(self.edit_btn)
-        self.del_btn = QPushButton("Delete")
-        self.del_btn.setObjectName("red_btn")
-        line3_layout.addWidget(self.del_btn)
+
+        view_btn = QPushButton("View")
+        line3_layout.addWidget(view_btn)
+
+        edit_btn = QPushButton("Edit")
+        edit_btn.setObjectName("red_btn")
+        line3_layout.addWidget(edit_btn)
+
+        del_btn = QPushButton("Delete")
+        del_btn.setObjectName("red_btn")
+        line3_layout.addWidget(del_btn)
 
         section_layout.addLayout(line3_layout)
 
-        # HR Line between Vendor and Product sections
-        hr = QLabel()
+        hr = QLabel() # HR Line between entries
         hr.setObjectName("hr")
         section_layout.addWidget(hr)
 
         # Add to container
-        self.tickets_layout.addWidget(section_widget)
-        self.tickets_section.append(tickets_section)
+        self.users_layout.addWidget(section_widget)
 
-    def remove_ticket_section(self):
+    def remove_user_section(self):
         """
-        :purpose: removes and clears all ticket sections
-        :return: None
+        :purpose: clears subtab widget that holds vendor items
         :author(s): Joe Lee
         """
         # Remove all widgets from the layout
-        for i in reversed(range(self.tickets_layout.count())):
-            widget = self.tickets_layout.itemAt(i).widget()
+        for i in reversed(range(self.users_layout.count())):
+            widget = self.users_layout.itemAt(i).widget()
             if widget:
-                self.tickets_layout.removeWidget(widget)
+                self.users_layout.removeWidget(widget)
                 widget.deleteLater()
 
-        # Clear the tickets_section list
-        self.tickets_section.clear()
+        self.users_section.clear()
 
         # Update status
-        # self.status_label.setText("All tickets cleared")
+        status_bar_instance.send_message("All users cleared")
 
     def fetch_on_clicked(self):
         """
@@ -218,49 +364,12 @@ class UsersTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        self.remove_ticket_section()
         users = self.fetch()
         if not users:
-            # self.status_label.setText("No users found")
-            print("err") # delete when fixed
+            log.error("No users found")
         else:
             for user in users:
-                self.add_user_section()
-
-    def fetch(self):
-        """
-        :purpose: fetches all users from Entities container
-        :return: list of users
-        :author(s): Joe Lee
-        """
-        try:
-            container = self.db_connection.connect("Entities")
-
-            query = """
-            SELECT c.id, c.username, c.first_name, c.last_name
-            FROM c
-            WHERE c.type = 'user'
-            ORDER BY c.username ASC
-            """
-
-            results = list(container.query_items(
-                query=query,
-                enable_cross_partition_query=True
-            ))
-
-            users = []
-            for item in results:
-                users.append({
-                    'user_id': item['id'],
-                    'username': item.get('username', ''),
-                    'first_name': item.get('first_name', ''),
-                    'last_name': item.get('last_name', '')
-                })
-            return users
-
-        except Exception as e:
-            print(f"Error fetching users: {e}")
-            return []
+                self.add_user_section(user)
 
     def create_new_user_prompt(self):
         '''
@@ -275,20 +384,23 @@ class UsersTab(BaseTab):
         # Fields
         layout.addWidget(QLabel("Username:"))
         username_input = QLineEdit()
+        username_input.setObjectName("username_input")
         layout.addWidget(username_input)
 
         layout.addWidget(QLabel("First Name:"))
         first_name_input = QLineEdit()
+        first_name_input.setObjectName("first_name_input")
         layout.addWidget(first_name_input)
 
         layout.addWidget(QLabel("Last Name:"))
         last_name_input = QLineEdit()
+        last_name_input.setObjectName("last_name_input")
         layout.addWidget(last_name_input)
 
         layout.addWidget(QLabel("Password:"))
         password_input = QLineEdit()
+        password_input.setObjectName("password_input")
         layout.addWidget(password_input)
-
 
         # Security Questions
         prompt_label = QLabel("Security Question 1:")
@@ -296,17 +408,16 @@ class UsersTab(BaseTab):
         layout.addWidget(prompt_label)
         question1 = QComboBox()
         question1.addItems(self.questionList)
-        question1.setObjectName("prompt_label")
+        question1.setObjectName("question1")
         question1.setCurrentIndex(-1)
         layout.addWidget(question1)
-
 
         res1_label = QLabel("Response for Question 1:")
         res1_label.setObjectName("label")
         layout.addWidget(res1_label)
         question1_response = QLineEdit()
         question1_response.setPlaceholderText("Question 1 Response")
-        question1_response.setObjectName("response_field")
+        question1_response.setObjectName("response1")
         question1_response.setMaxLength(255)
         layout.addWidget(question1_response)
 
@@ -320,7 +431,7 @@ class UsersTab(BaseTab):
         layout.addWidget(prompt_label)
         question2 = QComboBox()
         question2.addItems(self.questionList)
-        question2.setObjectName("prompt_label")
+        question2.setObjectName("question2")
         question2.setCurrentIndex(-1)
         layout.addWidget(question2)
 
@@ -329,12 +440,11 @@ class UsersTab(BaseTab):
         layout.addWidget(res2_label)
         question2_response = QLineEdit()
         question2_response.setPlaceholderText("Question 2 Response")
-        question2_response.setObjectName("response_field")
+        question2_response.setObjectName("response2")
         question2_response.setMaxLength(255)
         layout.addWidget(question2_response)
 
         layout.addStretch()
-
 
         # Buttons
         btn_layout = QHBoxLayout()
@@ -346,66 +456,13 @@ class UsersTab(BaseTab):
         layout.addLayout(btn_layout)
 
         # Connects
-        create_btn.clicked.connect(dialog.accept)
+        create_btn.clicked.connect(self.on_create_clicked(dialog))
         cancel_btn.clicked.connect(dialog.reject)
 
         # Execute dialog
         result = dialog.exec()
-
-
-        # Validate that both security questions are selected
-        if question1 == -1 or question2 == -1:
-            QMessageBox.warning(self, "Missing Information", "Please select both security questions.")
-            return
-
-        # Validate that security questions are different
-        if question1.currentIndex() == question2.currentIndex():
-            QMessageBox.warning(self, "Invalid Selection", "Please select two different security questions.")
-            return
-
-        # Validate that response fields have input
-        if question1_response.text() == "" or question2_response.text() == "":
-            QMessageBox.warning(self, "Missing Information", "Please provide responses for both security questions.")
-            return
-
-        q_dict = {
-            question1.currentText(): question1_response.text(),
-            question2.currentText(): question2_response.text()
-        }
-        #print(q_dict)
-        q_dict_hashed = hash_security_question_answer(q_dict)
-        q_keys = list(q_dict_hashed.keys())
-        q_values = list(q_dict_hashed.values())
-
-
-        user_id = user_insert_counter.get_next_user_id()
-
-        user_dict = {
-            # type and user_id automatically handled by user_insert_counter.insert_new_user()
-            #"type": "user",
-            #"user_id": 0,
-            "username": username_input.text(),
-            "first_name": first_name_input.text(),
-            "last_name": last_name_input.text(),
-            "password": hash_password(password_input.text()),
-            "q1_q": q_keys[0],
-            "q1_a": q_values[0],
-            "q2_q": q_keys[1],
-            "q2_a": q_values[1],
-            "admin": False
-        }
-
-
-        # returns a dict including all info to create a new user.
-        # password and security questions and answers are hashed
-        # return value not currently used
         if result == QDialog.DialogCode.Accepted:
-            print("Valid Input")
-            user_insert_counter.insert_new_user(user_dict)
-
-            return user_dict
-        else:
-            return None
+            self.handle_dialog_accepted(dialog)
 
     def setup_button_connections(self):
         """
@@ -413,4 +470,135 @@ class UsersTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        self.update_btn.clicked.connect(self.fetch_on_clicked)
+        self.clear_btn.clicked.connect(self.clear)
+        self.search_btn.clicked.connect(self.build_and_search)
+        self.create_btn.clicked.connect(self.create_new_user_prompt)
+
+    def on_create_clicked(self, dialog):
+        """
+        :Purpose: handles button initialization
+        :Author(s): Joe Lee
+        """
+        def handler():
+            if self.validate_user_data(dialog):
+                dialog.accept()
+        return handler
+
+    def handle_dialog_accepted(self, dialog):
+        """
+        :Purpose: executes a sequence of events
+        :Author(s): Joe Lee
+        """
+        self.new_user_data = self.gather_new_user_data(dialog)
+        self.hash_security_q_and_a()
+        insert_item("Entities", "user", self.new_user_data)
+
+    def gather_new_user_data(self, dialog):
+        """
+        :Purpose: gathers user data from dialog's input fields
+        :Method: passes in dialog then parses dialog for data
+        :Author(s): Colin Heinselman, Joe Lee
+        """
+        raw_user_data = {
+            "user_id": self.generate_new_user_id(),
+            "username": dialog.findChild(QLineEdit, "username_input").text().strip(),
+            "first_name": dialog.findChild(QLineEdit, "first_name_input").text().strip(),
+            "last_name": dialog.findChild(QLineEdit, "last_name_input").text().strip(),
+            "password": hash_password(dialog.findChild(QLineEdit, "password_input").text().strip()),
+            "q1_q": dialog.findChild(QComboBox, "question1").currentText().strip(),
+            "q1_a": dialog.findChild(QLineEdit, "response1").text().strip(),
+            "q2_q": dialog.findChild(QComboBox, "question2").currentText().strip(),
+            "q2_a": dialog.findChild(QLineEdit, "response2").text().strip(),
+            "admin": False,
+            "type": "user"
+        }
+        return raw_user_data
+
+    def generate_new_user_id(self):
+        """
+        :Purpose: generates new user_id incrementing max value of database property by 1
+        :Author(s): Joe Lee
+        """
+        new_id = get_max_value("Entities", "user_id") + 1
+        return new_id
+
+    def hash_security_q_and_a(self):
+        """
+        :Purpose: hashes user_data's security properties
+        :Author(s): Colin Heinselman, Joe Lee
+        """
+        # Hash security questions and answers
+        q_a_dict = {
+            self.new_user_data["q1_q"]: self.new_user_data["q1_a"],
+            self.new_user_data["q2_q"]: self.new_user_data["q2_a"],
+        }
+
+        q_dict_hashed = hash_security_question_answer(q_a_dict)
+        q_keys = list(q_dict_hashed.keys())
+        q_values = list(q_dict_hashed.values())
+        self.new_user_data["q1_q"] = q_keys[0]
+        self.new_user_data["q1_a"] = q_values[0]
+        self.new_user_data["q2_q"] = q_keys[1]
+        self.new_user_data["q2_a"] = q_values[1]
+
+    def validate_user_data(self, dialog):
+        """
+        :Purpose: execute a series of validations on user data
+        :Author(s): Colin Heinselman, Joe Lee
+        """
+        username = dialog.findChild(QLineEdit, "username_input").text()
+        if not self.username_is_clean(username):
+            return False
+        if not self.validate_security_questions(dialog):
+            return False
+        return True
+
+    def validate_security_questions(self, dialog):
+        """
+        :Purpose: validates security questions and responses within the dialog
+        Author(s): Colin Heinselman
+        """
+        # Validate that both security questions are selected
+        q1_q = dialog.findChild(QComboBox, "question1")
+        q2_q = dialog.findChild(QComboBox, "question2")
+        q1_a = dialog.findChild(QLineEdit, "response1")
+        q2_a = dialog.findChild(QLineEdit, "response2")
+
+        # Check both questions selected
+        if q1_q.currentIndex() == -1 or q2_q.currentIndex() == -1:
+            QMessageBox.warning(dialog, "Missing Information",
+                                "Please select both security questions.")
+            return False
+
+        # Check questions are different
+        if q1_q.currentIndex() == q2_q.currentIndex():
+            QMessageBox.warning(dialog, "Invalid Selection",
+                                "Please select two different security questions.")
+            return False
+
+        # Check responses not empty
+        if not q1_a.text().strip() or not q2_a.text().strip():
+            QMessageBox.warning(dialog, "Missing Information",
+                                "Please provide responses for both security questions.")
+            return False
+        return True
+
+    def username_is_clean(self, username: str) -> bool:
+        """
+        :purpose: Takes a username as input and determine if it includes any banned substrings
+        :param username: The username to check
+        :return: True if the username contains any banned substrings. False otherwise
+        :author(s): Colin Heinselman
+        """
+        banned_substrings = [
+            "administrator", "root", "system", "guest",
+            "support", "help", "owner", "moderator",
+            "login", "logout", "create", "delete", "config",
+            "settings", "account", "profile", "username"
+        ]
+
+        lower_username = username.lower()  # make check case-insensitive
+        for banned in banned_substrings:
+            if banned in lower_username:
+                return False
+        return True
