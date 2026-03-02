@@ -1,6 +1,6 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout, QFrame
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -54,8 +54,9 @@ class ProductsTab(BaseTab):
         # Ends creation and adds header_section to window
         layout.addLayout(header_section)
 
-        # HR Line between Vendor and Products sections
-        hr1 = QLabel()
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
@@ -100,7 +101,9 @@ class ProductsTab(BaseTab):
         search_section_1.addWidget(self.search_btn)
         layout.addLayout(search_section_1)
 
-        hr2 = QLabel()
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         layout.addWidget(hr2)
 
@@ -332,8 +335,9 @@ class ProductsTab(BaseTab):
 
         section_layout.addLayout(line3_layout)
 
-        # HR Line between Vendor and Product sections
-        hr = QLabel()
+        hr = QFrame()
+        hr.setFrameShape(QFrame.Shape.HLine)
+        hr.setFrameShadow(QFrame.Shadow.Sunken)
         hr.setObjectName("hr")
         section_layout.addWidget(hr)
 

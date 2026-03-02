@@ -451,7 +451,9 @@ class VendorsTab(BaseTab):
 
         section_layout.addLayout(line3_layout)
         # HR Line between Vendor and Product sections
-        hr = QLabel()
+        hr = QFrame()
+        hr.setFrameShape(QFrame.Shape.HLine)
+        hr.setFrameShadow(QFrame.Shadow.Sunken)
         hr.setObjectName("hr")
         section_layout.addWidget(hr)
 
