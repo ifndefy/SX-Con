@@ -13,7 +13,7 @@ from services import parse_consignment_table as c_table
 class CRTab(BaseTab):
     def __init__(self, api_handler):
         super().__init__(api_handler, "consignment_rates")
-        self.ticket_list = None
+        self.entry_list = None
 
         self.scroll_zone = None
 
@@ -66,14 +66,15 @@ class CRTab(BaseTab):
         #Add Canvas to tab
         self.main_layout.addWidget(self.tab_content)
         #todo: move to on_active_tab to avoid fetching until we need the data
-        self.populate_consignment_entries()
+        self.populate_rate_settings()
 
     #Retrieve tha table from SPOT_CR.csv and turn it into entries in our widget's section
-    def populate_consignment_entries(self):
-        self.ticket_list = c_table.fetch_consignment_data()
-        log.debug(f"Retrieved consignment rates: {self.ticket_list}")
-        for key, value in self.ticket_list.items():
-            self.consignments_section_layout.addWidget(_CRTicket(key, value))
+    def populate_rate_settings(self):
+        self.entry_list = c_table.fetch_consignment_data()
+        log.debug(f"Retrieved consignment rates: {self.entry_list}")
+        for key, value in self.entry_list.items():
+            self.consignments_section_layout.addWidget(_CREntry(key, value))
+        self.consignments_section_layout.addStretch()
 
     #todo: add check in admin_settings to trigger on_active_tab when the tab being switched to has this function, use to populate tickets when needed
     def on_active_tab(self):
@@ -82,18 +83,19 @@ class CRTab(BaseTab):
     def setup_button_connections(self):
         pass
 
-#private ticket object, should only be used by this subtab
-class _CRTicket(QWidget):
+#private entry object, should only be used by this subtab
+class _CREntry(QWidget):
     def __init__(self, product_type = None, rate = None):
         super().__init__()
         #Store constructor data
         self.old_rate = None
         self.old_type = None
-
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        
         #Create 'box' to hold ticket fields/buttons
-        self.ticket_container = QWidget()
-        self.ticket_container.setObjectName("ticket_body")
-        self.ticket_layout = QHBoxLayout(self.ticket_container)
+        self.entry_container = QWidget()
+        self.entry_container.setObjectName("entry_body")
+        self.entry_layout = QHBoxLayout(self.entry_container)
   
         #Create Elements of ticket
         self.type_line = QLabel("Type:")
@@ -101,7 +103,7 @@ class _CRTicket(QWidget):
         
         self.product_type_input = QLineEdit(f"{product_type}" if product_type else "")
         self.product_type_input.setPlaceholderText("Produce Type")
-        self.product_type_input.setObjectName("ticket_field")
+        self.product_type_input.setObjectName("entry_field")
         self.product_type_input.setProperty("state", "READ_ONLY")
         self.product_type_input.setMaxLength(30)
         self.product_type_input.setFixedWidth(265)
@@ -114,7 +116,7 @@ class _CRTicket(QWidget):
 
         self.product_rate_input = QLineEdit(f"{rate}" if rate else "")
         self.product_rate_input.setPlaceholderText("Produce Rate")
-        self.product_rate_input.setObjectName("ticket_field")
+        self.product_rate_input.setObjectName("entry_field")
         self.product_rate_input.setProperty("state", "READ_ONLY")
         self.product_rate_input.setMaxLength(30)
         self.product_rate_input.setFixedWidth(265)
@@ -123,41 +125,41 @@ class _CRTicket(QWidget):
 
         self.end_spacer = QSpacerItem(45, 50, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
-        self.ticket_edit_btn = QPushButton("Edit")
+        self.entry_edit_btn = QPushButton("Edit")
 
-        self.ticket_cancel_btn = QPushButton("Cancel")
-        self.ticket_cancel_btn.setObjectName("red_btn")
-        self.ticket_cancel_btn.hide()
+        self.edit_cancel_btn = QPushButton("Cancel")
+        self.edit_cancel_btn.setObjectName("red_btn")
+        self.edit_cancel_btn.hide()
 
-        self.ticket_save_btn = QPushButton("Save")
-        self.ticket_save_btn.hide()
+        self.edit_save_btn = QPushButton("Save")
+        self.edit_save_btn.hide()
 
-        #Add elements to ticket container
-        self.ticket_layout.addWidget(self.type_line)
-        self.ticket_layout.addWidget(self.product_type_input)
+        #Add elements to entry container
+        self.entry_layout.addWidget(self.type_line)
+        self.entry_layout.addWidget(self.product_type_input)
 
-        self.ticket_layout.addItem(self.middle_spacer)
+        self.entry_layout.addItem(self.middle_spacer)
 
-        self.ticket_layout.addWidget(self.rate_line)
-        self.ticket_layout.addWidget(self.product_rate_input)
+        self.entry_layout.addWidget(self.rate_line)
+        self.entry_layout.addWidget(self.product_rate_input)
 
-        self.ticket_layout.addStretch()
+        self.entry_layout.addStretch()
 
-        self.ticket_layout.addWidget(self.ticket_edit_btn)
-        self.ticket_layout.addWidget(self.ticket_cancel_btn)
-        self.ticket_layout.addWidget(self.ticket_save_btn)
+        self.entry_layout.addWidget(self.entry_edit_btn)
+        self.entry_layout.addWidget(self.edit_cancel_btn)
+        self.entry_layout.addWidget(self.edit_save_btn)
 
         self.setup_button_connections()
         
         #Create top-level widget to store ticket container
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0,0,0,0)
-        self.main_layout.addWidget(self.ticket_container)
+        self.main_layout.addWidget(self.entry_container)
 
     def setup_button_connections(self):
-        self.ticket_edit_btn.clicked.connect(self.edit_btn_handler)
-        self.ticket_cancel_btn.clicked.connect(self.cancel_btn_handler)
-        self.ticket_save_btn.clicked.connect(self.save_btn_handler)
+        self.entry_edit_btn.clicked.connect(self.edit_btn_handler)
+        self.edit_save_btn.clicked.connect(self.save_btn_handler)
+        self.edit_cancel_btn.clicked.connect(self.cancel_btn_handler)
 
     def get_rate(self):
         return self.product_rate_input.text().strip() or None
@@ -176,7 +178,7 @@ class _CRTicket(QWidget):
     def edit_btn_handler(self):
         self.old_type = self.get_type()
         self.old_rate = self.get_rate()
-        log.info(f"Editing {self.old_type} ticket, current value: {self.old_rate}")
+        log.info(f"Editing {self.old_type} entry, current value: {self.old_rate}")
 
         self.product_rate_input.setReadOnly(False)
         self.product_rate_input.setProperty("state", "READ_WRITE")
@@ -185,9 +187,9 @@ class _CRTicket(QWidget):
         self.product_rate_input.style().unpolish(self.product_rate_input)
         self.product_rate_input.style().polish(self.product_rate_input)
 
-        self.ticket_cancel_btn.show()
-        self.ticket_save_btn.show()
-        self.ticket_edit_btn.hide()
+        self.edit_cancel_btn.show()
+        self.edit_save_btn.show()
+        self.entry_edit_btn.hide()
 
     # lock fields, restore old values to fields and swap to other button set
     def cancel_btn_handler(self):
@@ -203,9 +205,9 @@ class _CRTicket(QWidget):
         self.product_rate_input.setText(self.old_rate)
         self.product_type_input.setText(self.old_type)
 
-        self.ticket_cancel_btn.hide()
-        self.ticket_save_btn.hide()
-        self.ticket_edit_btn.show()
+        self.edit_cancel_btn.hide()
+        self.edit_save_btn.hide()
+        self.entry_edit_btn.show()
 
     def save_btn_handler(self):
         field_data = self.fetch_field_values()
@@ -224,9 +226,9 @@ class _CRTicket(QWidget):
         self.product_rate_input.style().unpolish(self.product_rate_input)
         self.product_rate_input.style().polish(self.product_rate_input)
 
-        self.ticket_cancel_btn.hide()
-        self.ticket_save_btn.hide()
-        self.ticket_edit_btn.show()
+        self.edit_cancel_btn.hide()
+        self.edit_save_btn.hide()
+        self.entry_edit_btn.show()
 
 #might be worth moving this, but ideally this remains private to consignment_rate.py since it should be the only one writing to SPOT
 def _write_to_spot_csv(data):
