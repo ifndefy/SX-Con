@@ -11,9 +11,34 @@ def test_connect_database():
     try:
         connection_target = "test"
         connection = db_connection.connect(connection_target)
-        #print(connection)
 
-        #redundant case, as if it fails at all, SPOT.OFFLINE is turned to True
+        if connection is None:
+            return -1
+
+        elif SPOT.OFFLINE:
+            return -1
+
+        connection_target = ""
+        connection = db_connection.connect(connection_target)
+
+        if connection is None:
+            return -1
+
+        elif SPOT.OFFLINE:
+            return -1
+
+        connection_target = "123abc098zyx"
+        connection = db_connection.connect(connection_target)
+
+        if connection is None:
+            return -1
+
+        elif SPOT.OFFLINE:
+            return -1
+
+        connection_target = "Entities"
+        connection = db_connection.connect(connection_target)
+
         if connection is None:
             return -1
 
@@ -25,5 +50,3 @@ def test_connect_database():
     except Exception as e:
         print(e)
         return -1
-
-print(test_connect_database())
