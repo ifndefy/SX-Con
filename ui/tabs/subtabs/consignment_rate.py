@@ -95,6 +95,7 @@ class _CREntry(QWidget):
         #Create 'box' to hold ticket fields/buttons
         self.entry_container = QWidget()
         self.entry_container.setObjectName("entry_body")
+        self.entry_container.setProperty("state", "READ_ONLY")
         self.entry_layout = QHBoxLayout(self.entry_container)
   
         #Create Elements of ticket
@@ -182,10 +183,14 @@ class _CREntry(QWidget):
 
         self.product_rate_input.setReadOnly(False)
         self.product_rate_input.setProperty("state", "READ_WRITE")
+        self.entry_container.setProperty("state", "READ_WRITE")
 
         #Refresh the widget style to update appearance
         self.product_rate_input.style().unpolish(self.product_rate_input)
         self.product_rate_input.style().polish(self.product_rate_input)
+
+        self.entry_container.style().unpolish(self.entry_container)
+        self.entry_container.style().polish(self.entry_container)
 
         self.parent().setFocus()
         self.entry_edit_btn.hide()
@@ -198,10 +203,14 @@ class _CREntry(QWidget):
         log.info(f"Edit Aborted, resetting values {self.get_rate()} -> {self.old_rate}")
         self.product_rate_input.setReadOnly(True)
         self.product_rate_input.setProperty("state", "READ_ONLY")
+        self.entry_container.setProperty("state", "READ_ONLY")
 
         #Refresh the widget style to update appearance
         self.product_rate_input.style().unpolish(self.product_rate_input)
         self.product_rate_input.style().polish(self.product_rate_input)
+
+        self.entry_container.style().unpolish(self.entry_container)
+        self.entry_container.style().polish(self.entry_container)
 
         self.product_rate_input.setText(self.old_rate)
         self.product_type_input.setText(self.old_type)
@@ -223,10 +232,14 @@ class _CREntry(QWidget):
 
         self.product_rate_input.setReadOnly(True)
         self.product_rate_input.setProperty("state", "READ_ONLY")
+        self.entry_container.setProperty("state", "READ_ONLY")
 
         #Refresh the widget style to update appearance, might want to wrap this in a function/ set up a util or service .py file to provide helpers with stuff like this
         self.product_rate_input.style().unpolish(self.product_rate_input)
         self.product_rate_input.style().polish(self.product_rate_input)
+
+        self.entry_container.style().unpolish(self.entry_container)
+        self.entry_container.style().polish(self.entry_container)
         
         self.parent().setFocus()
         self.edit_save_btn.hide()

@@ -357,6 +357,12 @@ QWidget#entry_body {
     border: 1px solid #5C4033;
 }
 
+QWidget#entry_body:hover,
+QWidget#entry_body[state="READ_WRITE"]{
+    background-color: #E5C59B;
+    border: 0 px solid #5C4033;
+}
+
 /*Default entry Style: all entry field objects fall back to here for missing properties/invalid states*/
 QLineEdit#entry_field{
     background-color: #E5C59B;
