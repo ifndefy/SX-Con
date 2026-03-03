@@ -139,11 +139,9 @@ class OpenTicketsTab(BaseTab):
         status_input.setPlaceholderText("OPEN")
         status_input.setReadOnly(True)
         status_input.setFixedWidth(70)
-
         # Set status if provided
         if ticket_data:
             status_input.setText(str(ticket_data.get('status', '')))
-
         line1_layout.addWidget(status_input)
         tickets_section['status'] = status_input
 
@@ -207,7 +205,6 @@ class OpenTicketsTab(BaseTab):
     def handle_close_btn(self, ticket_index):
         def handler():
             try:
-                print(ticket_index)
                 handler_close_btn(ticket_index)
                 log.info(f"Closed ticket {ticket_index}")
             except Exception as e:
