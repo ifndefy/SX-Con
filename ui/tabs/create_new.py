@@ -328,7 +328,7 @@ class CreateNewTab(BaseTab):
         # Action buttons
         action_layout = QVBoxLayout()
 
-        self.excel_btn = excel.ExcelButton(self.gather_record, xls_gen.generate_excel, "Excel")
+        self.excel_btn = QPushButton("Excel")
         self.pdf_btn = QPushButton("PDF")
         self.print_btn = QPushButton("Print")
 
@@ -582,6 +582,11 @@ class CreateNewTab(BaseTab):
             'revenue_grouped': revenue_data['grouped']
         }
 
+    def handle_excel_btn(self):
+        self.handle_calc_btn()
+        data = self.gather_record()
+        xls_gen.generate_excel(data)
+
     def setup_button_connections(self):
         """
         :purpose: links buttons with methods
@@ -592,6 +597,7 @@ class CreateNewTab(BaseTab):
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
         self.calc_btn.clicked.connect(self.handle_calc_btn)
+        self.excel_btn.clicked.connect(self.handle_excel_btn)
         self.pdf_btn.clicked.connect(self.on_pdf_clicked)
         self.print_btn.clicked.connect(self.on_print_clicked)
 
