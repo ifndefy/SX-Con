@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
 
+from handlers.handler_close import handler_close_btn
 from handlers.handler_print import handler_print
 from handlers.handler_pdf import handler_db_pdf
 from services.get_item import get_item
@@ -166,6 +167,11 @@ class OpenTicketsTab(BaseTab):
         line1_layout.addWidget(print_btn)
         tickets_section['print_btn'] = print_btn
 
+        close_btn = QPushButton("Close")
+        close_btn.setObjectName("red_btn")
+        line1_layout.addWidget(close_btn)
+        tickets_section['close_btn'] = close_btn
+
         section_layout.addLayout(line1_layout)
 
         # Create details container (initially hidden)
@@ -194,8 +200,20 @@ class OpenTicketsTab(BaseTab):
         pdf_btn.clicked.connect(self.make_pdf_handler(ticket_number_input.text()))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
         print_btn.clicked.connect(self.make_print_handler(ticket_number_input.text()))
+        close_btn.clicked.connect(self.handle_close_btn(ticket_number_input.text()))
 
         self.tickets_section.append(tickets_section)
+
+    def handle_close_btn(self, ticket_index):
+        def handler():
+            try:
+                print(ticket_index)
+                handler_close_btn(ticket_index)
+                log.info(f"Closed ticket {ticket_index}")
+            except Exception as e:
+                log.error(f"Could not close ticket {ticket_index}: {e}")
+                return
+        return handler
 
     def make_print_handler(self, ticket_number):
         def handler():
