@@ -187,9 +187,10 @@ class _CREntry(QWidget):
         self.product_rate_input.style().unpolish(self.product_rate_input)
         self.product_rate_input.style().polish(self.product_rate_input)
 
+        self.parent().setFocus()
+        self.entry_edit_btn.hide()
         self.edit_cancel_btn.show()
         self.edit_save_btn.show()
-        self.entry_edit_btn.hide()
 
     # lock fields, restore old values to fields and swap to other button set
     def cancel_btn_handler(self):
@@ -205,6 +206,7 @@ class _CREntry(QWidget):
         self.product_rate_input.setText(self.old_rate)
         self.product_type_input.setText(self.old_type)
 
+        self.parent().setFocus()
         self.edit_cancel_btn.hide()
         self.edit_save_btn.hide()
         self.entry_edit_btn.show()
@@ -225,9 +227,10 @@ class _CREntry(QWidget):
         #Refresh the widget style to update appearance, might want to wrap this in a function/ set up a util or service .py file to provide helpers with stuff like this
         self.product_rate_input.style().unpolish(self.product_rate_input)
         self.product_rate_input.style().polish(self.product_rate_input)
-
-        self.edit_cancel_btn.hide()
+        
+        self.parent().setFocus()
         self.edit_save_btn.hide()
+        self.edit_cancel_btn.hide()
         self.entry_edit_btn.show()
 
 #might be worth moving this, but ideally this remains private to consignment_rate.py since it should be the only one writing to SPOT
