@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtCore import Qt
 
 from src import SPOT
-from core.hash_qa import hash_security_question_answer
+from src.core.hash_qa import hash_security_question_answer
 import utils.logger.logger as log
 
 class SecurityQuestionsDialog(QDialog):
