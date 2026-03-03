@@ -452,7 +452,7 @@ class CreateNewTab(BaseTab):
         quantity_input = QLineEdit()
         quantity_input.setPlaceholderText("Qty")
         quantity_input.setFixedWidth(100)
-        quantity_input.setValidator(QIntValidator(0, 9999, self))
+        quantity_input.setValidator(QRegularExpressionValidator(QRegularExpression(r'^\d*$')))
         quantity_input.textChanged.connect(self.handle_total)
         line2_layout.addWidget(quantity_input)
         product_section['quantity'] = quantity_input
