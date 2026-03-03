@@ -8,9 +8,11 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
+from handlers.handler_open_close import handler_open_close_btns
 from handlers.handler_pdf import handler_db_pdf
 from handlers.handler_print import handler_print
 from services.get_item import get_item
+from services.get_property import get_property
 from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
 
@@ -264,10 +266,18 @@ class RecordsTab(BaseTab):
                     'status': item.get('status', ''),
                 })
 
-            tickets.sort(key=lambda t: int(t['ticket_number']))
+            tickets.sort(key=lambda t: int(t['ticket_number']), reverse=True)
 
             for ticket in tickets:
-                self.add_ticket_section(ticket)
+                self.add_record_section()
+                last_section = self.records_section[-1]
+                last_section['ticket_num'].setText(str(ticket['ticket_number']))
+                last_section['datetime'].setText(str(ticket['datetime']))
+                last_section['status'].setText(ticket['status'])
+                if last_section['status'].text().strip() == "CLOSED":
+                    last_section['close_btn'].hide()
+                if last_section['status'].text().strip() == "OPEN":
+                    last_section['open_btn'].hide()
 
             if not tickets:
                 status_bar_instance.send_message("No tickets found")
@@ -287,7 +297,7 @@ class RecordsTab(BaseTab):
         get_all_query = "SELECT * FROM c WHERE c.type = 'consignment'"
         self.query_db(get_all_query)
 
-    def add_ticket_section(self, rec_data):
+    def add_record_section(self):
         """
         :purpose: adds record lines
         :return: None
@@ -306,7 +316,6 @@ class RecordsTab(BaseTab):
         # ticket_num
         line1_layout.addWidget(QLabel("Ticket Number:"))
         ticket_num_input = QLineEdit()
-        ticket_num_input.setText(str(rec_data['ticket_number']))
         ticket_num_input.setObjectName("READ_ONLY")
         ticket_num_input.setReadOnly(True)
         ticket_num_input.setMaxLength(6)
@@ -317,7 +326,6 @@ class RecordsTab(BaseTab):
         # datetime
         line1_layout.addWidget(QLabel("DateTime:"))
         datetime_input = QLineEdit()
-        datetime_input.setText(str(rec_data['datetime']))
         datetime_input.setObjectName("READ_ONLY")
         datetime_input.setReadOnly(True)
         datetime_input.setFixedWidth(160)
@@ -327,7 +335,6 @@ class RecordsTab(BaseTab):
         # status
         line1_layout.addWidget(QLabel("Status:"))
         status_input = QLineEdit()
-        status_input.setText(str(rec_data['status']))
         status_input.setObjectName("READ_ONLY")
         status_input.setReadOnly(True)
         status_input.setFixedWidth(69)
@@ -360,8 +367,15 @@ class RecordsTab(BaseTab):
 
         close_btn = QPushButton("Close")
         close_btn.setObjectName('red_btn')
+        close_btn.setFixedWidth(68)
         line1_layout.addWidget(close_btn)
         rec_section['close_btn'] = close_btn
+
+        open_btn = QPushButton("Open")
+        open_btn.setObjectName('green_btn')
+        open_btn.setFixedWidth(68)
+        line1_layout.addWidget(open_btn)
+        rec_section['open_btn'] = open_btn
 
         section_layout.addLayout(line1_layout)
 
@@ -384,14 +398,41 @@ class RecordsTab(BaseTab):
         rec_section['index'] = ticket_index
 
         view_btn.clicked.connect(self.make_view_handler(ticket_index))
-        pdf_btn.clicked.connect(self.make_pdf_handler(ticket_num_input.text()))
+        pdf_btn.clicked.connect(self.make_pdf_handler(ticket_index))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
-        print_btn.clicked.connect(self.make_print_handler(ticket_num_input.text()))
+        print_btn.clicked.connect(self.make_print_handler(ticket_index))
+        close_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "closed"))
+        open_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "open"))
 
         self.records_section.append(rec_section)
 
-    def make_print_handler(self, ticket_number):
+    def handle_open_close_btns(self, ticket_index, action):
         def handler():
+            try:
+                ticket_number = self.records_section[ticket_index]['ticket_num'].text().strip()
+                self.parent().setFocus()
+                if action == "open":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"OPENED ticket {ticket_number}")
+                    self.records_section[ticket_index]['status'].setText("OPEN")
+                    self.records_section[ticket_index]['open_btn'].hide()
+                    self.records_section[ticket_index]['close_btn'].show()
+                elif action == "closed":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"CLOSED ticket {ticket_number}")
+                    self.records_section[ticket_index]['status'].setText("CLOSED")
+                    self.records_section[ticket_index]['close_btn'].hide()
+                    self.records_section[ticket_index]['open_btn'].show()
+                self.records_section[ticket_index]['status'].setText(
+                    get_property("Consignments", "status", "consignment", ticket_number)
+                )
+            except Exception as e:
+                log.error(f"Could not {action} ticket {ticket_number}: {e}")
+        return handler
+
+    def make_print_handler(self, ticket_index):
+        def handler():
+            ticket_number = self.records_section[ticket_index]['ticket_num'].text().strip()
             try:
                 handler_db_pdf(int(ticket_number))
             except Exception as e:
@@ -425,14 +466,15 @@ class RecordsTab(BaseTab):
 
         return gather_ticket
 
-    def make_pdf_handler(self, ticket_number):
+    def make_pdf_handler(self, ticket_index):
         def handler():
-            self.handle_pdf_btn_clicked(int(ticket_number))
+            self.handle_pdf_btn_clicked(ticket_index)
         return handler
 
-    def handle_pdf_btn_clicked(self, ticket_number):
+    def handle_pdf_btn_clicked(self, ticket_index):
+        ticket_number = self.records_section[ticket_index]['ticket_num'].text().strip()
         try:
-            handler_db_pdf(ticket_number)
+            handler_db_pdf(int(ticket_number))
             log.info(f"PDF generated for ticket {ticket_number}")
         except Exception as e:
             log.error(f"ERROR generating PDF for ticket {ticket_number}: {e}")
@@ -461,20 +503,6 @@ class RecordsTab(BaseTab):
 
         # Update status
         status_bar_instance.send_message("All tickets cleared")
-
-    def fetch_on_clicked(self):
-        """
-        :purpose: calls fetch method and adds ticket sections
-        :return: None
-        :author(s): Joe Lee
-        """
-        self.remove_record_section()
-        records = self.fetch()
-        if not records:
-            log.error("No records found")
-        else:
-            for record in records:
-                self.add_ticket_section(record)
 
     def on_view_clicked(self, ticket_index):
         try:

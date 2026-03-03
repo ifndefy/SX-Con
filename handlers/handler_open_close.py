@@ -8,14 +8,14 @@ from services.update_property import update_property
 import utils.logger.logger as log
 
 
-def handler_close_btn(ticket_index):
+def handler_open_close_btns(ticket_index, action):
     try:
         update_property(
             container_name="Consignments",
             entity_type="consignment",
             entity_id=ticket_index,
             property_name="status",
-            property_value="CLOSED"
+            property_value=str(action).upper()
         )
 
     except Exception:

@@ -9,8 +9,7 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
 
-from handlers.handler_close import handler_close_btn
-from handlers.handler_open import handler_open_btn
+from handlers.handler_open_close import handler_open_close_btns
 from handlers.handler_print import handler_print
 from handlers.handler_pdf import handler_db_pdf
 from services.get_item import get_item
@@ -270,39 +269,33 @@ class VendorTicketsTab(BaseTab):
         pdf_btn.clicked.connect(self.make_pdf_handler(ticket_index))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
         print_btn.clicked.connect(self.make_print_handler(ticket_index))
-        close_btn.clicked.connect(self.handle_close_btn(ticket_index))
-        open_btn.clicked.connect(self.handle_open_btn(ticket_index))
+        close_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "closed"))
+        open_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "open"))
 
         self.tickets_section.append(tickets_section)
 
-    def handle_open_btn(self, ticket_index):
+    def handle_open_close_btns(self, ticket_index, action):
         def handler():
             try:
                 ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
-                handler_open_btn(ticket_number)
-                log.info(f"OPENED ticket {ticket_number}")
-                self.tickets_section[ticket_index]['status'].setText(get_property("Consignments", "status", "consignment", ticket_number))
+                if action == "open":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"OPENED ticket {ticket_number}")
+                    self.tickets_section[ticket_index]['status'].setText("OPEN")
+                    self.tickets_section[ticket_index]['open_btn'].hide()
+                    self.tickets_section[ticket_index]['close_btn'].show()
+                elif action == "closed":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"CLOSED ticket {ticket_number}")
+                    self.tickets_section[ticket_index]['status'].setText("CLOSED")
+                    self.tickets_section[ticket_index]['close_btn'].hide()
+                    self.tickets_section[ticket_index]['open_btn'].show()
+                self.tickets_section[ticket_index]['status'].setText(
+                    get_property("Consignments", "status", "consignment", ticket_number)
+                )
                 self.parent().setFocus()
-                self.tickets_section[ticket_index]['open_btn'].hide()
-                self.tickets_section[ticket_index]['close_btn'].show()
             except Exception as e:
-                log.error(f"Could not open ticket {ticket_number}: {e}")
-                return
-        return handler
-
-    def handle_close_btn(self, ticket_index):
-        def handler():
-            try:
-                ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
-                handler_close_btn(ticket_number)
-                log.info(f"CLOSED ticket {ticket_number}")
-                self.tickets_section[ticket_index]['status'].setText(get_property("Consignments", "status", "consignment", ticket_number))
-                self.parent().setFocus()
-                self.tickets_section[ticket_index]['close_btn'].hide()
-                self.tickets_section[ticket_index]['open_btn'].show()
-            except Exception as e:
-                log.error(f"Could not close ticket {ticket_number}: {e}")
-                return
+                log.error(f"Could not {action} ticket {ticket_number}: {e}")
         return handler
 
     def make_print_handler(self, ticket_index):
