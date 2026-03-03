@@ -527,7 +527,7 @@ class UsersTab(BaseTab):
         :Purpose: generates new user_id incrementing max value of database property by 1
         :Author(s): Joe Lee
         """
-        new_id = get_max_value("Entities", "user_id") + 1
+        new_id = int(get_max_value("Entities", "user_id")) + 1
         return new_id
 
     def hash_security_q_and_a(self):
