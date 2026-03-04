@@ -16,7 +16,7 @@ from src import SPOT
 
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
-from core.hash_qa import hash_security_question_answer
+from src.core.hash_qa import hash_security_question_answer
 from src.core.hash_password import hash_password
 import utils.logger.logger as log
 from services.message_bus import status_bar_instance
@@ -241,7 +241,8 @@ class UsersTab(BaseTab):
                     'user_id': item.get('user_id'),
                     'username': item.get('username', ''),
                     'first_name': item.get('first_name', ''),
-                    'last_name': item.get('last_name', '')
+                    'last_name': item.get('last_name', ''),
+                    'admin': item.get('admin', ''),
                 })
 
             users.sort(key=lambda v: int(v['user_id']))
@@ -296,6 +297,16 @@ class UsersTab(BaseTab):
         username.setMaxLength(30)
         username.setFixedWidth(265)
         line1_layout.addWidget(username)
+
+
+        line1_layout.addWidget(QLabel("Admin"))
+        admin_field = QComboBox()
+        admin_field.addItems(["True", "False"])
+        admin_field.setObjectName("READ_ONLY")
+        admin_field.setEnabled(False)
+        current_index = 0 if user_data['admin'] == True else 1      # Set "Admin" value as True or False in GUI
+        admin_field.setCurrentIndex(current_index)
+        line1_layout.addWidget(admin_field)
 
         line1_layout.addStretch()
         section_layout.addLayout(line1_layout)
