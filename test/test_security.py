@@ -1,7 +1,7 @@
 
 from src.core.hash_password import hash_password
 from src.core.authenticate import authenticate_password
-from ui.core.prompts import hash_security_question_answer
+from src.core.hash_qa import hash_security_question_answer
 
 def test_hash_password():
     """
