@@ -15,7 +15,7 @@ from ui.tabs.base import BaseTab
 
 from services.insert_item import insert_item
 import utils.logger.logger as log
-from ui.tabs.subtabs.utils import get_average_price
+from ui.tabs.subtabs.utils import get_average_price as avg
 
 class ProductsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -292,7 +292,8 @@ class ProductsTab(BaseTab):
         line2_layout = QHBoxLayout()
         line2_layout.addWidget(QLabel("Average Price:"))
         avg_price = QLineEdit()
-        avg_price.setText("TBD") # todo:
+        avg_price_value = avg.get_average_price(prod_data['product_id'])
+        avg_price.setText(f"${avg_price_value:,.2f}")
         avg_price.setObjectName("READ_ONLY")
         avg_price.setReadOnly(True)
         avg_price.setMaxLength(30)
