@@ -1,3 +1,4 @@
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -5,6 +6,8 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import Qt
+
+from src.imgs import img_helpers
 
 from src import SPOT
 from ui.prompts.forgot_pw import ForgotPasswordScreen
@@ -23,10 +26,11 @@ class LoginScreen(QDialog):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.setWindowTitle("SX-Con - Login")
-        self.setFixedSize(500, 400)
+        self.setFixedSize(500, 350)
         self.setModal(True)
 
         self.username = None
+        self.logo = img_helpers.get_login_logo_path()
         self.setup_ui()
 
         self.theme_manager.apply_default_theme(self)
@@ -37,18 +41,11 @@ class LoginScreen(QDialog):
         author(s): Joe Lee
         """
         layout = QVBoxLayout()
-
-        # todo: Insert Client Logo
-        logo = QLabel("CLIENT LOGO GOES HERE")
-        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo.setObjectName("logo")
-        layout.addWidget(logo)
-
-        # Title
-        title = QLabel("SX-Con Login")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setObjectName("login_title")
-        layout.addWidget(title)
+        label = QLabel(self)
+        logo_img = QPixmap(self.logo)
+        scaled_logo_image = logo_img.scaledToWidth(logo_img.width(), Qt.TransformationMode.SmoothTransformation)
+        label.setPixmap(scaled_logo_image)
+        layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Revision
         rev = QLabel(SPOT.APP_VERSION)
@@ -69,7 +66,7 @@ class LoginScreen(QDialog):
         layout.addWidget(QLabel("Password:"))
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("Enter password")
-        self.password_input.setMaxLength(255) # todo: require at least 8 characters in PW
+        self.password_input.setMaxLength(255)
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         layout.addWidget(self.password_input)
 

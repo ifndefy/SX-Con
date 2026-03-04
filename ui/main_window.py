@@ -1,3 +1,5 @@
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QTabWidget
@@ -39,8 +41,8 @@ class MainWindow(QWidget):
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
-        self.setGeometry(0, 0, 1100, 770)
-        self.setMinimumSize(1100, 770)
+        self.setGeometry(0, 0, 1100, 794)
+        self.setMinimumSize(1100, 794)
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -48,17 +50,26 @@ class MainWindow(QWidget):
         # Logo + Program title + Revision info
         title_layout = QHBoxLayout()
 
-        # Program title
-        program_name = QLabel("SX-Con")
-        program_name.setObjectName("program_name")
-        title_layout.addWidget(program_name)
+        label = QLabel(self)
+        logo_img = QPixmap(r'D:\SX-Con\src\imgs\sxc_window_logo.png')#.scaledToWidth(300)
+        scaled_logo_image = logo_img.scaledToWidth(logo_img.width(), Qt.TransformationMode.SmoothTransformation)
+        label.setPixmap(scaled_logo_image)
+        title_layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        title_layout.addStretch()  # Push to left
+
+        log_rev_container = QVBoxLayout()
+        self.logout_button = QPushButton("Logout")
+        self.logout_button.setObjectName("logout_button")
+        self.logout_button.clicked.connect(self.logout)
+        log_rev_container.addWidget(self.logout_button, alignment=Qt.AlignmentFlag.AlignTop)
 
         # Revision info
         self.revision_label = QLabel(SPOT.APP_VERSION)
         self.revision_label.setObjectName("revision_label")
-        title_layout.addWidget(self.revision_label)
+        log_rev_container.addWidget(self.revision_label)
 
-        title_layout.addStretch()  # Push to left
+        title_layout.addLayout(log_rev_container)
         layout.addLayout(title_layout)
 
         self.setup_tabs()
@@ -73,12 +84,7 @@ class MainWindow(QWidget):
         self.status_label = QLabel("Ready to create record")
         status_section.addWidget(self.status_label)
         status_section.addStretch()
-
         layout.addWidget(status_container)
-        self.logout_button = QPushButton("Logout")
-        self.logout_button.setObjectName("logout_button")
-        self.logout_button.clicked.connect(self.logout)
-        title_layout.addWidget(self.logout_button)
 
     def setup_tabs(self):
         self.tabs = QTabWidget()
