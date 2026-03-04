@@ -8,9 +8,11 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
 
+from handlers.handler_open_close import handler_open_close_btns
 from handlers.handler_print import handler_print
 from handlers.handler_pdf import handler_db_pdf
 from services.get_item import get_item
+from services.get_property import get_property
 from ui.core import excel
 from ui.core.view_ticket import ViewTicket
 from utils.core import generate_excel as xls_gen
@@ -109,11 +111,6 @@ class OpenTicketsTab(BaseTab):
         ticket_number_input.setPlaceholderText("XXXX")
         ticket_number_input.setReadOnly(True)
         ticket_number_input.setFixedWidth(80)
-
-        # Set ticket number if provided
-        if ticket_data:
-            ticket_number_input.setText(str(ticket_data.get('ticket_number', '')))
-
         line1_layout.addWidget(ticket_number_input)
         tickets_section['ticket_num'] = ticket_number_input
 
@@ -123,11 +120,6 @@ class OpenTicketsTab(BaseTab):
         datetime_input.setObjectName("READ_ONLY")
         datetime_input.setReadOnly(True)
         datetime_input.setFixedWidth(175)
-
-        # Set datetime if provided
-        if ticket_data:
-            datetime_input.setText(str(ticket_data.get('datetime', '')))
-
         line1_layout.addWidget(datetime_input)
         tickets_section['datetime'] = datetime_input
 
@@ -138,11 +130,6 @@ class OpenTicketsTab(BaseTab):
         status_input.setPlaceholderText("OPEN")
         status_input.setReadOnly(True)
         status_input.setFixedWidth(70)
-
-        # Set status if provided
-        if ticket_data:
-            status_input.setText(str(ticket_data.get('status', '')))
-
         line1_layout.addWidget(status_input)
         tickets_section['status'] = status_input
 
@@ -165,6 +152,18 @@ class OpenTicketsTab(BaseTab):
         print_btn = QPushButton("Print")
         line1_layout.addWidget(print_btn)
         tickets_section['print_btn'] = print_btn
+
+        close_btn = QPushButton("Close")
+        close_btn.setObjectName("red_btn")
+        close_btn.setFixedWidth(68)
+        line1_layout.addWidget(close_btn)
+        tickets_section['close_btn'] = close_btn
+
+        open_btn = QPushButton("Open")
+        open_btn.setObjectName("green_btn")
+        open_btn.setFixedWidth(68)
+        line1_layout.addWidget(open_btn)
+        tickets_section['open_btn'] = open_btn
 
         section_layout.addLayout(line1_layout)
 
@@ -194,8 +193,34 @@ class OpenTicketsTab(BaseTab):
         pdf_btn.clicked.connect(self.make_pdf_handler(ticket_number_input.text()))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
         print_btn.clicked.connect(self.make_print_handler(ticket_number_input.text()))
+        close_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "closed"))
+        open_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "open"))
 
         self.tickets_section.append(tickets_section)
+
+    def handle_open_close_btns(self, ticket_index, action):
+        def handler():
+            try:
+                ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
+                if action == "open":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"OPENED ticket {ticket_number}")
+                    self.tickets_section[ticket_index]['status'].setText("OPEN")
+                    self.tickets_section[ticket_index]['open_btn'].hide()
+                    self.tickets_section[ticket_index]['close_btn'].show()
+                elif action == "closed":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"CLOSED ticket {ticket_number}")
+                    self.tickets_section[ticket_index]['status'].setText("CLOSED")
+                    self.tickets_section[ticket_index]['close_btn'].hide()
+                    self.tickets_section[ticket_index]['open_btn'].show()
+                self.tickets_section[ticket_index]['status'].setText(
+                    get_property("Consignments", "status", "consignment", ticket_number)
+                )
+                self.parent().setFocus()
+            except Exception as e:
+                log.error(f"Could not {action} ticket {ticket_number}: {e}")
+        return handler
 
     def make_print_handler(self, ticket_number):
         def handler():
@@ -274,9 +299,9 @@ class OpenTicketsTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        self.update_btn.clicked.connect(self.fetch_on_clicked)
+        self.update_btn.clicked.connect(self.on_fetch_clicked)
 
-    def fetch_on_clicked(self):
+    def on_fetch_clicked(self):
         """
         :purpose: calls fetch method and adds ticket sections
         :return: None
@@ -288,7 +313,15 @@ class OpenTicketsTab(BaseTab):
             log.warning(f"No tickets found for Status: OPEN")
         else:
             for ticket in tickets:
-                self.add_ticket_section(ticket)  # Pass ticket data to populate fields
+                self.add_ticket_section()  # Pass ticket data to populate fields
+                last_section = self.tickets_section[-1]
+                last_section['ticket_num'].setText(str(ticket['ticket_number']))
+                last_section['datetime'].setText(str(ticket['datetime']))
+                last_section['status'].setText(ticket['status'])
+                if last_section['status'].text().strip() == "CLOSED":
+                    last_section['close_btn'].hide()
+                if last_section['status'].text().strip() == "OPEN":
+                    last_section['open_btn'].hide()
 
     def fetch(self, status):
         try:

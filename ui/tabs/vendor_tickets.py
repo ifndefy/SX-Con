@@ -9,9 +9,11 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
 
+from handlers.handler_open_close import handler_open_close_btns
 from handlers.handler_print import handler_print
 from handlers.handler_pdf import handler_db_pdf
 from services.get_item import get_item
+from services.get_property import get_property
 from services.get_item_by_property import get_item_by_property
 from ui.core import format_phone
 from ui.core import format_state
@@ -35,6 +37,7 @@ class VendorTicketsTab(BaseTab):
     def setup_ui(self):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        # scroll.setFixedWidth(1050)
         scroll_content = QWidget()
         layout = QVBoxLayout(scroll_content)
 
@@ -229,9 +232,17 @@ class VendorTicketsTab(BaseTab):
 
         close_btn = QPushButton("Close")
         close_btn.setObjectName("red_btn")
+        close_btn.setFixedWidth(68)
         line1_layout.addWidget(close_btn)
         tickets_section['close_btn'] = close_btn
 
+        open_btn = QPushButton("Open")
+        open_btn.setObjectName("green_btn")
+        open_btn.setFixedWidth(68)
+        line1_layout.addWidget(open_btn)
+        tickets_section['open_btn'] = open_btn
+
+        line1_layout.addStretch()
         section_layout.addLayout(line1_layout)
 
         details_container = QWidget()
@@ -258,8 +269,34 @@ class VendorTicketsTab(BaseTab):
         pdf_btn.clicked.connect(self.make_pdf_handler(ticket_index))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
         print_btn.clicked.connect(self.make_print_handler(ticket_index))
+        close_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "closed"))
+        open_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "open"))
 
         self.tickets_section.append(tickets_section)
+
+    def handle_open_close_btns(self, ticket_index, action):
+        def handler():
+            try:
+                ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
+                if action == "open":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"OPENED ticket {ticket_number}")
+                    self.tickets_section[ticket_index]['status'].setText("OPEN")
+                    self.tickets_section[ticket_index]['open_btn'].hide()
+                    self.tickets_section[ticket_index]['close_btn'].show()
+                elif action == "closed":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"CLOSED ticket {ticket_number}")
+                    self.tickets_section[ticket_index]['status'].setText("CLOSED")
+                    self.tickets_section[ticket_index]['close_btn'].hide()
+                    self.tickets_section[ticket_index]['open_btn'].show()
+                self.tickets_section[ticket_index]['status'].setText(
+                    get_property("Consignments", "status", "consignment", ticket_number)
+                )
+                self.parent().setFocus()
+            except Exception as e:
+                log.error(f"Could not {action} ticket {ticket_number}: {e}")
+        return handler
 
     def make_print_handler(self, ticket_index):
         def handler():
@@ -359,6 +396,11 @@ class VendorTicketsTab(BaseTab):
                     last_section['ticket_num'].setText(str(ticket['ticket_number']))
                     last_section['datetime'].setText(str(ticket['datetime']))
                     last_section['status'].setText(ticket['status'])
+                    if last_section['status'].text().strip() == "CLOSED":
+                        last_section['close_btn'].hide()
+                    if last_section['status'].text().strip() == "OPEN":
+                        last_section['open_btn'].hide()
+
         else:
             status_bar_instance.send_message("Please enter a Vendor ID")
 
