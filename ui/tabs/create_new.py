@@ -19,6 +19,7 @@ from handlers import handler_print
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
 from services.message_bus import status_bar_instance
+from services.parse_consignment_table import fetch_consignment_data
 from src.core import generate_agg_data
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
@@ -29,19 +30,7 @@ from ui.core import format_phone, format_price, format_state, excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 
-
-BASE_RATE = 25
-
-def compute_rate(product_type: str) -> int:
-    """
-    :purpose: returns adjusted rate if product type is "hot food"
-    :return: int
-    :author(s): Colin Henderson
-    """
-    t = (product_type or "").strip().lower()
-    if t in ("hot food", "hot foods"):
-        return 30
-    return BASE_RATE
+import decimal as d
 
 class CreateNewTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -62,6 +51,7 @@ class CreateNewTab(BaseTab):
         self.revenue_generation = None
         self.create_btn = None
 
+        self.rates_container = fetch_consignment_data()
         self.product_sections = []
         self.product_counter = 1
         self.db_connection = db_connection
@@ -424,7 +414,7 @@ class CreateNewTab(BaseTab):
         rate_input = QLineEdit()
         rate_input.setReadOnly(True)
         rate_input.setObjectName("READ_ONLY")
-        rate_input.setPlaceholderText(str(BASE_RATE))
+        rate_input.setPlaceholderText("N/A")
         rate_input.setFixedWidth(80)
         rate_input.setValidator(QIntValidator(0, 100, self))
         # Default to BASE_RATE until type indicates otherwise
@@ -518,15 +508,14 @@ class CreateNewTab(BaseTab):
 
     def _on_product_type_changed(self, product_section: dict):
         try:
+            print(self.rates_container)
             rate_widget = product_section.get('rate')
             type_widget = product_section.get('product_type')
             if not rate_widget or not type_widget:
+                log.error("Could not retreive type and rate subwidgets")
                 return
-            current = (rate_widget.text() or "").strip()
-            safe_to_override = (current == "" or current in (str(BASE_RATE), "30"))
-            if not safe_to_override:
-                return
-            new_rate = compute_rate(type_widget.currentText())
+            new_rate = self.rates_container[type_widget.currentText()]
+            print(new_rate)
             rate_widget.setText(str(new_rate))
         except Exception as e:
             log.error(f"Failed to auto-set rate: {e}")
@@ -806,7 +795,7 @@ class CreateNewTab(BaseTab):
 
                     rate_value = self._convert_rate(product.get('rate'))
                     if rate_value is None:
-                        rate_value = compute_rate(product.get('product_type'))
+                        rate_value = self.rates_container[product.get('product_type')]
 
                     product_doc = {
                         'id': f"product_{product_id}",
@@ -850,7 +839,7 @@ class CreateNewTab(BaseTab):
                             'rate': (
                                 self._convert_rate(product.get('rate'))
                                 if self._convert_rate(product.get('rate')) is not None
-                                else compute_rate(product.get('product_type'))
+                                else self.rates_container[product.get('product_type')]
                             ),
                             'price': self._convert_null(product['price']),
                             'quantity': self._convert_quantity(product['quantity']),
@@ -1094,15 +1083,6 @@ class CreateNewTab(BaseTab):
         - Update status; return -1 on any error, 0 on success
         """
         try:
-            subtotal = 0.0
-            for section in self.product_sections:
-                price = self._parse_money(section['price'].text())
-                qty = self._parse_int(section['quantity'].text())
-                if price < 0 or qty < 0:
-                    log.error("Error: Negative price or quantity")
-                    return -1
-                subtotal += price * qty
-
             records = getattr(self.revenue_generation, "revenue_records", None)
             if not records or len(records) != 4:
                 log.error("Error: Revenue widget not initialized")
@@ -1113,15 +1093,36 @@ class CreateNewTab(BaseTab):
                 log.error("Error: Revenue calculation method (SXC-22) not found")
                 return -1
 
+            #over every percentage sold bracket
             for rec in records:
-                pct_label = rec['percentage'].text()
-                result = calc(subtotal, 1, pct_label)
-                if result == -1 or not self._valid_revenue_result(result):
-                    log.error(f"Error: Invalid revenue output for {pct_label}")
-                    return -1
+                subtotal = {'gross': d.Decimal('0.00'), 
+                            'vendor': d.Decimal('0.00'), 
+                            'super_x': d.Decimal('0.00')}
+                #iterate over every product
+                for section in self.product_sections:
+                    price = self._parse_money(section['price'].text())
+                    qty = self._parse_int(section['quantity'].text())
+                    rate = self.rates_container[section['product_type'].currentText()]
 
-                rec['vendor'].setText(f"${float(result['vendor']):.2f}")
-                rec['super_x'].setText(f"${float(result['super_x']):.2f}")
+                    if price < 0 or qty < 0:
+                        log.error("Error: Negative price or quantity")
+                        return -1
+                    
+                    pct_label = rec['percentage'].text()
+                    #calculate that products revanue contribution at its consignment rate for amount sold
+                    result = calc(price, qty, pct_label, rate)
+
+                    if result == -1 or not self._valid_revenue_result(result):
+                        log.error(f"Error: Invalid revenue output for {pct_label}")
+                        return -1      
+
+                    #Add to totals
+                    subtotal['gross'] += result['gross']
+                    subtotal['vendor'] += result['vendor']
+                    subtotal['super_x'] += result['super_x']
+
+                rec['vendor'].setText(f"${float(subtotal['vendor']):.2f}")
+                rec['super_x'].setText(f"${float(subtotal['super_x']):.2f}")
 
             status_bar_instance.send_message("Revenue fields updated")
             return 0
@@ -1175,7 +1176,7 @@ class CreateNewTab(BaseTab):
                             if item and "rate" in item and item["rate"] is not None:
                                 product_section['rate'].setText(str(item["rate"]))
                         else:
-                         product_section['rate'].setText(str(compute_rate(item.get("product_type") if item else "")))
+                         product_section['rate'].setText(self.rates_container[item.get("product_type")] if item else "")
 
                     else:
                         # Product doesn't exist - clear and unlock
@@ -1192,7 +1193,7 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].style().polish(product_section['product_type'])
 
                         if 'rate' in product_section:
-                            product_section['rate'].setText(str(BASE_RATE))
+                            product_section['rate'].setText("N/A")
                     break
         except Exception as e:
             log.error(f"Failed to fetch record: {e}")
@@ -1232,7 +1233,7 @@ class CreateNewTab(BaseTab):
                             if "rate" in item and item["rate"] is not None:
                                 product_section['rate'].setText(str(item["rate"]))
                             else:
-                                product_section['rate'].setText(str(compute_rate(item.get("product_type"))))
+                                product_section['rate'].setText(self.rates_container[item.get("product_type")])
                     else:
                         product_section['product_id'].setObjectName("DEFAULT")
                         product_section['product_id'].setReadOnly(False)
@@ -1246,7 +1247,7 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].style().polish(product_section['product_type'])
 
                         product_section['rate'].setObjectName("DEFAULT")
-                        product_section['rate'].setText(str(BASE_RATE))
+                        product_section['rate'].setText("N/A")
                     break
         except Exception as e:
             log.error(f"Failed to fetch record by name: {e}")
