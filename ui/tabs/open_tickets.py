@@ -190,9 +190,9 @@ class OpenTicketsTab(BaseTab):
 
         # Connect the view button
         view_btn.clicked.connect(self.make_view_handler(ticket_index))
-        pdf_btn.clicked.connect(self.make_pdf_handler(ticket_number_input.text()))
+        pdf_btn.clicked.connect(self.make_pdf_handler(ticket_number_input))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
-        print_btn.clicked.connect(self.make_print_handler(ticket_number_input.text()))
+        print_btn.clicked.connect(self.make_print_handler(ticket_number_input))
         close_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "closed"))
         open_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "open"))
 
@@ -222,8 +222,9 @@ class OpenTicketsTab(BaseTab):
                 log.error(f"Could not {action} ticket {ticket_number}: {e}")
         return handler
 
-    def make_print_handler(self, ticket_number):
+    def make_print_handler(self, ticket_number_input):
         def handler():
+            ticket_number = ticket_number_input.text().strip()
             try:
                 handler_db_pdf(int(ticket_number))
             except Exception as e:
@@ -257,9 +258,10 @@ class OpenTicketsTab(BaseTab):
 
         return gather_ticket
 
-    def make_pdf_handler(self, ticket_number):
+    def make_pdf_handler(self, ticket_number_input):
         def handler():
-            self.handle_pdf_btn_clicked(int(ticket_number))
+            ticket_number = int(ticket_number_input.text().strip())
+            self.handle_pdf_btn_clicked(ticket_number)
         return handler
 
     def handle_pdf_btn_clicked(self, ticket_number):

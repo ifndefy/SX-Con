@@ -617,7 +617,9 @@ class CreateNewTab(BaseTab):
         vendor_data = self._gather_vendor_data()
         products_data = self._gather_products_data()
         self.update_revenue_fields()
+        self.rev_by_prod.handle_updating(self.product_sections)
         revenue_data = self._gather_revenue_data()
+
         try:
             if self._validate_required_fields(vendor_data, products_data):
                 handler_live_pdf(vendor_data, products_data, revenue_data)
@@ -628,6 +630,7 @@ class CreateNewTab(BaseTab):
                 return False
         except Exception as e:
             log.error(f"ERROR generating PDF for ticket {vendor_data['ticket_number']}: {e}")
+            return False
 
     def create_record(self):
         """

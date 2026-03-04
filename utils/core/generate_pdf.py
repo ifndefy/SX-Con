@@ -31,7 +31,7 @@ class PDF:
             self.set_pdf_filename()
             self.set_cursor(self.pdf_filename)
 
-        self.num_prods = len(self.ticket_data["price_data"]["products"])
+        self.num_prods = len(self.ticket_data["price_data"]["products"]) if self.ticket_data else 0
 
     def set_ticket_data(self):
         self.ticket_data = get_item_by_property("Consignments", "consignment", "ticket_number", self.ticket_num)
