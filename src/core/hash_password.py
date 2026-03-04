@@ -20,10 +20,3 @@ def hash_password(password: str) -> str:
 
     except Exception:
         return "-1"
-
-
-if __name__ == "__main__":
-    # Example usage (for testing only)
-    user_input = input("Enter password: ")
-    result = hash_password(user_input)
-    print(f"Result: {result}")
