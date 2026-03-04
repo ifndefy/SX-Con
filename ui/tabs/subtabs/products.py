@@ -15,6 +15,8 @@ from ui.tabs.base import BaseTab
 
 from services.insert_item import insert_item
 import utils.logger.logger as log
+from src.core import get_average_price as avg
+from src.core import get_latest_price as latest
 
 class ProductsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -291,7 +293,8 @@ class ProductsTab(BaseTab):
         line2_layout = QHBoxLayout()
         line2_layout.addWidget(QLabel("Average Price:"))
         avg_price = QLineEdit()
-        avg_price.setText("TBD") # todo:
+        avg_price_value = avg.get_average_price(prod_data['product_id'])
+        avg_price.setText(f"${avg_price_value:,.2f}")
         avg_price.setObjectName("READ_ONLY")
         avg_price.setReadOnly(True)
         avg_price.setMaxLength(30)
@@ -302,7 +305,8 @@ class ProductsTab(BaseTab):
 
         line2_layout.addWidget(QLabel("last Price:"))
         last_price = QLineEdit()
-        last_price.setText("TBD")
+        latest_price_val = latest.get_latest_price(prod_data['product_id'])
+        last_price.setText(f"${latest_price_val:,.2f}")
         last_price.setObjectName("READ_ONLY")
         last_price.setReadOnly(True)
         last_price.setMaxLength(30)
