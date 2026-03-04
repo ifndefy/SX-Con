@@ -2,11 +2,11 @@ import utils.logger.logger as log
 from services.connect_database import db_connection
 import pandas as pd
 
-def get_average_price(product_id):
+def get_latest_price(product_id):
     """
-    :Gets the average item price from a list containing all price data for a product
+    :Gets the latest item price from a list containing all price data for a product
     :args- price_data = list of dicts that contain the previous sales info 
-    :returns aggregate mean as float on success, -1 on fail
+    :returns latest price as float on success, -1 on fail
     """
     price_data = _fetch_price_history(product_id)
 
@@ -18,7 +18,7 @@ def get_average_price(product_id):
         return -1
     
     dataframe = pd.DataFrame(price_data)
-    
+
     if 'price' not in dataframe.columns:
         log.error("no price field found in price_data")
         return -1
@@ -26,13 +26,15 @@ def get_average_price(product_id):
     #Strip dollar signs
     dataframe['price'] = dataframe['price'].astype(str).str.replace('$', '')
     #Convert column to floats
-    dataframe['price'] = pd.to_numeric(dataframe['price'], errors = 'coerce')
-    
-    print(dataframe)
-    average = dataframe['price'].mean()
-    print(average)
+    dataframe['price'] = pd.to_numeric(dataframe['price'], errors='coerce')
 
-    return average
+    #convert string date to datetime, sort by date
+    dataframe['datetime'] = pd.to_datetime(dataframe['datetime'], format = "%m/%d/%y -- %H:%M")
+    dataframe = dataframe.sort_values(by = 'datetime', ascending = False)
+
+    print(dataframe)
+
+    return dataframe.iloc[0, dataframe.columns.get_loc('price')]
 
 def _fetch_price_history(product_id):
     try:
