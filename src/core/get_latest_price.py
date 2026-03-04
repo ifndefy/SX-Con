@@ -32,8 +32,6 @@ def get_latest_price(product_id):
     dataframe['datetime'] = pd.to_datetime(dataframe['datetime'], format = "%m/%d/%y -- %H:%M")
     dataframe = dataframe.sort_values(by = 'datetime', ascending = False)
 
-    print(dataframe)
-
     return dataframe.iloc[0, dataframe.columns.get_loc('price')]
 
 def _fetch_price_history(product_id):

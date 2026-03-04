@@ -28,9 +28,7 @@ def get_average_price(product_id):
     #Convert column to floats
     dataframe['price'] = pd.to_numeric(dataframe['price'], errors = 'coerce')
     
-    print(dataframe)
     average = dataframe['price'].mean()
-    print(average)
 
     return average
 
