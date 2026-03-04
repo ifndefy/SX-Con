@@ -16,7 +16,7 @@ from src import SPOT
 
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
-from core.hash_qa import hash_security_question_answer
+from src.core.hash_qa import hash_security_question_answer
 from src.core.hash_password import hash_password
 import utils.logger.logger as log
 from services.message_bus import status_bar_instance
@@ -452,6 +452,17 @@ class UsersTab(BaseTab):
         question2_response.setMaxLength(255)
         layout.addWidget(question2_response)
 
+        # Admin
+        admin_q_label = QLabel("Admin")
+        admin_q_label.setObjectName("label")
+        layout.addWidget(admin_q_label)
+        admin_question = QComboBox()
+        admin_question.addItems(["True", "False"])
+        admin_question.setObjectName("admin_question")
+        admin_question.setCurrentIndex(-1)
+        layout.addWidget(admin_question)
+
+
         layout.addStretch()
 
         # Buttons
@@ -517,7 +528,7 @@ class UsersTab(BaseTab):
             "q1_a": dialog.findChild(QLineEdit, "response1").text().strip(),
             "q2_q": dialog.findChild(QComboBox, "question2").currentText().strip(),
             "q2_a": dialog.findChild(QLineEdit, "response2").text().strip(),
-            "admin": False,
+            "admin": True if dialog.findChild(QComboBox, "admin_question").currentText().strip() == "True" else False,
             "type": "user"
         }
         return raw_user_data
