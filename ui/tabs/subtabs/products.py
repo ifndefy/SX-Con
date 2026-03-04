@@ -15,7 +15,7 @@ from ui.tabs.base import BaseTab
 
 from services.insert_item import insert_item
 import utils.logger.logger as log
-from ui.tabs.subtabs.utils import get_average_price as avg
+from src.core import get_average_price as avg
 
 class ProductsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -478,19 +478,3 @@ class ProductsTab(BaseTab):
 
     def validate_product_data(self, dialog):
         return True
-
-"""
-print(get_average_price(None)) #Expected: -1
-print(get_average_price([])) #Expected: -1
-print(get_average_price([{'wrong_cols' : 'hello', 'wrong_cols2' : 'hello2', 'wrong_cols3' : 30, 'wrong_cols4' :  40, 'wrong_cols5' : 50}])) #Expected: -1
-print(get_average_price([{'right_cols' : 'hello', 'right_cols2' : 'hello2', 'right_cols3' : 30, 'right_cols4' :  40, 'right_cols5' : 50, 'price' : 10}]) #Expected: 10.0
-
-print(get_average_price([
-    {'right_cols' : 'hello', 'right_cols2' : 'hello2', 'right_cols3' : 30, 'right_cols4' :  40, 'right_cols5' : 50, 'price' : 10},
-    {'right_cols' : 'hello', 'right_cols2' : 'hello2', 'right_cols3' : 30, 'right_cols4' :  40, 'right_cols5' : 50, 'price' : 20},
-    {'right_cols' : 'hello', 'right_cols2' : 'hello2', 'right_cols3' : 30, 'right_cols4' :  40, 'right_cols5' : 50, 'price' : 30},
-    {'right_cols' : 'hello', 'right_cols2' : 'hello2', 'right_cols3' : 30, 'right_cols4' :  40, 'right_cols5' : 50, 'price' : 40},
-    {'right_cols' : 'hello', 'right_cols2' : 'hello2', 'right_cols3' : 30, 'right_cols4' :  40, 'right_cols5' : 50, 'price' : 50},
-    {'right_cols' : 'hello', 'right_cols2' : 'hello2', 'right_cols3' : 30, 'right_cols4' :  40, 'right_cols5' : 50, 'price' : 60},
-    ]) #Expected: 35.0
-"""
