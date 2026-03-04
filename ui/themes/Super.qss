@@ -354,3 +354,28 @@ ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
     background-color: #E5C59B;
     color: #000000;
 }
+
+/*Entry QSS : admin_settings->rates*/
+QWidget#entry_body {
+    background-color: #8A6A52;
+    border: 1px solid #5C4033;
+}
+
+QWidget#entry_body:hover,
+QWidget#entry_body[state="READ_WRITE"]{
+    background-color: #E5C59B;
+    border: 0 px solid #5C4033;
+}
+
+/*Default entry Style: all entry field objects fall back to here for missing properties/invalid states*/
+QLineEdit#entry_field{
+    background-color: #E5C59B;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+/*State 01: Read-Only -> we change the background of the field and then fall back to the default style for the rest*/
+QLineEdit#entry_field[state="READ_ONLY"] {
+    background-color: #B0B0B0;
+}
