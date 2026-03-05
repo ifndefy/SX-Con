@@ -344,10 +344,6 @@ class UsersTab(BaseTab):
         edit_btn.setObjectName("red_btn")
         line3_layout.addWidget(edit_btn)
 
-        del_btn = QPushButton("Delete")
-        del_btn.setObjectName("red_btn")
-        line3_layout.addWidget(del_btn)
-
         section_layout.addLayout(line3_layout)
 
         hr = QFrame()
