@@ -283,6 +283,14 @@ class CreateNewTab(BaseTab):
         combo_section_row_0.addWidget(vr1)
         combo_section_row_0.addStretch()
 
+        # wrap bottom middle to enable calculate button to expand
+        bot_mid_widget = QWidget()
+        bot_mid_layout = QVBoxLayout(bot_mid_widget)
+        bot_mid_layout.setContentsMargins(0, 0, 0, 0)
+
+        # top half of the bottom contains the revenue data
+        middle_top_row = QHBoxLayout()
+
         rev_by_prod_widget = QWidget()
         rev_prod_section = QVBoxLayout(rev_by_prod_widget)
         rev_by_prod_title = QLabel("Revenue by Product Type")
@@ -290,32 +298,31 @@ class CreateNewTab(BaseTab):
         rev_prod_section.addWidget(rev_by_prod_title, alignment=Qt.AlignmentFlag.AlignRight)
         self.rev_by_prod = RevenueByProdType()
         rev_prod_section.addWidget(self.rev_by_prod)
-        combo_section_row_0.addWidget(rev_by_prod_widget)
+        middle_top_row.addWidget(rev_by_prod_widget)
 
-        # HR Line to separate revenue fields
         vr2 = QFrame()
         vr2.setFrameShape(QFrame.Shape.VLine)
         vr2.setFrameShadow(QFrame.Shadow.Sunken)
         vr2.setObjectName("hr")
-        combo_section_row_0.addWidget(vr2)
+        middle_top_row.addWidget(vr2)
 
-        # Revenue Sharing section
         revenue_widget = QWidget()
         revenue_section = QVBoxLayout(revenue_widget)
         revenue_title = QLabel("Revenue Sharing")
         revenue_title.setObjectName("post_title")
         revenue_section.addWidget(revenue_title, alignment=Qt.AlignmentFlag.AlignCenter)
-
         self.revenue_generation = RevenueGeneration()
         revenue_section.addWidget(self.revenue_generation)
+        revenue_section.addStretch()
+        middle_top_row.addWidget(revenue_widget)
+
+        bot_mid_layout.addLayout(middle_top_row)
 
         self.calc_btn = QPushButton("Calculate")
         self.calc_btn.setObjectName("post_title")
-        revenue_section.addWidget(self.calc_btn)
+        bot_mid_layout.addWidget(self.calc_btn)
 
-        revenue_section.addStretch()
-
-        combo_section_row_0.addWidget(revenue_widget)
+        combo_section_row_0.addWidget(bot_mid_widget)
         combo_section_row_0.addStretch()
 
         # HR Line to separate revenue fields from action buttons

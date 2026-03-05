@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
@@ -57,7 +58,9 @@ class OpenTicketsTab(BaseTab):
         layout.addLayout(header_section)
 
         # HR Line between Vendor and Tickets sections
-        hr1 = QLabel()
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
@@ -72,9 +75,11 @@ class OpenTicketsTab(BaseTab):
         layout.addStretch()
 
         # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
-        hr3.setObjectName("hr")
-        layout.addWidget(hr3)
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
