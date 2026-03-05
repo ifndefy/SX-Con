@@ -1,13 +1,9 @@
 """
 tests if instances of format_price is correctly placing the decimal place
 """
-import sys
-from PyQt6.QtWidgets import QApplication
-
 from ui.core.format_price import PriceField
 
-def test_format_price():
-    app = QApplication(sys.argv)
+def test_format_price(app):
     test_price_field = PriceField()
 
     test_price_field.setText("1")

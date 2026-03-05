@@ -1,13 +1,9 @@
 """
 tests if instances of format_phone are correctly masking inputs
 """
-import sys
-from PyQt6.QtWidgets import QApplication
-
 from ui.core.format_phone import PhoneNumField
 
-def test_format_phone():
-    app = QApplication(sys.argv)
+def test_format_phone(app):
     test_phone_field = PhoneNumField()
 
     test_phone_field.setText("1")
