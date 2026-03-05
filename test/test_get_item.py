@@ -14,7 +14,7 @@ def test_get_item() -> int:
         "Consignments": ["consignment"]
     }
 
-    entity_id = "1"
+    entity_id = "2"
     # --------------------------------------
 
     for container, entity_types in test_matrix.items():

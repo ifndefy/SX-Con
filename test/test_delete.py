@@ -64,3 +64,7 @@ def test_delete_property():
     item = get_item(container_name, entity_type, entity_id)
     if item.get(attribute_to_delete) is not None:
         assert False, "Item property still exists in database"
+
+    del_rc = delete_item(container_name, entity_type, entity_id)
+    if del_rc != 0:
+        assert False, "Failed to delete item from database"
