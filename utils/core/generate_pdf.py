@@ -31,7 +31,13 @@ class PDF:
             self.set_pdf_filename()
             self.set_cursor(self.pdf_filename)
 
-        self.num_prods = len(self.ticket_data["price_data"]["products"]) if self.ticket_data else 0
+        self.num_prods = 0
+        if self.ticket_data:
+            for p in self.ticket_data["price_data"]["products"]:
+                for f in ("product_id", "product_name", "price", "quantity"):
+                    if p.get(f) not in (None, "", "NULL", "$0.00", "0"):
+                        self.num_prods += 1
+                        break
 
     def set_ticket_data(self):
         self.ticket_data = get_item_by_property("Consignments", "consignment", "ticket_number", self.ticket_num)
@@ -104,12 +110,29 @@ class PDF:
 
         self.save_y(y)
 
+    @staticmethod
+    def _is_valid_product(p):
+        """
+        :purpose: validate if a product is fully null
+        :Author(s): Joe lee
+        """
+        check_fields = ("product_id", "product_name", "price", "quantity")
+        for f in check_fields:
+            if p.get(f) not in (None, "", "NULL", "$0.00", "0"):
+                return True
+        return False
+
     def draw_ticket_content(self, cursor, y_axis):
         y_prod = y_axis
         c = cursor
 
-        count = 0
+        valid_products = []
         for prod in self.ticket_data["price_data"]["products"]:
+            if self._is_valid_product(prod):
+                valid_products.append(prod)
+
+        count = 0
+        for prod in valid_products:
             c.setFont("Helvetica-Bold", 10)
             c.drawString(30, y_prod, "Product ID:")
             c.rect(85, y_prod - 3, 34, 15)

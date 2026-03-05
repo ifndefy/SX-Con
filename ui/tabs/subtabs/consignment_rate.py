@@ -3,7 +3,7 @@ import pandas as pd
 from ui.tabs.base import BaseTab
 import utils.logger.logger as log
 
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QFrame
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea, QSpacerItem
 from PyQt6.QtWidgets import QLabel, QLineEdit, QPushButton
 from PyQt6.QtGui import QIntValidator
@@ -45,8 +45,11 @@ class CRTab(BaseTab):
         self.tab_header.addStretch()
         
         #Add break line
-        hr1 = QLabel()
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
+        self.main_layout.addWidget(hr1)
 
         #Ticket Section
         self.consignments_section = QWidget()
