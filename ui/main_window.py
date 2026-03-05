@@ -9,6 +9,8 @@ from PyQt6.QtWidgets import QPushButton
 
 from handlers.api_handler import APIHandler
 from src import SPOT
+from src.imgs import img_helpers
+from src.user import current_user
 from ui.core.theme_manager import ThemeManager
 from ui.core.status_bar import StatusBar
 from ui.tabs.create_new import CreateNewTab
@@ -22,6 +24,7 @@ import utils.logger.logger as log
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.current_user = current_user
         self.status_label = None
         self.revision_label = None
         self.theme_dropdown_menu = None
@@ -32,17 +35,18 @@ class MainWindow(QWidget):
         self.settings_tab = None
         self.admin_settings_tab = None
 
+        self.logo_path = img_helpers.get_window_logo_path()
         self.api_handler = APIHandler()
         self.theme_manager = ThemeManager()
         self.db_connection = db_connection
         self.setup_window()
         self.setup_ui()
-        self.theme_manager.apply_default_theme(self)               
+        self.theme_manager.apply_default_theme(self)
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
-        self.setGeometry(0, 0, 1100, 794)
-        self.setMinimumSize(1100, 794)
+        self.setGeometry(0, 0, 1100, 795)
+        self.setMinimumSize(1100, 795)
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -51,7 +55,7 @@ class MainWindow(QWidget):
         title_layout = QHBoxLayout()
 
         label = QLabel(self)
-        logo_img = QPixmap(r'D:\SX-Con\src\imgs\sxc_window_logo.png')#.scaledToWidth(300)
+        logo_img = QPixmap(self.logo_path)
         scaled_logo_image = logo_img.scaledToWidth(logo_img.width(), Qt.TransformationMode.SmoothTransformation)
         label.setPixmap(scaled_logo_image)
         title_layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -94,14 +98,16 @@ class MainWindow(QWidget):
         self.vendor_tickets_tab = VendorTicketsTab(self.api_handler, self.db_connection)
         self.open_tickets_tab = OpenTicketsTab(self.api_handler, self.db_connection)
         self.settings_tab = SettingsTab(self.api_handler)
-        self.admin_settings_tab = AdminSettingsTab(self.api_handler, self.db_connection)
 
         self.tabs.addTab(self.create_new_tab, "Create New")
         self.tabs.addTab(self.vendor_tickets_tab, "Vendor Tickets")
         self.tabs.addTab(self.open_tickets_tab, "Open Tickets")
         self.tabs.addTab(self.settings_tab, "Settings")
-        self.tabs.addTab(self.admin_settings_tab, "Admin Settings")
 
+        if current_user.is_admin():
+            self.admin_settings_tab = AdminSettingsTab(self.api_handler, self.db_connection)
+            self.tabs.addTab(self.admin_settings_tab, "Admin Settings")
+            self.tabs.tabBar().setStyleSheet("QTabBar::tab:last { background-color: #691601; }")
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
     def on_tab_changed(self, index):
