@@ -17,7 +17,7 @@ def test_get_property() -> int:
     }
 
     attribute = "id"
-    entity_id = "1"
+    entity_id = "2"
 
     for container_name, entity_types in test_matrix.items():
         for entity_type in entity_types:

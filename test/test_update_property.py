@@ -1,7 +1,5 @@
 import random
-import time
 from services.delete_item import delete_item
-from services.get_item import get_item
 from services.get_property import get_property
 from services.insert_item import insert_item
 from services.update_property import update_property
