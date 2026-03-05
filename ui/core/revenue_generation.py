@@ -196,7 +196,9 @@ class RevenueGeneration(QWidget):
             if diff != 0:
                 vendor = (vendor + diff).quantize(q2, rounding=ROUND_HALF_UP)
 
-            return {"gross": f"{gross:.2f}", "vendor": f"{vendor:.2f}", "super_x": f"{super_x:.2f}"}
+            return {"gross": gross, 
+                    "vendor": vendor, 
+                    "super_x": super_x}
 
         except (InvalidOperation, ValueError, TypeError):
             return -1
