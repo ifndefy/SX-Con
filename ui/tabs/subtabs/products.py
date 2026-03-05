@@ -1,6 +1,8 @@
 from PyQt6.QtCore import QTimer
-from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import QVBoxLayout, QFrame
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -68,9 +70,10 @@ class ProductsTab(BaseTab):
         product_section_row_1.addWidget(QLabel("ProductID:"))
         self.product_id_input = QLineEdit()
         self.product_id_input.setPlaceholderText("P ID")
-        self.product_id_input.setMaxLength(30)
+        self.product_id_input.setMaxLength(10)
         self.product_id_input.setFixedWidth(102)
-        self.product_id_input.setValidator(QIntValidator(0, 9999, self))
+        product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
+        self.product_id_input.setValidator(product_id_validator)
         self.product_id_input.textChanged.connect(self.on_search_input_changed)
         product_section_row_1.addWidget(self.product_id_input)
 
@@ -79,6 +82,8 @@ class ProductsTab(BaseTab):
         self.product_name_input.setPlaceholderText("Produce Name")
         self.product_name_input.setMaxLength(30)
         self.product_name_input.setFixedWidth(265)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.product_name_input.setValidator(alpha_validator)
         self.product_name_input.textChanged.connect(self.on_search_input_changed)
         product_section_row_1.addWidget(self.product_name_input)
 
