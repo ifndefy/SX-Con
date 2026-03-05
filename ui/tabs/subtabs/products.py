@@ -1,6 +1,8 @@
-from PyQt6.QtCore import QTimer, QRegularExpression
-from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
-from PyQt6.QtWidgets import QVBoxLayout, QFrame
+from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel

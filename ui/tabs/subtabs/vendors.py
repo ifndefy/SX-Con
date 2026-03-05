@@ -1,6 +1,10 @@
-from PyQt6.QtCore import QTimer, QRegularExpression
-from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
-from PyQt6.QtWidgets import QVBoxLayout, QDialog, QFrame
+from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QIntValidator
+from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
@@ -8,7 +12,6 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from ui.core.format_phone import PhoneNumField
 from ui.tabs.base import BaseTab
 
 from ui.core import format_phone
