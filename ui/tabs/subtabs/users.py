@@ -55,6 +55,7 @@ class UsersTab(BaseTab):
         header_section.addStretch()  # Push to the left
 
         self.create_btn = QPushButton("Create New User")
+        self.create_btn.setFixedWidth(200)
         header_section.addWidget(self.create_btn)
 
         layout.addLayout(header_section)  # Ends creation and adds header_section to window

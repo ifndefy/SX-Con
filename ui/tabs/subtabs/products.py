@@ -51,6 +51,7 @@ class ProductsTab(BaseTab):
         header_section.addStretch() # push to the left
 
         self.create_btn = QPushButton("Create New Product")
+        self.create_btn.setFixedWidth(200)
         header_section.addWidget(self.create_btn)
 
         # Ends creation and adds header_section to window
