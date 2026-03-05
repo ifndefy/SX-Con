@@ -333,9 +333,6 @@ class ProductsTab(BaseTab):
         self.edit_btn = QPushButton("Edit")
         self.edit_btn.setObjectName("red_btn")
         line3_layout.addWidget(self.edit_btn)
-        self.del_btn = QPushButton("Delete")
-        self.del_btn.setObjectName("red_btn")
-        line3_layout.addWidget(self.del_btn)
 
         section_layout.addLayout(line3_layout)
 
