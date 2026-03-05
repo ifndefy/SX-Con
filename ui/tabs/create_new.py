@@ -503,19 +503,16 @@ class CreateNewTab(BaseTab):
             return
 
         total = RevenueGeneration.calculate_total(fixed_price, qty, rate_text)
-        print(total)
         section['total'].setText(f"${total:.2f}")
 
     def _on_product_type_changed(self, product_section: dict):
         try:
-            print(self.rates_container)
             rate_widget = product_section.get('rate')
             type_widget = product_section.get('product_type')
             if not rate_widget or not type_widget:
                 log.error("Could not retreive type and rate subwidgets")
                 return
             new_rate = self.rates_container[type_widget.currentText()]
-            print(new_rate)
             rate_widget.setText(str(new_rate))
         except Exception as e:
             log.error(f"Failed to auto-set rate: {e}")

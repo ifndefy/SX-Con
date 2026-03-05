@@ -188,17 +188,17 @@ class RevenueGeneration(QWidget):
             super_x = gross * r
             vendor = gross * (Decimal("1") - r)
 
-            gross = gross.quantize(q2)
-            vendor = vendor.quantize(q2)
-            super_x = super_x.quantize(q2)
+            gross = gross.quantize(q2, rounding=ROUND_HALF_UP)
+            vendor = vendor.quantize(q2, rounding=ROUND_HALF_UP)
+            super_x = super_x.quantize(q2, rounding=ROUND_HALF_UP)
 
             diff = gross - (vendor + super_x)
             if diff != 0:
-                vendor = (vendor + diff).quantize(q2)
+                vendor = (vendor + diff).quantize(q2, rounding=ROUND_HALF_UP)
 
-            return {"gross":round(gross, 2), 
-                    "vendor": round(vendor,2), 
-                    "super_x": round(super_x,2)}
+            return {"gross": gross, 
+                    "vendor": vendor, 
+                    "super_x": super_x}
 
         except (InvalidOperation, ValueError, TypeError):
             return -1
