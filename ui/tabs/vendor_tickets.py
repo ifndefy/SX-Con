@@ -1,7 +1,8 @@
+from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QVBoxLayout
-from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QFrame
+from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
@@ -16,7 +17,6 @@ from handlers.handler_print import handler_print
 from handlers.handler_pdf import handler_db_pdf
 from services.get_item import get_item
 from services.get_property import get_property
-from services.get_item_by_property import get_item_by_property
 from ui.core import format_phone
 from ui.core import format_state
 from ui.core import excel
@@ -25,6 +25,7 @@ from utils.core import generate_excel as xls_gen
 
 from services.message_bus import status_bar_instance
 import utils.logger.logger as log
+
 
 class VendorTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -36,39 +37,46 @@ class VendorTicketsTab(BaseTab):
 
         super().__init__(api_handler, "vendor_tickets")
 
+        self.search_timer = QTimer()
+        self.search_timer.setSingleShot(True)
+        self.search_timer.timeout.connect(self.build_and_search)
+
     def setup_ui(self):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        # scroll.setFixedWidth(1050)
         scroll_content = QWidget()
         layout = QVBoxLayout(scroll_content)
 
         vendor_section_row_0 = QHBoxLayout()
-
-        vendor_title = QLabel("Vendor Information")
+        vendor_title = QLabel("View Vendor Tickets")
         vendor_title.setObjectName("post_title")
         vendor_section_row_0.addWidget(vendor_title)
-
         vendor_section_row_0.addStretch()
-
         layout.addLayout(vendor_section_row_0)
+
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
+        hr1.setObjectName("hr")
+        layout.addWidget(hr1)
 
         vendor_section_row_1 = QHBoxLayout()
 
         vendor_section_row_1.addWidget(QLabel("Vendor ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setPlaceholderText("V ID")
+        self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
-        self.vendor_id_input.textEdited.connect(self.auto_pop_vend)
+        self.vendor_id_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
-        self.phone_input = format_phone.PhoneNumField()
-        self.phone_input.setFixedWidth(150)
-        self.phone_input.setValidator(QIntValidator(0, 2147483647, self))
-        self.phone_input.textEdited.connect(self.auto_pop_vend_by_phone)
-        vendor_section_row_1.addWidget(self.phone_input)
+        self.phone_number_input = format_phone.PhoneNumField()
+        self.phone_number_input.setMaxLength(12)
+        self.phone_number_input.setFixedWidth(150)
+        self.phone_number_input.textChanged.connect(self.on_search_input_changed)
+        vendor_section_row_1.addWidget(self.phone_number_input)
 
         vendor_section_row_1.addStretch()
         layout.addLayout(vendor_section_row_1)
@@ -77,91 +85,93 @@ class VendorTicketsTab(BaseTab):
 
         vendor_section_row_2.addWidget(QLabel("First Name:"))
         self.first_name_input = QLineEdit()
-        self.first_name_input.setObjectName("READ_ONLY")
         self.first_name_input.setPlaceholderText("First Name")
-        self.first_name_input.setReadOnly(True)
         self.first_name_input.setMaxLength(30)
-        self.first_name_input.setMinimumWidth(263)
+        self.first_name_input.setFixedWidth(263)
+        self.first_name_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_2.addWidget(self.first_name_input)
 
         vendor_section_row_2.addWidget(QLabel("Middle Name:"))
         self.middle_name_input = QLineEdit()
-        self.middle_name_input.setObjectName("READ_ONLY")
-        self.middle_name_input.setPlaceholderText("Middle Name")
-        self.middle_name_input.setReadOnly(True)
+        self.middle_name_input.setPlaceholderText("M. Name")
         self.middle_name_input.setMaxLength(10)
-        self.middle_name_input.setMinimumWidth(103)
+        self.middle_name_input.setFixedWidth(103)
+        self.middle_name_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_2.addWidget(self.middle_name_input)
 
         vendor_section_row_2.addWidget(QLabel("Last Name:"))
         self.last_name_input = QLineEdit()
-        self.last_name_input.setObjectName("READ_ONLY")
         self.last_name_input.setPlaceholderText("Last Name")
-        self.last_name_input.setReadOnly(True)
         self.last_name_input.setMaxLength(30)
-        self.last_name_input.setMinimumWidth(263)
+        self.last_name_input.setFixedWidth(263)
+        self.last_name_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_2.addWidget(self.last_name_input)
 
+        vendor_section_row_2.addStretch()
         layout.addLayout(vendor_section_row_2)
 
         vendor_section_row_3 = QHBoxLayout()
 
         vendor_section_row_3.addWidget(QLabel("Address:"))
         self.address_input = QLineEdit()
-        self.address_input.setObjectName("READ_ONLY")
         self.address_input.setPlaceholderText("Address")
-        self.address_input.setReadOnly(True)
         self.address_input.setMaxLength(255)
+        self.address_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_3.addWidget(self.address_input)
 
         vendor_section_row_3.addWidget(QLabel("City:"))
         self.city_input = QLineEdit()
-        self.city_input.setObjectName("READ_ONLY")
         self.city_input.setPlaceholderText("City")
-        self.city_input.setReadOnly(True)
         self.city_input.setMaxLength(30)
+        self.city_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_3.addWidget(self.city_input)
 
         vendor_section_row_3.addWidget(QLabel("State:"))
         self.state_input = format_state.FormatState()
-        self.state_input.setObjectName("READ_ONLY")
-        self.state_input.setReadOnly(True)
-        self.state_input.setMaxLength(2)
         self.state_input.setFixedWidth(50)
+        self.state_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_3.addWidget(self.state_input)
 
-        vendor_section_row_3.addWidget(QLabel("Zip Code:"))
+        vendor_section_row_3.addWidget(QLabel("Zip:"))
         self.zip_input = QLineEdit()
-        self.zip_input.setObjectName("READ_ONLY")
         self.zip_input.setPlaceholderText("Zip")
-        self.zip_input.setReadOnly(True)
         self.zip_input.setMaxLength(5)
         self.zip_input.setFixedWidth(70)
+        self.zip_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_3.addWidget(self.zip_input)
 
+        vendor_section_row_3.addStretch()
         layout.addLayout(vendor_section_row_3)
 
-        hr1 = QFrame()
-        hr1.setFrameShape(QFrame.Shape.HLine)
-        hr1.setFrameShadow(QFrame.Shadow.Sunken)
-        hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        action_section = QHBoxLayout()
+
+        self.clear_btn = QPushButton("Clear")
+        self.clear_btn.setFixedWidth(200)
+        action_section.addWidget(self.clear_btn)
+
+        action_section.addStretch()
+
+        self.search_btn = QPushButton("Search")
+        self.search_btn.setFixedWidth(200)
+        action_section.addWidget(self.search_btn)
+
+        layout.addLayout(action_section)
+
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
 
         ticket_section_row_0 = QHBoxLayout()
-
         ticket_title = QLabel("Tickets")
         ticket_title.setObjectName("post_title")
         ticket_section_row_0.addWidget(ticket_title)
-
         layout.addLayout(ticket_section_row_0)
 
         self.tickets_layout = QVBoxLayout()
-
         layout.addLayout(self.tickets_layout)
 
-        ticket_section_row_1 = QHBoxLayout()
-
-        layout.addLayout(ticket_section_row_1)
         layout.addStretch(1)
 
         hr2 = QFrame()
@@ -174,14 +184,220 @@ class VendorTicketsTab(BaseTab):
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
 
-        vendor_section_row_3 = QHBoxLayout()
-        # vendor_section_row_3.addStretch()
-        self.fetch_btn = QPushButton("Fetch")
-        # self.fetch_btn.setFixedWidth(200)
-        vendor_section_row_3.addWidget(self.fetch_btn)
-        main_layout.addLayout(vendor_section_row_3)
-
         self.setup_button_connections()
+
+    def clear(self):
+        """
+        :purpose: clears all input fields and fetched items
+        :author(s): Joe Lee
+        """
+        self.search_timer.stop()
+        self.remove_ticket_section()
+        fields = [
+            self.vendor_id_input,
+            self.phone_number_input,
+            self.first_name_input,
+            self.middle_name_input,
+            self.last_name_input,
+            self.address_input,
+            self.city_input,
+            self.state_input,
+            self.zip_input,
+        ]
+        for field in fields:
+            field.blockSignals(True)
+            field.clear()
+            field.setReadOnly(False)
+            field.setObjectName("DEFAULT")
+            field.blockSignals(False)
+            field.style().unpolish(field)
+            field.style().polish(field)
+
+        status_bar_instance.send_message("Query and Results cleared")
+
+    def on_search_input_changed(self):
+        """
+        :Purpose: forces a wait before triggering search
+        :Author(s): Joe Lee
+        """
+        self.search_timer.start(300)
+
+    def build_and_search(self):
+        """
+        :Purpose: Builds a vendor query from input fields, then fetches matching tickets
+        :Author(s): Joe Lee
+        """
+        self.remove_ticket_section()
+
+        conditions = ["c.type = 'vendor'"]
+        properties = []
+
+        def add_property(prop, value, operator="="):
+            if value:
+                if operator == "CONTAINS":
+                    conditions.append(f"CONTAINS(LOWER(c.{prop}), LOWER(@{prop}))")
+                else:
+                    conditions.append(f"c.{prop} {operator} @{prop}")
+                properties.append({"name": f"@{prop}", "value": value})
+
+        vendor_id = self.vendor_id_input.text().strip()
+        if vendor_id:
+            try:
+                add_property("vendor_id", int(vendor_id), "=")
+            except ValueError:
+                pass
+
+        phone = self.phone_number_input.text().strip()
+        if phone:
+            add_property("phone", phone, "CONTAINS")
+
+        first_name = self.first_name_input.text().strip()
+        if first_name:
+            add_property("first_name", first_name, "CONTAINS")
+
+        middle_name = self.middle_name_input.text().strip()
+        if middle_name:
+            add_property("middle_name", middle_name, "CONTAINS")
+
+        last_name = self.last_name_input.text().strip()
+        if last_name:
+            add_property("last_name", last_name, "CONTAINS")
+
+        address = self.address_input.text().strip()
+        if address:
+            add_property("address", address, "CONTAINS")
+
+        city = self.city_input.text().strip()
+        if city:
+            add_property("city", city, "CONTAINS")
+
+        state = self.state_input.text().strip()
+        if state:
+            add_property("state", state, "CONTAINS")
+
+        zip_code = self.zip_input.text().strip()
+        if zip_code:
+            add_property("zip", zip_code, "CONTAINS")
+
+        if len(conditions) == 1:
+            self.fetch()
+            return
+
+        where_clause = " AND ".join(conditions)
+        vendor_query = f"SELECT c.vendor_id FROM c WHERE {where_clause}"
+        self.query_db(vendor_query, properties)
+
+    def query_db(self, vendor_query: str, properties: list = None):
+        """
+        :purpose: gets vendor id based on input values, then gets consignments from vendor id
+        :Author(s): Joe Lee
+        """
+        self.remove_ticket_section()
+        try:
+            # find vendor_id that could match field inputs
+            entity_container = self.db_connection.connect("Entities")
+            vendor_results = list(entity_container.query_items(
+                query=vendor_query,
+                parameters=properties if properties else [],
+                enable_cross_partition_query=True
+            ))
+
+            vendor_ids = []
+            for item in vendor_results:
+                if 'vendor_id' in item:
+                    vendor_ids.append(item['vendor_id'])
+            if not vendor_ids:
+                status_bar_instance.send_message("No vendors found matching criteria")
+                return
+
+            # find tickets with vendor_id
+            consignment_container = self.db_connection.connect("Consignments")
+            tickets = []
+
+            for vendor_id in vendor_ids:
+                results = list(consignment_container.query_items(
+                    query="""
+                        SELECT * FROM c
+                        WHERE c.type = 'consignment'
+                        AND c.vendor_id = @vendor_id
+                    """,
+                    parameters=[{"name": "@vendor_id", "value": vendor_id}],
+                    enable_cross_partition_query=True
+                ))
+                for item in results:
+                    tickets.append({
+                        'ticket_number': item.get('ticket_number'),
+                        'vendor_id': item.get('vendor_id', ''),
+                        'product_ids': item.get('product_ids', ''),
+                        'datetime': item.get('datetime', ''),
+                        'status': item.get('status', ''),
+                    })
+
+            tickets.sort(key=lambda t: int(t['ticket_number']), reverse=True)
+
+            for ticket in tickets:
+                self.add_ticket_section()
+                last_section = self.tickets_section[-1]
+                last_section['ticket_num'].setText(str(ticket['ticket_number']))
+                last_section['datetime'].setText(str(ticket['datetime']))
+                last_section['status'].setText(ticket['status'])
+                if last_section['status'].text().strip() == "CLOSED":
+                    last_section['close_btn'].hide()
+                if last_section['status'].text().strip() == "OPEN":
+                    last_section['open_btn'].hide()
+
+            if not tickets:
+                status_bar_instance.send_message("No tickets found for matching vendors")
+            else:
+                status_bar_instance.send_message(f"Found {len(tickets)} ticket(s)")
+
+        except Exception as e:
+            log.error(f"Error executing query: {e}")
+            status_bar_instance.send_message("Query failed")
+
+    def fetch(self):
+        """
+        :purpose: fetches all consignment tickets (no filter)
+        :author(s): Joe Lee
+        """
+        try:
+            container = self.db_connection.connect("Consignments")
+            results = list(container.query_items(
+                query="SELECT * FROM c WHERE c.type = 'consignment'",
+                enable_cross_partition_query=True
+            ))
+
+            tickets = []
+            for item in results:
+                tickets.append({
+                    'ticket_number': item.get('ticket_number'),
+                    'vendor_id': item.get('vendor_id', ''),
+                    'product_ids': item.get('product_ids', ''),
+                    'datetime': item.get('datetime', ''),
+                    'status': item.get('status', ''),
+                })
+
+            tickets.sort(key=lambda t: int(t['ticket_number']), reverse=True)
+
+            for ticket in tickets:
+                self.add_ticket_section()
+                last_section = self.tickets_section[-1]
+                last_section['ticket_num'].setText(str(ticket['ticket_number']))
+                last_section['datetime'].setText(str(ticket['datetime']))
+                last_section['status'].setText(ticket['status'])
+                if last_section['status'].text().strip() == "CLOSED":
+                    last_section['close_btn'].hide()
+                if last_section['status'].text().strip() == "OPEN":
+                    last_section['open_btn'].hide()
+
+            if not tickets:
+                status_bar_instance.send_message("No tickets found")
+            else:
+                status_bar_instance.send_message(f"Found {len(tickets)} ticket(s)")
+
+        except Exception as e:
+            log.error(f"Error fetching all tickets: {e}")
+            status_bar_instance.send_message("Fetch failed")
 
     def add_ticket_section(self):
         tickets_section = {}
@@ -248,7 +464,6 @@ class VendorTicketsTab(BaseTab):
         line1_layout.addWidget(open_btn)
         tickets_section['open_btn'] = open_btn
 
-        line1_layout.addStretch()
         section_layout.addLayout(line1_layout)
 
         details_container = QWidget()
@@ -263,7 +478,6 @@ class VendorTicketsTab(BaseTab):
 
         section_layout.addWidget(details_container)
         tickets_section['details_container'] = details_container
-
         tickets_section['product_details_widget'] = details_container
 
         self.tickets_layout.addWidget(section_widget)
@@ -374,7 +588,6 @@ class VendorTicketsTab(BaseTab):
     def make_view_handler(self, ticket_index):
         def handler():
             self.on_view_clicked(ticket_index)
-
         return handler
 
     def remove_ticket_section(self):
@@ -385,67 +598,11 @@ class VendorTicketsTab(BaseTab):
                 widget.deleteLater()
 
         self.tickets_section.clear()
-
         log.info("All tickets cleared")
 
     def setup_button_connections(self):
-        self.fetch_btn.clicked.connect(self.on_fetch_clicked)
-
-    def on_fetch_clicked(self):
-        self.remove_ticket_section()
-        vendor_id = self.vendor_id_input.text().strip()
-        if vendor_id:
-            tickets = self.fetch(vendor_id)
-            if not tickets:
-                log.warning(f"No tickets found for Vendor ID: {vendor_id}")
-            else:
-                for ticket in tickets:
-                    self.add_ticket_section()
-                    last_section = self.tickets_section[-1]
-                    last_section['ticket_num'].setText(str(ticket['ticket_number']))
-                    last_section['datetime'].setText(str(ticket['datetime']))
-                    last_section['status'].setText(ticket['status'])
-                    if last_section['status'].text().strip() == "CLOSED":
-                        last_section['close_btn'].hide()
-                    if last_section['status'].text().strip() == "OPEN":
-                        last_section['open_btn'].hide()
-
-        else:
-            status_bar_instance.send_message("Please enter a Vendor ID")
-
-    def fetch(self, vendor_id_input):
-        try:
-            container = self.db_connection.connect("Consignments")
-
-            query = """
-                    SELECT c.ticket_number, c.datetime, c.status
-                    FROM c
-                    WHERE c.vendor_id = @vendor_id
-                    ORDER BY c.ticket_number DESC
-                    """
-
-            parameters = [
-                {"name": "@vendor_id", "value": int(vendor_id_input)}
-            ]
-
-            results = list(container.query_items(
-                query=query,
-                parameters=parameters,
-                enable_cross_partition_query=True
-            ))
-
-            tickets = []
-            for item in results:
-                tickets.append({
-                    'ticket_number': item['ticket_number'],
-                    'datetime': item['datetime'],
-                    'status': item['status']
-                })
-            return tickets
-
-        except Exception as e:
-            log.error(f"Error fetching tickets: {e}")
-            return []
+        self.clear_btn.clicked.connect(self.clear)
+        self.search_btn.clicked.connect(self.build_and_search)
 
     def on_view_clicked(self, ticket_index):
         try:
@@ -523,83 +680,3 @@ class VendorTicketsTab(BaseTab):
         except Exception as e:
             log.error(f"Error fetching ticket details: {e}")
             return None
-
-    def auto_pop_vend(self):
-        try:
-            field_mapping = {
-                'phone': self.phone_input,
-                'first_name': self.first_name_input,
-                'middle_name': self.middle_name_input,
-                'last_name': self.last_name_input,
-                'address': self.address_input,
-                'city': self.city_input,
-                'state': self.state_input,
-                'zip': self.zip_input
-            }
-            vend_id = self.vendor_id_input.text().strip()
-
-            if vend_id:
-                item = get_item("Entities", "vendor", vend_id)
-                if item is not None:
-                    for field_name, input_field in field_mapping.items():
-                        if field_name in item:
-                            input_field.setText(item[field_name])
-                            input_field.setObjectName("READ_ONLY")
-                            input_field.setReadOnly(True)
-                else:
-                    for input_field in field_mapping.values():
-                        input_field.setText("")
-                        input_field.setObjectName("")
-                        input_field.setReadOnly(False)
-            else:
-                for input_field in field_mapping.values():
-                    input_field.setText("")
-                    input_field.setObjectName("")
-                    input_field.setReadOnly(False)
-
-            for input_field in field_mapping.values():
-                input_field.style().unpolish(input_field)
-                input_field.style().polish(input_field)
-
-        except Exception as e:
-            log.error(f"Failed to fetch vendor: {e}")
-
-    def auto_pop_vend_by_phone(self):
-        try:
-            field_mapping = {
-                'vendor_id': self.vendor_id_input,
-                'first_name': self.first_name_input,
-                'middle_name': self.middle_name_input,
-                'last_name': self.last_name_input,
-                'address': self.address_input,
-                'city': self.city_input,
-                'state': self.state_input,
-                'zip': self.zip_input
-            }
-            phone = self.phone_input.text().strip()
-
-            if phone:
-                item = get_item_by_property("Entities", "vendor", "phone", phone)
-                if item is not None:
-                    for field_name, input_field in field_mapping.items():
-                        if field_name in item:
-                            input_field.setText(str(item[field_name]))
-                            input_field.setObjectName("READ_ONLY")
-                            input_field.setReadOnly(True)
-                else:
-                    for input_field in field_mapping.values():
-                        input_field.setText("")
-                        input_field.setObjectName("")
-                        input_field.setReadOnly(False)
-            else:
-                for input_field in field_mapping.values():
-                    input_field.setText("")
-                    input_field.setObjectName("")
-                    input_field.setReadOnly(False)
-
-            for input_field in field_mapping.values():
-                input_field.style().unpolish(input_field)
-                input_field.style().polish(input_field)
-
-        except Exception as e:
-            log.error(f"Failed to fetch vendor by phone: {e}")
