@@ -37,16 +37,12 @@ class ProductsTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
 
-        # Line 0 Creation
+        main_layout_widget = QWidget()
+        main_layout = QVBoxLayout(main_layout_widget)
+
         header_section = QHBoxLayout()
-
-        # Product Header
         title = QLabel("View Products")
         title.setObjectName("post_title")
         header_section.addWidget(title)
@@ -57,13 +53,13 @@ class ProductsTab(BaseTab):
         header_section.addWidget(self.create_btn)
 
         # Ends creation and adds header_section to window
-        layout.addLayout(header_section)
+        main_layout.addLayout(header_section)
 
         hr1 = QFrame()
         hr1.setFrameShape(QFrame.Shape.HLine)
         hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        main_layout.addWidget(hr1)
 
         product_section_row_1 = QHBoxLayout()
 
@@ -96,7 +92,7 @@ class ProductsTab(BaseTab):
         product_section_row_1.addWidget(self.product_type_input)
 
         product_section_row_1.addStretch()
-        layout.addLayout(product_section_row_1)
+        main_layout.addLayout(product_section_row_1)
 
         search_section_1 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
@@ -107,26 +103,27 @@ class ProductsTab(BaseTab):
         self.search_btn = QPushButton("Search")
         self.search_btn.setFixedWidth(200)
         search_section_1.addWidget(self.search_btn)
-        layout.addLayout(search_section_1)
+        main_layout.addLayout(search_section_1)
 
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
+        main_layout.addWidget(hr2)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
 
         # Products sections container
         self.products_layout = QVBoxLayout()
-        layout.addLayout(self.products_layout)
-        products_section = QHBoxLayout()
-        layout.addLayout(products_section)
-        layout.addStretch()
+        scroll_layout.addLayout(self.products_layout)
+        scroll_layout.addStretch()
 
-        # Set up the scroll area
         scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
-
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def clear(self):
@@ -233,6 +230,7 @@ class ProductsTab(BaseTab):
                     'product_name': item.get('product_name', ''),
                     'product_type': item.get('product_type', ''),
                     'rate': item.get('rate', 'NA'),
+
                 })
 
             products.sort(key=lambda v: int(v['product_id']))
@@ -292,6 +290,15 @@ class ProductsTab(BaseTab):
         product_name.setFixedWidth(265)
         line1_layout.addWidget(product_name)
 
+        line1_layout.addWidget(QLabel("Product Type:"))
+        product_type_input = QComboBox()
+        product_type_input.addItems(self.list_prod_types)
+        product_type_input.setPlaceholderText("Produce Type")
+        index = product_type_input.findText(prod_data['product_type'])
+        product_type_input.setCurrentIndex(index)
+        product_type_input.setObjectName("READ_ONLY")
+        product_type_input.setEnabled(False)
+        line1_layout.addWidget(product_type_input)
         line1_layout.addStretch()
 
         section_layout.addLayout(line1_layout)

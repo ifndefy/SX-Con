@@ -39,34 +39,26 @@ class RecordsTab(BaseTab):
         :purpose: initializes the "Record" subtab
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
 
-        # Line 0 Creation
+        main_layout_widget = QWidget()
+        main_layout = QVBoxLayout(main_layout_widget)
+
         header_section = QHBoxLayout()
-
-        # Record Header
         title = QLabel("View Records")
         title.setObjectName("post_title")
         header_section.addWidget(title)
         header_section.addStretch()
-
-        # Ends creation and adds header_section to window
-        layout.addLayout(header_section)
+        main_layout.addLayout(header_section)
 
         # HR Line between Vendor and Tickets sections
         hr1 = QFrame()
         hr1.setFrameShape(QFrame.Shape.HLine)
         hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
-
+        main_layout.addWidget(hr1)
 
         search_section_row_1 = QHBoxLayout()
-
         search_section_row_1.addWidget(QLabel("Ticket Number:"))
         self.ticket_number_input = QLineEdit()
         self.ticket_number_input.setPlaceholderText("T Num")
@@ -74,7 +66,6 @@ class RecordsTab(BaseTab):
         self.ticket_number_input.setValidator(QIntValidator(0, 999999, self))
         self.ticket_number_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.ticket_number_input)
-
 
         search_section_row_1.addWidget(QLabel("Datetime:"))
         self.datetime_input = QLineEdit()
@@ -86,66 +77,60 @@ class RecordsTab(BaseTab):
 
         search_section_row_1.addWidget(QLabel("Status:"))
         self.status_input = QLineEdit()
-        self.status_input.setPlaceholderText("Stat")
+        self.status_input.setPlaceholderText("Status")
         self.status_input.setMaxLength(10)
-        self.status_input.setFixedWidth(69)
+        self.status_input.setFixedWidth(75)
         self.status_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.status_input)
 
-        search_section_row_1.addStretch()
-        layout.addLayout(search_section_row_1)
-
-        search_section_row_2 = QHBoxLayout()
-
-        search_section_row_2.addWidget(QLabel("Vendor ID:"))
+        search_section_row_1.addWidget(QLabel("Vendor ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setPlaceholderText("V ID")
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
         self.vendor_id_input.textChanged.connect(self.on_search_input_changed)
-        search_section_row_2.addWidget(self.vendor_id_input)
+        search_section_row_1.addWidget(self.vendor_id_input)
 
-        search_section_row_2.addWidget(QLabel("Product ID:"))
+        search_section_row_1.addWidget(QLabel("Product ID:"))
         self.product_id_input = QLineEdit()
         self.product_id_input.setPlaceholderText("P ID")
         self.product_id_input.setFixedWidth(80)
         self.product_id_input.setValidator(QIntValidator(0, 9999, self))
         self.product_id_input.textChanged.connect(self.on_search_input_changed)
-        search_section_row_2.addWidget(self.product_id_input)
+        search_section_row_1.addWidget(self.product_id_input)
 
-        search_section_row_2.addStretch()
-        layout.addLayout(search_section_row_2)
+        search_section_row_1.addStretch()
+        main_layout.addLayout(search_section_row_1)
 
-        search_section_row_3 = QHBoxLayout()
+        search_section_row_2 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setFixedWidth(200)
-        search_section_row_3.addWidget(self.clear_btn)
+        search_section_row_2.addWidget(self.clear_btn)
 
-        search_section_row_3.addStretch()
+        search_section_row_2.addStretch()
         self.search_btn = QPushButton("Search")
         self.search_btn.setFixedWidth(200)
-        search_section_row_3.addWidget(self.search_btn)
-        layout.addLayout(search_section_row_3)
+        search_section_row_2.addWidget(self.search_btn)
+        main_layout.addLayout(search_section_row_2)
 
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
+        main_layout.addWidget(hr2)
 
-        # Ticket Line 1: Tickets sections container
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
+
         self.records_layout = QVBoxLayout()
-        layout.addLayout(self.records_layout)
+        scroll_layout.addLayout(self.records_layout)
+        scroll_layout.addStretch()
 
-        records_section = QHBoxLayout()
-        layout.addLayout(records_section)
-        layout.addStretch()
-
-        # Set up the scroll area
         scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
-
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def clear(self):
@@ -280,6 +265,7 @@ class RecordsTab(BaseTab):
                     last_section['close_btn'].hide()
                 if last_section['status'].text().strip() == "OPEN":
                     last_section['open_btn'].hide()
+                last_section['vendor_id'].setText(str(ticket['vendor_id']))
 
             if not tickets:
                 status_bar_instance.send_message("No tickets found")
@@ -339,47 +325,65 @@ class RecordsTab(BaseTab):
         status_input = QLineEdit()
         status_input.setObjectName("READ_ONLY")
         status_input.setReadOnly(True)
-        status_input.setFixedWidth(69)
+        status_input.setFixedWidth(75)
         line1_layout.addWidget(status_input)
         rec_section['status'] = status_input
 
-        line1_layout.addStretch()
+        # vendor id
+        line1_layout.addWidget(QLabel("Vendor ID:"))
+        vendor_id_input = QLineEdit()
+        vendor_id_input.setObjectName("READ_ONLY")
+        vendor_id_input.setReadOnly(True)
+        vendor_id_input.setFixedWidth(80)
+        line1_layout.addWidget(vendor_id_input)
+        rec_section['vendor_id'] = vendor_id_input
 
+        # prod id
+        line1_layout.addWidget(QLabel("Product ID:"))
+        product_id_input = QLineEdit()
+        product_id_input.setObjectName("READ_ONLY")
+        product_id_input.setReadOnly(True)
+        product_id_input.setFixedWidth(80)
+        line1_layout.addWidget(product_id_input)
+        rec_section['product_id'] = product_id_input
+
+        line1_layout.addStretch()
+        section_layout.addLayout(line1_layout)
+
+        line2_layout = QHBoxLayout()
         # btns
         view_btn = QPushButton("View")
-        line1_layout.addWidget(view_btn)
+        line2_layout.addWidget(view_btn)
         rec_section['view_btn'] = view_btn
 
         #Create excel button without gather function link once index is assigned
         excel_btn = excel.ExcelButton(None, xls_gen.generate_excel, "Excel")
-        line1_layout.addWidget(excel_btn)
+        line2_layout.addWidget(excel_btn)
         rec_section['excel_btn'] = excel_btn
 
         pdf_btn = QPushButton("PDF")
-        line1_layout.addWidget(pdf_btn)
+        line2_layout.addWidget(pdf_btn)
         rec_section['pdf_btn'] = pdf_btn
 
         print_btn = QPushButton("Print")
-        line1_layout.addWidget(print_btn)
+        line2_layout.addWidget(print_btn)
         rec_section['print_btn'] = print_btn
 
         edit_btn = QPushButton("Edit")
-        line1_layout.addWidget(edit_btn)
+        line2_layout.addWidget(edit_btn)
         rec_section['edit_btn'] = edit_btn
 
         close_btn = QPushButton("Close")
         close_btn.setObjectName('red_btn')
-        close_btn.setFixedWidth(68)
-        line1_layout.addWidget(close_btn)
+        line2_layout.addWidget(close_btn)
         rec_section['close_btn'] = close_btn
 
         open_btn = QPushButton("Open")
         open_btn.setObjectName('green_btn')
-        open_btn.setFixedWidth(68)
-        line1_layout.addWidget(open_btn)
+        line2_layout.addWidget(open_btn)
         rec_section['open_btn'] = open_btn
 
-        section_layout.addLayout(line1_layout)
+        section_layout.addLayout(line2_layout)
 
         details_container = QWidget()
         details_container.setObjectName("view_bg")
@@ -393,6 +397,12 @@ class RecordsTab(BaseTab):
 
         section_layout.addWidget(details_container)
         rec_section['details_container'] = details_container
+
+        hr = QFrame()
+        hr.setFrameShape(QFrame.Shape.HLine)
+        hr.setFrameShadow(QFrame.Shadow.Sunken)
+        hr.setObjectName("hr")
+        section_layout.addWidget(hr)
 
         # Add to container
         self.records_layout.addWidget(section_widget)

@@ -36,11 +36,10 @@ class VendorsTab(BaseTab):
         :purpose: initializes the "vendors subtab" tab
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
+
+        main_layout_widget = QWidget()
+        main_layout = QVBoxLayout(main_layout_widget)
 
         header_section = QHBoxLayout()
         title = QLabel("View Vendors") # Subtab header
@@ -52,13 +51,13 @@ class VendorsTab(BaseTab):
         self.create_btn.setFixedWidth(200)
         header_section.addWidget(self.create_btn)
 
-        layout.addLayout(header_section) # Ends creation and adds header_section to window
+        main_layout.addLayout(header_section) # Ends creation and adds header_section to window
 
         hr1 = QFrame()
         hr1.setFrameShape(QFrame.Shape.HLine)
         hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        main_layout.addWidget(hr1)
 
         search_section_row_1 = QHBoxLayout()
 
@@ -79,7 +78,7 @@ class VendorsTab(BaseTab):
         search_section_row_1.addWidget(self.phone_number_input)
 
         search_section_row_1.addStretch()
-        layout.addLayout(search_section_row_1)
+        main_layout.addLayout(search_section_row_1)
 
         search_section_row_2 = QHBoxLayout()
 
@@ -108,7 +107,7 @@ class VendorsTab(BaseTab):
         search_section_row_2.addWidget(self.last_name_input)
 
         search_section_row_2.addStretch()
-        layout.addLayout(search_section_row_2)
+        main_layout.addLayout(search_section_row_2)
 
         search_section_row_3 = QHBoxLayout()
 
@@ -141,7 +140,7 @@ class VendorsTab(BaseTab):
         search_section_row_3.addWidget(self.zip_input)
 
         search_section_row_3.addStretch()
-        layout.addLayout(search_section_row_3)
+        main_layout.addLayout(search_section_row_3)
 
         search_section_row_4 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
@@ -152,26 +151,26 @@ class VendorsTab(BaseTab):
         self.search_btn = QPushButton("Search")
         self.search_btn.setFixedWidth(200)
         search_section_row_4.addWidget(self.search_btn)
-        layout.addLayout(search_section_row_4)
+        main_layout.addLayout(search_section_row_4)
 
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
+        main_layout.addWidget(hr2)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
 
         self.vendors_layout = QVBoxLayout() # Vendors container
-        layout.addLayout(self.vendors_layout)
+        scroll_layout.addLayout(self.vendors_layout)
+        scroll_layout.addStretch()
 
-        vendors_section = QHBoxLayout()
-        layout.addLayout(vendors_section)
-        layout.addStretch()
-
-        # Set up the scroll area
         scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
-
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def clear(self):

@@ -42,23 +42,23 @@ class VendorTicketsTab(BaseTab):
         self.search_timer.timeout.connect(self.build_and_search)
 
     def setup_ui(self):
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
+
+        main_layout_widget = QWidget()
+        main_layout = QVBoxLayout(main_layout_widget)
 
         vendor_section_row_0 = QHBoxLayout()
         vendor_title = QLabel("View Vendor Tickets")
         vendor_title.setObjectName("post_title")
         vendor_section_row_0.addWidget(vendor_title)
         vendor_section_row_0.addStretch()
-        layout.addLayout(vendor_section_row_0)
+        main_layout.addLayout(vendor_section_row_0)
 
         hr1 = QFrame()
         hr1.setFrameShape(QFrame.Shape.HLine)
         hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        main_layout.addWidget(hr1)
 
         vendor_section_row_1 = QHBoxLayout()
 
@@ -79,7 +79,7 @@ class VendorTicketsTab(BaseTab):
         vendor_section_row_1.addWidget(self.phone_number_input)
 
         vendor_section_row_1.addStretch()
-        layout.addLayout(vendor_section_row_1)
+        main_layout.addLayout(vendor_section_row_1)
 
         vendor_section_row_2 = QHBoxLayout()
 
@@ -108,7 +108,7 @@ class VendorTicketsTab(BaseTab):
         vendor_section_row_2.addWidget(self.last_name_input)
 
         vendor_section_row_2.addStretch()
-        layout.addLayout(vendor_section_row_2)
+        main_layout.addLayout(vendor_section_row_2)
 
         vendor_section_row_3 = QHBoxLayout()
 
@@ -141,7 +141,7 @@ class VendorTicketsTab(BaseTab):
         vendor_section_row_3.addWidget(self.zip_input)
 
         vendor_section_row_3.addStretch()
-        layout.addLayout(vendor_section_row_3)
+        main_layout.addLayout(vendor_section_row_3)
 
         action_section = QHBoxLayout()
 
@@ -155,35 +155,39 @@ class VendorTicketsTab(BaseTab):
         self.search_btn.setFixedWidth(200)
         action_section.addWidget(self.search_btn)
 
-        layout.addLayout(action_section)
+        main_layout.addLayout(action_section)
 
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
+        main_layout.addWidget(hr2)
 
         ticket_section_row_0 = QHBoxLayout()
         ticket_title = QLabel("Tickets")
         ticket_title.setObjectName("post_title")
         ticket_section_row_0.addWidget(ticket_title)
-        layout.addLayout(ticket_section_row_0)
+        main_layout.addLayout(ticket_section_row_0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
 
         self.tickets_layout = QVBoxLayout()
-        layout.addLayout(self.tickets_layout)
+        scroll_layout.addLayout(self.tickets_layout)
 
-        layout.addStretch(1)
+        scroll_layout.addStretch(1)
 
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
+        main_layout.addWidget(hr2)
 
         scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
-
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def clear(self):
@@ -479,6 +483,12 @@ class VendorTicketsTab(BaseTab):
         section_layout.addWidget(details_container)
         tickets_section['details_container'] = details_container
         tickets_section['product_details_widget'] = details_container
+
+        hr = QFrame()
+        hr.setFrameShape(QFrame.Shape.HLine)
+        hr.setFrameShadow(QFrame.Shadow.Sunken)
+        hr.setObjectName("hr")
+        section_layout.addWidget(hr)
 
         self.tickets_layout.addWidget(section_widget)
 
