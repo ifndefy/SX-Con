@@ -1,6 +1,8 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import QVBoxLayout, QFrame, QMessageBox
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QFrame
+from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
