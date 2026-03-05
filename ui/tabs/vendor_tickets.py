@@ -2,6 +2,7 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QFrame
+from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
@@ -172,6 +173,12 @@ class VendorTicketsTab(BaseTab):
         layout.addLayout(self.tickets_layout)
 
         layout.addStretch(1)
+
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
+        hr2.setObjectName("hr")
+        layout.addWidget(hr2)
 
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
@@ -520,8 +527,12 @@ class VendorTicketsTab(BaseTab):
             except Exception as e:
                 log.error(f"Could not generate PDF for ticket {ticket_number}: {e}")
                 return
-            handler_print(ticket_number)
-            log.info(f"Print requested for ticket {ticket_number}")
+
+            try:
+                handler_print(ticket_number)
+                log.info(f"Print requested for ticket {ticket_number}")
+            except Exception as e:
+                QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket_number}:\n\n{e}")
         return handler
 
     def make_pdf_handler(self, ticket_index):
@@ -557,7 +568,7 @@ class VendorTicketsTab(BaseTab):
             ticket_number = ticket['ticket_num'].text().strip()
             ticket_details = self.view(ticket_number)
             unpacked_ticket = ticket_details['ticket_data']
-
+            
             ticket_header = {
                 'ticket_number': unpacked_ticket['ticket_number'],
                 'vendor_id': unpacked_ticket['vendor_id'],
@@ -571,8 +582,8 @@ class VendorTicketsTab(BaseTab):
                 'revenue_shared': unpacked_ticket['revenue']['shared'],
                 'revenue_grouped': unpacked_ticket['revenue']['grouped']
             }
-
-        return gather_ticket
+        
+        return gather_ticket 
 
     def make_view_handler(self, ticket_index):
         def handler():
