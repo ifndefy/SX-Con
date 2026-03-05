@@ -507,6 +507,8 @@ class CreateNewTab(BaseTab):
 
     def _on_product_type_changed(self, product_section: dict):
         try:
+            #update any admin changes to table
+            self.rates_container = fetch_consignment_data()
             rate_widget = product_section.get('rate')
             type_widget = product_section.get('product_type')
             if not rate_widget or not type_widget:
