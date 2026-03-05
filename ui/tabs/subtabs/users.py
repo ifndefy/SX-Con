@@ -45,11 +45,10 @@ class UsersTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
+
+        main_layout_widget = QWidget()
+        main_layout = QVBoxLayout(main_layout_widget)
 
         header_section = QHBoxLayout()
         title = QLabel("View Users")  # Subtab header
@@ -61,13 +60,13 @@ class UsersTab(BaseTab):
         self.create_btn.setFixedWidth(200)
         header_section.addWidget(self.create_btn)
 
-        layout.addLayout(header_section)  # Ends creation and adds header_section to window
+        main_layout.addLayout(header_section)  # Ends creation and adds header_section to window
 
         hr1 = QFrame()
         hr1.setFrameShape(QFrame.Shape.HLine)
         hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        main_layout.addWidget(hr1)
 
         search_section_row_1 = QHBoxLayout()
 
@@ -90,8 +89,16 @@ class UsersTab(BaseTab):
         self.username_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.username_input)
 
+        search_section_row_1.addWidget(QLabel("Admin:"))
+        self.admin_field = QComboBox()
+        self.admin_field.addItems(["True", "False"])
+        self.admin_field.setCurrentIndex(-1)
+        self.admin_field.setPlaceholderText("admin")
+        self.admin_field.currentIndexChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.admin_field)
+
         search_section_row_1.addStretch()
-        layout.addLayout(search_section_row_1)
+        main_layout.addLayout(search_section_row_1)
 
         search_section_row_2 = QHBoxLayout()
 
@@ -114,7 +121,7 @@ class UsersTab(BaseTab):
         search_section_row_2.addWidget(self.last_name_input)
 
         search_section_row_2.addStretch()
-        layout.addLayout(search_section_row_2)
+        main_layout.addLayout(search_section_row_2)
 
         search_section_row_3 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
@@ -125,26 +132,26 @@ class UsersTab(BaseTab):
         self.search_btn = QPushButton("Search")
         self.search_btn.setFixedWidth(200)
         search_section_row_3.addWidget(self.search_btn)
-        layout.addLayout(search_section_row_3)
+        main_layout.addLayout(search_section_row_3)
 
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
+        main_layout.addWidget(hr2)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
 
         self.users_layout = QVBoxLayout()  # Users container
-        layout.addLayout(self.users_layout)
+        scroll_layout.addLayout(self.users_layout)
+        scroll_layout.addStretch()
 
-        users_section = QHBoxLayout()
-        layout.addLayout(users_section)
-        layout.addStretch()
-
-        # Set up the scroll area
         scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
-
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def clear(self):
@@ -168,6 +175,12 @@ class UsersTab(BaseTab):
             field.blockSignals(False)
             field.style().unpolish(field)
             field.style().polish(field)
+
+        self.admin_field.blockSignals(True)
+        self.admin_field.setCurrentIndex(-1)
+        self.admin_field.blockSignals(False)
+        self.admin_field.style().unpolish(self.admin_field)
+        self.admin_field.style().polish(self.admin_field)
 
         status_bar_instance.send_message("Query and Results cleared")
 
@@ -212,6 +225,11 @@ class UsersTab(BaseTab):
         username = self.username_input.text().strip()
         if username:
             add_property("username", username, "CONTAINS")
+
+        admin_status = self.admin_field.currentText().strip().lower()
+        if admin_status:
+            admin_bool = admin_status == "true"
+            add_property("admin", admin_bool, "=")
 
         first_name = self.first_name_input.text().strip()
         if first_name:
@@ -310,7 +328,7 @@ class UsersTab(BaseTab):
         username.setValidator(alpha_validator)
         line1_layout.addWidget(username)
 
-        line1_layout.addWidget(QLabel("Admin"))
+        line1_layout.addWidget(QLabel("Admin:"))
         admin_field = QComboBox()
         admin_field.addItems(["True", "False"])
         admin_field.setObjectName("READ_ONLY")
