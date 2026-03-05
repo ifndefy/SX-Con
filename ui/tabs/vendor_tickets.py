@@ -249,7 +249,7 @@ class VendorTicketsTab(BaseTab):
         details_container.setObjectName("view_bg")
         details_container.setVisible(False)
         details_layout = QVBoxLayout(details_container)
-        details_layout.setContentsMargins(20, 10, 10, 10)
+        details_layout.setContentsMargins(10, 10, 10, 10)
 
         product_details_layout = QVBoxLayout()
         tickets_section['product_details_layout'] = product_details_layout
