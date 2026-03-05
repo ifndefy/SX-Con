@@ -1,5 +1,5 @@
-from PyQt6.QtCore import QTimer
-from PyQt6.QtGui import QIntValidator
+from PyQt6.QtCore import QTimer, QRegularExpression
+from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
 from PyQt6.QtWidgets import QVBoxLayout, QFrame
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
@@ -81,6 +81,8 @@ class UsersTab(BaseTab):
         self.username_input.setPlaceholderText("Username")
         self.username_input.setMaxLength(30)
         self.username_input.setFixedWidth(265)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.username_input.setValidator(alpha_validator)
         self.username_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.username_input)
 
@@ -94,6 +96,7 @@ class UsersTab(BaseTab):
         self.first_name_input.setPlaceholderText("First Name")
         self.first_name_input.setMaxLength(30)
         self.first_name_input.setFixedWidth(265)
+        self.first_name_input.setValidator(alpha_validator)
         self.first_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.first_name_input)
 
@@ -102,6 +105,7 @@ class UsersTab(BaseTab):
         self.last_name_input.setPlaceholderText("Last Name")
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setFixedWidth(265)
+        self.last_name_input.setValidator(alpha_validator)
         self.last_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.last_name_input)
 
@@ -285,8 +289,10 @@ class UsersTab(BaseTab):
         user_id.setText(str(user_data['user_id']))
         user_id.setObjectName("READ_ONLY")
         user_id.setReadOnly(True)
-        user_id.setMaxLength(30)
+        user_id.setMaxLength(10)
         user_id.setFixedWidth(55)
+        user_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
+        user_id.setValidator(user_id_validator)
         line1_layout.addWidget(user_id)
 
         line1_layout.addWidget(QLabel("Username:"))
@@ -296,8 +302,9 @@ class UsersTab(BaseTab):
         username.setReadOnly(True)
         username.setMaxLength(30)
         username.setFixedWidth(265)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        username.setValidator(alpha_validator)
         line1_layout.addWidget(username)
-
 
         line1_layout.addWidget(QLabel("Admin"))
         admin_field = QComboBox()
@@ -319,6 +326,7 @@ class UsersTab(BaseTab):
         first_name.setReadOnly(True)
         first_name.setMaxLength(30)
         first_name.setFixedWidth(265)
+        first_name.setValidator(alpha_validator)
         line2_layout.addWidget(first_name)
 
         # last name
@@ -329,6 +337,7 @@ class UsersTab(BaseTab):
         last_name.setReadOnly(True)
         last_name.setMaxLength(30)
         last_name.setFixedWidth(265)
+        last_name.setValidator(alpha_validator)
         line2_layout.addWidget(last_name)
 
         line2_layout.addStretch()
@@ -402,16 +411,20 @@ class UsersTab(BaseTab):
         layout.addWidget(QLabel("Username:"))
         username_input = QLineEdit()
         username_input.setObjectName("username_input")
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        username_input.setValidator(alpha_validator)
         layout.addWidget(username_input)
 
         layout.addWidget(QLabel("First Name:"))
         first_name_input = QLineEdit()
         first_name_input.setObjectName("first_name_input")
+        first_name_input.setValidator(alpha_validator)
         layout.addWidget(first_name_input)
 
         layout.addWidget(QLabel("Last Name:"))
         last_name_input = QLineEdit()
         last_name_input.setObjectName("last_name_input")
+        last_name_input.setValidator(alpha_validator)
         layout.addWidget(last_name_input)
 
         layout.addWidget(QLabel("Password:"))
