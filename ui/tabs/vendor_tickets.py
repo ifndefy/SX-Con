@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import QVBoxLayout, QFrame
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
@@ -294,8 +295,10 @@ class VendorTicketsTab(BaseTab):
                 enable_cross_partition_query=True
             ))
 
-            vendor_ids = [item['vendor_id'] for item in vendor_results if 'vendor_id' in item]
-
+            vendor_ids = []
+            for item in vendor_results:
+                if 'vendor_id' in item:
+                    vendor_ids.append(item['vendor_id'])
             if not vendor_ids:
                 status_bar_instance.send_message("No vendors found matching criteria")
                 return
