@@ -617,8 +617,11 @@ class CreateNewTab(BaseTab):
         if not self.on_pdf_clicked():
             return
 
-        handler_print.handler_print(ticket)
-        log.info(f"Print requested for ticket {ticket}")
+        try:
+            handler_print.handler_print(ticket)
+            log.info(f"Print requested for ticket {ticket}")
+        except Exception as e:
+            QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket}:\n\n{e}")
 
     def on_pdf_clicked(self):
         vendor_data = self._gather_vendor_data()
