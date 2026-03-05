@@ -37,11 +37,12 @@ class OpenTicketsTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
+
+        main_layout_widget = QWidget()
+        main_layout_widget.setObjectName("main_layout")
+        main_layout = QVBoxLayout(main_layout_widget)
+
 
         # Line 0 Creation
         header_section = QHBoxLayout()
@@ -55,43 +56,39 @@ class OpenTicketsTab(BaseTab):
         header_section.addStretch()
 
         # Ends creation and adds header_section to window
-        layout.addLayout(header_section)
+        main_layout.addLayout(header_section)
 
         # HR Line between Vendor and Tickets sections
         hr1 = QFrame()
         hr1.setFrameShape(QFrame.Shape.HLine)
         hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        main_layout.addWidget(hr1)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
 
         # Ticket Line 1: Tickets sections container
         self.tickets_layout = QVBoxLayout()
+        scroll_layout.addLayout(self.tickets_layout)
 
-        layout.addLayout(self.tickets_layout)
-
-        tickets_section = QHBoxLayout()
-
-        layout.addLayout(tickets_section)
-        layout.addStretch()
+        scroll_layout.addStretch()
+        scroll.setWidget(scroll_content)
+        main_layout.addWidget(scroll)
 
         # HR Line to separate buttons at the bottom
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
-
-        # Set up the scroll area
-        scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
-        main_layout.addWidget(scroll)
+        main_layout.addWidget(hr2)
 
         # Set up update button separate from the scrollable area
-        vendor_section_row_3 = QHBoxLayout()
         self.update_btn = QPushButton("Update")
-        vendor_section_row_3.addWidget(self.update_btn)
-        main_layout.addLayout(vendor_section_row_3)
-
+        main_layout.addWidget(self.update_btn)
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def add_ticket_section(self, ticket_data=None):
@@ -183,9 +180,14 @@ class OpenTicketsTab(BaseTab):
         product_details_layout = QVBoxLayout()
         tickets_section['product_details_layout'] = product_details_layout
         details_layout.addLayout(product_details_layout)
-
         section_layout.addWidget(details_container)
         tickets_section['details_container'] = details_container
+
+        hr = QFrame()
+        hr.setFrameShape(QFrame.Shape.HLine)
+        hr.setFrameShadow(QFrame.Shadow.Sunken)
+        hr.setObjectName("hr")
+        section_layout.addWidget(hr)
 
         # Add to container
         self.tickets_layout.addWidget(section_widget)
