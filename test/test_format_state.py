@@ -1,13 +1,9 @@
 """
 tests if instances of format_state is correctly capitalizing the input and limiting to 2
 """
-import sys
-from PyQt6.QtWidgets import QApplication
-
 from ui.core.format_state import FormatState
 
-def test_format_state():
-    app = QApplication(sys.argv)
+def test_format_state(app):
     test_state_field = FormatState()
 
     test_state_field.setText("a")
