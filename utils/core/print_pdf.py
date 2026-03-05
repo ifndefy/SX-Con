@@ -97,25 +97,76 @@ class Sxcprinter:
 
     def find_printer(self):
         """
-        Purpose: Return the default printer if not then return printer at index 0
-        Returns: default printer | printer[0]
-        Author(s): Joe Lee
+        :Purpose: return the default printer if not then return printer at index 0
+        :Returns: default printer or printer[0]
+        :Raises: exception if printer is found but unavailable
+        :Author(s): Joe Lee
         """
-        # Get real printers
+        # filter the virtual printers
         real_printers = self.get_real_printers()
         if not real_printers:
-            log.error("No real, ready printer found.")
+            message = "No real and ready printer found."
+            log.error(message)
+            raise Exception(message)
 
         # Get default printer if there is one
         try:
             default_printer = win32print.GetDefaultPrinter()
             if default_printer in real_printers:
+                self._assert_printer_ready(default_printer)
                 return default_printer
         except Exception:
-            log.error("Could not find printers")
+            if not real_printers:
+                message = "No real and ready printer found."
+                log.error(message)
+                raise Exception(message)
 
         # Fallback plan, typically index 0 is the "default" printer / real printer
-        return real_printers[0]
+        fallback_printer = real_printers[0]
+        self._assert_printer_ready(fallback_printer)
+        return fallback_printer
+
+    def _assert_printer_ready(self, printer_name: str):
+        """
+        :purpose: Checks printer status and raises if it is not ready to print.
+        :Author(s): Joe Lee
+        """
+        UNAVAILABLE_STATUSES = {
+            win32print.PRINTER_STATUS_BUSY: "busy",
+            win32print.PRINTER_STATUS_DOOR_OPEN: "door open",
+            win32print.PRINTER_STATUS_ERROR: "in error state",
+            win32print.PRINTER_STATUS_NO_TONER: "out of toner",
+            win32print.PRINTER_STATUS_NOT_AVAILABLE: "not available",
+            win32print.PRINTER_STATUS_OFFLINE: "offline",
+            win32print.PRINTER_STATUS_OUT_OF_MEMORY: "out of memory",
+            win32print.PRINTER_STATUS_OUTPUT_BIN_FULL: "output bin full",
+            win32print.PRINTER_STATUS_PAGE_PUNT: "page punt error",
+            win32print.PRINTER_STATUS_PAPER_JAM: "paper jam",
+            win32print.PRINTER_STATUS_PAPER_OUT: "out of paper",
+            win32print.PRINTER_STATUS_PAPER_PROBLEM: "paper problem",
+            win32print.PRINTER_STATUS_USER_INTERVENTION: "requires user intervention",
+        }
+
+        try:
+            printer_handle = win32print.OpenPrinter(printer_name)
+        except Exception:
+            message = f"Printer '{printer_name}' could not be opened — it may be offline or in an error state."
+            log.error(message)
+            raise Exception(message)
+        try:
+            printer_info = win32print.GetPrinter(printer_handle, 2)
+            status = printer_info["Status"]
+
+            for status_flag, description in UNAVAILABLE_STATUSES.items():
+                if status & status_flag:  # needs to use bitwise and due to printer codes
+                    message = f"Printer '{printer_name}' is unavailable: {description}."
+                    log.error(message)
+                    raise Exception(message)
+        except Exception:
+            win32print.ClosePrinter(printer_handle)
+            raise
+
+        win32print.ClosePrinter(printer_handle)
 
     def val_pdf_path(self, pdf_path):
         if not os.path.exists(pdf_path):
