@@ -8,19 +8,19 @@ def test_format_price(app):
 
     test_price_field.setText("1")
     test_price_field.textEdited.emit("1")
-    assert test_price_field.text() == "$1", "Assert: Failed to properly mask output"
+    assert test_price_field.text() == "$0.01", "Assert: Failed to properly mask output"
 
     test_price_field.setText("")
     test_price_field.textEdited.emit("")
-    assert test_price_field.text() == "$0", "Assert: Failed to properly mask output"
+    assert test_price_field.text() == "", "Assert: Failed to properly mask output"
 
     test_price_field.setText("12")
     test_price_field.textEdited.emit("12")
-    assert test_price_field.text() == "$12", "Assert: Failed to properly mask output"
+    assert test_price_field.text() == "$0.12", "Assert: Failed to properly mask output"
 
     test_price_field.setText("1")
     test_price_field.textEdited.emit("1")
-    assert test_price_field.text() == "$1", "Assert: Failed to properly mask output"
+    assert test_price_field.text() == "$0.01", "Assert: Failed to properly mask output"
 
     test_price_field.setText("123")
     test_price_field.textEdited.emit("123")
@@ -28,7 +28,7 @@ def test_format_price(app):
 
     test_price_field.setText("12")
     test_price_field.textEdited.emit("12")
-    assert test_price_field.text() == "$12", "Assert: Failed to properly mask output"
+    assert test_price_field.text() == "$0.12", "Assert: Failed to properly mask output"
 
     test_price_field.setText("1234")
     test_price_field.textEdited.emit("1234")
