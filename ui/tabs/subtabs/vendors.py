@@ -78,6 +78,14 @@ class VendorsTab(BaseTab):
         search_section_row_1.addWidget(self.phone_number_input)
 
         search_section_row_1.addStretch()
+
+        search_section_row_1.addWidget(QLabel("Last Consignment:"))
+        self.last_consignment_input = QLineEdit()
+        self.last_consignment_input.setPlaceholderText("Last Consignment")
+        self.last_consignment_input.setFixedWidth(265)
+        self.last_consignment_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.last_consignment_input)
+
         main_layout.addLayout(search_section_row_1)
 
         search_section_row_2 = QHBoxLayout()
@@ -86,7 +94,7 @@ class VendorsTab(BaseTab):
         self.first_name_input = QLineEdit()
         self.first_name_input.setPlaceholderText("First Name")
         self.first_name_input.setMaxLength(30)
-        self.first_name_input.setFixedWidth(263)
+        self.first_name_input.setMinimumWidth(263)
         self.first_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.first_name_input)
 
@@ -94,7 +102,7 @@ class VendorsTab(BaseTab):
         self.middle_name_input = QLineEdit()
         self.middle_name_input.setPlaceholderText("M. Name")
         self.middle_name_input.setMaxLength(10)
-        self.middle_name_input.setFixedWidth(103)
+        self.middle_name_input.setMinimumWidth(103)
         self.middle_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.middle_name_input)
 
@@ -102,11 +110,10 @@ class VendorsTab(BaseTab):
         self.last_name_input = QLineEdit()
         self.last_name_input.setPlaceholderText("Last Name")
         self.last_name_input.setMaxLength(30)
-        self.last_name_input.setFixedWidth(263)
+        self.last_name_input.setMinimumWidth(263)
         self.last_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.last_name_input)
 
-        search_section_row_2.addStretch()
         main_layout.addLayout(search_section_row_2)
 
         search_section_row_3 = QHBoxLayout()
@@ -139,21 +146,7 @@ class VendorsTab(BaseTab):
         self.zip_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.zip_input)
 
-        search_section_row_3.addStretch()
         main_layout.addLayout(search_section_row_3)
-
-        search_section_row_last_consignment = QHBoxLayout()
-
-        search_section_row_last_consignment.addWidget(QLabel("Last Consignment:"))
-        self.last_consignment_input = QLineEdit()
-        self.last_consignment_input.setPlaceholderText("Last Consignment")
-        self.last_consignment_input.setMaxLength(30)
-        self.last_consignment_input.setFixedWidth(263)
-        self.last_consignment_input.textChanged.connect(self.on_search_input_changed)
-        search_section_row_last_consignment.addWidget(self.last_consignment_input)
-
-        search_section_row_last_consignment.addStretch()
-        layout.addLayout(search_section_row_last_consignment)
 
         search_section_row_4 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
@@ -252,6 +245,24 @@ class VendorsTab(BaseTab):
         phone = self.phone_number_input.text().strip()
         if phone:
             add_property("phone", phone, "CONTAINS")
+
+        last_con = self.last_consignment_input.text().strip()
+        if last_con:
+            try:
+                container = self.db_connection.connect("Consignments")
+                results = list(container.query_items(
+                    query='SELECT * FROM c WHERE CONTAINS(LOWER(c["datetime"]), LOWER(@last_consignment))',
+                    parameters=[{"name": "@last_consignment", "value": last_con}],
+                    enable_cross_partition_query=True
+                ))
+                matched_vendor_ids = list({r.get('vendor_id') for r in results if r.get('vendor_id')})
+                if not matched_vendor_ids:
+                    status_bar_instance.send_message("No results found")
+                    return
+                conditions.append(f"c.vendor_id IN ({', '.join(str(v) for v in matched_vendor_ids)})")
+            except Exception as e:
+                log.error(f"Error querying consignments for datetime: {e}")
+                return
 
         first_name = self.first_name_input.text().strip()
         if first_name:
@@ -370,8 +381,16 @@ class VendorsTab(BaseTab):
         phone_input.setFixedWidth(150)
         vendor_section_row_1.addWidget(phone_input)
 
-        # Ends creation and adds vendor_section_row_1 to window
         vendor_section_row_1.addStretch()
+
+        vendor_section_row_1.addWidget(QLabel("Last Consignment:"))
+        last_consignment_input = QLineEdit()
+        last_consignment_input.setPlaceholderText("Last Consignment")
+        last_consignment_input.setObjectName("READ_ONLY")
+        last_consignment_input.setFixedWidth(263)
+        vendor_section_row_1.addWidget(last_consignment_input)
+
+        # Ends creation and adds vendor_section_row_1 to window
         section_layout.addLayout(vendor_section_row_1)
 
         # Vendor Line 2: First Name + Middle Name + Last Name

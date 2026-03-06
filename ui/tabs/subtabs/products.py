@@ -83,29 +83,30 @@ class ProductsTab(BaseTab):
         self.product_name_input.textChanged.connect(self.on_search_input_changed)
         product_section_row_1.addWidget(self.product_name_input)
 
-        product_section_row_1.addWidget(QLabel("Product Type:"))
-        self.product_type_input = QComboBox()
-        self.product_type_input.addItems(self.list_prod_types)
-        self.product_type_input.setPlaceholderText("Produce Type")
-        self.product_type_input.setCurrentIndex(-1)
-        self.product_type_input.currentIndexChanged.connect(self.on_search_input_changed)
-        product_section_row_1.addWidget(self.product_type_input)
-
         product_section_row_1.addStretch()
-        main_layout.addLayout(product_section_row_1)
 
-        product_section_row_last_consignment = QHBoxLayout()
-
-        product_section_row_last_consignment.addWidget(QLabel("Last Consignment:"))
+        product_section_row_1.addWidget(QLabel("Last Consignment:"))
         self.last_consignment_input = QLineEdit()
         self.last_consignment_input.setPlaceholderText("Last Consignment")
         self.last_consignment_input.setMaxLength(30)
         self.last_consignment_input.setFixedWidth(265)
         self.last_consignment_input.textChanged.connect(self.on_search_input_changed)
-        product_section_row_last_consignment.addWidget(self.last_consignment_input)
+        product_section_row_1.addWidget(self.last_consignment_input)
 
-        product_section_row_last_consignment.addStretch()
-        layout.addLayout(product_section_row_last_consignment)
+        main_layout.addLayout(product_section_row_1)
+
+        product_section_row_2 = QHBoxLayout()
+
+        product_section_row_2.addWidget(QLabel("Product Type:"))
+        self.product_type_input = QComboBox()
+        self.product_type_input.addItems(self.list_prod_types)
+        self.product_type_input.setPlaceholderText("Produce Type")
+        self.product_type_input.setCurrentIndex(-1)
+        self.product_type_input.currentIndexChanged.connect(self.on_search_input_changed)
+        product_section_row_2.addWidget(self.product_type_input)
+
+        product_section_row_2.addStretch()
+        main_layout.addLayout(product_section_row_2)
 
         search_section_1 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
@@ -293,17 +294,29 @@ class ProductsTab(BaseTab):
         product_id.setFixedWidth(120)
         line1_layout.addWidget(product_id)
 
-        # username
+        # product_name
         line1_layout.addWidget(QLabel("Product Name:"))
         product_name = QLineEdit()
         product_name.setText(str(prod_data['product_name']))
         product_name.setObjectName("READ_ONLY")
         product_name.setReadOnly(True)
         product_name.setMaxLength(30)
-        product_name.setFixedWidth(265)
+        product_name.setMinimumWidth(130)
         line1_layout.addWidget(product_name)
 
-        line1_layout.addWidget(QLabel("Product Type:"))
+        line1_layout.addWidget(QLabel("Last Consignment:"))
+        last_consignment_input = QLineEdit()
+        last_consignment_input.setPlaceholderText("Last Consignment")
+        last_consignment_input.setObjectName("READ_ONLY")
+        last_consignment_input.setReadOnly(True)
+        last_consignment_input.setMaxLength(30)
+        last_consignment_input.setFixedWidth(265)
+        line1_layout.addWidget(last_consignment_input)
+
+        section_layout.addLayout(line1_layout)
+
+        line2_layout = QHBoxLayout()
+        line2_layout.addWidget(QLabel("Product Type:"))
         product_type_input = QComboBox()
         product_type_input.addItems(self.list_prod_types)
         product_type_input.setPlaceholderText("Produce Type")
@@ -311,12 +324,10 @@ class ProductsTab(BaseTab):
         product_type_input.setCurrentIndex(index)
         product_type_input.setObjectName("READ_ONLY")
         product_type_input.setEnabled(False)
-        line1_layout.addWidget(product_type_input)
-        line1_layout.addStretch()
+        line2_layout.addWidget(product_type_input)
 
-        section_layout.addLayout(line1_layout)
+        line2_layout.addStretch()
 
-        line2_layout = QHBoxLayout()
         line2_layout.addWidget(QLabel("Average Price:"))
         avg_price = QLineEdit()
         avg_price_value = avg.get_average_price(prod_data['product_id'])
@@ -324,7 +335,7 @@ class ProductsTab(BaseTab):
         avg_price.setObjectName("READ_ONLY")
         avg_price.setReadOnly(True)
         avg_price.setMaxLength(30)
-        avg_price.setFixedWidth(190)
+        avg_price.setFixedWidth(100)
         line2_layout.addWidget(avg_price)
 
         line2_layout.addStretch()
@@ -336,7 +347,7 @@ class ProductsTab(BaseTab):
         last_price.setObjectName("READ_ONLY")
         last_price.setReadOnly(True)
         last_price.setMaxLength(30)
-        last_price.setFixedWidth(190)
+        last_price.setFixedWidth(100)
         line2_layout.addWidget(last_price)
 
         line2_layout.addStretch()
@@ -347,7 +358,7 @@ class ProductsTab(BaseTab):
         rate_input.setObjectName("READ_ONLY")
         rate_input.setReadOnly(True)
         rate_input.setMaxLength(30)
-        rate_input.setFixedWidth(190)
+        rate_input.setFixedWidth(100)
         line2_layout.addWidget(rate_input)
 
         section_layout.addLayout(line2_layout)

@@ -89,15 +89,16 @@ class UsersTab(BaseTab):
         self.username_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.username_input)
 
-        search_section_row_1.addWidget(QLabel("Admin:"))
-        self.admin_field = QComboBox()
-        self.admin_field.addItems(["True", "False"])
-        self.admin_field.setCurrentIndex(-1)
-        self.admin_field.setPlaceholderText("admin")
-        self.admin_field.currentIndexChanged.connect(self.on_search_input_changed)
-        search_section_row_1.addWidget(self.admin_field)
-
         search_section_row_1.addStretch()
+
+        search_section_row_1.addWidget(QLabel("Last Consignment:"))
+        self.last_consignment_input = QLineEdit()
+        self.last_consignment_input.setPlaceholderText("Last Consignment")
+        self.last_consignment_input.setMaxLength(30)
+        self.last_consignment_input.setFixedWidth(265)
+        self.last_consignment_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.last_consignment_input)
+
         main_layout.addLayout(search_section_row_1)
 
         search_section_row_2 = QHBoxLayout()
@@ -121,20 +122,16 @@ class UsersTab(BaseTab):
         search_section_row_2.addWidget(self.last_name_input)
 
         search_section_row_2.addStretch()
+
+        search_section_row_2.addWidget(QLabel("Admin:"))
+        self.admin_field = QComboBox()
+        self.admin_field.addItems(["True", "False"])
+        self.admin_field.setCurrentIndex(-1)
+        self.admin_field.setPlaceholderText("admin")
+        self.admin_field.currentIndexChanged.connect(self.on_search_input_changed)
+        search_section_row_2.addWidget(self.admin_field)
+
         main_layout.addLayout(search_section_row_2)
-
-        search_section_row_last_consignment = QHBoxLayout()
-
-        search_section_row_last_consignment.addWidget(QLabel("Last Consignment:"))
-        self.last_consignment_input = QLineEdit()
-        self.last_consignment_input.setPlaceholderText("Last Consignment")
-        self.last_consignment_input.setMaxLength(30)
-        self.last_consignment_input.setFixedWidth(265)
-        self.last_consignment_input.textChanged.connect(self.on_search_input_changed)
-        search_section_row_last_consignment.addWidget(self.last_consignment_input)
-
-        search_section_row_last_consignment.addStretch()
-        layout.addLayout(search_section_row_last_consignment)
 
         search_section_row_3 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
@@ -239,11 +236,6 @@ class UsersTab(BaseTab):
         if username:
             add_property("username", username, "CONTAINS")
 
-        admin_status = self.admin_field.currentText().strip().lower()
-        if admin_status:
-            admin_bool = admin_status == "true"
-            add_property("admin", admin_bool, "=")
-
         first_name = self.first_name_input.text().strip()
         if first_name:
             add_property("first_name", first_name, "CONTAINS")
@@ -251,6 +243,11 @@ class UsersTab(BaseTab):
         last_name = self.last_name_input.text().strip()
         if last_name:
             add_property("last_name", last_name, "CONTAINS")
+
+        admin_status = self.admin_field.currentText().strip().lower()
+        if admin_status:
+            admin_bool = admin_status == "true"
+            add_property("admin", admin_bool, "=")
 
         if len(conditions) == 1:
             self.fetch()
@@ -279,6 +276,7 @@ class UsersTab(BaseTab):
                 users.append({
                     'user_id': item.get('user_id'),
                     'username': item.get('username', ''),
+                    'last_consignment': item.get('last_consignment', ''),
                     'first_name': item.get('first_name', ''),
                     'last_name': item.get('last_name', ''),
                     'admin': item.get('admin', ''),
@@ -341,16 +339,15 @@ class UsersTab(BaseTab):
         username.setValidator(alpha_validator)
         line1_layout.addWidget(username)
 
-        line1_layout.addWidget(QLabel("Admin:"))
-        admin_field = QComboBox()
-        admin_field.addItems(["True", "False"])
-        admin_field.setObjectName("READ_ONLY")
-        admin_field.setEnabled(False)
-        current_index = 0 if user_data['admin'] == True else 1      # Set "Admin" value as True or False in GUI
-        admin_field.setCurrentIndex(current_index)
-        line1_layout.addWidget(admin_field)
+        line1_layout.addWidget(QLabel("Last Consignment:"))
+        last_consignment_input = QLineEdit()
+        last_consignment_input.setPlaceholderText("Last Consignment")
+        last_consignment_input.setObjectName("READ_ONLY")
+        last_consignment_input.setReadOnly(True)
+        last_consignment_input.setMaxLength(30)
+        last_consignment_input.setFixedWidth(265)
+        line1_layout.addWidget(last_consignment_input)
 
-        line1_layout.addStretch()
         section_layout.addLayout(line1_layout)
 
         line2_layout = QHBoxLayout()
@@ -376,6 +373,16 @@ class UsersTab(BaseTab):
         line2_layout.addWidget(last_name)
 
         line2_layout.addStretch()
+
+        line2_layout.addWidget(QLabel("Admin:"))
+        admin_field = QComboBox()
+        admin_field.addItems(["True", "False"])
+        admin_field.setObjectName("READ_ONLY")
+        admin_field.setEnabled(False)
+        current_index = 0 if user_data['admin'] == True else 1      # Set "Admin" value as True or False in GUI
+        admin_field.setCurrentIndex(current_index)
+        line2_layout.addWidget(admin_field)
+
         section_layout.addLayout(line2_layout)
 
         line3_layout = QHBoxLayout()
