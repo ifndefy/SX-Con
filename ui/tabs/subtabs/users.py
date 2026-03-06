@@ -1,6 +1,9 @@
 from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QIntValidator
+from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -12,10 +15,11 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QMessageBox
 
 from ui.tabs.base import BaseTab
+from src import SPOT
 
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
-from ui.core.prompts import hash_security_question_answer
+from src.core.hash_qa import hash_security_question_answer
 from src.core.hash_password import hash_password
 import utils.logger.logger as log
 from services.message_bus import status_bar_instance
@@ -29,12 +33,7 @@ class UsersTab(BaseTab):
         self.db_connection = db_connection
         super().__init__(api_handler, "users")
 
-        self.questionList = [
-            "What is your mother's maiden name?",
-            "What color was your first car?",
-            "Who was your best friend in the third grade?"
-            # todo: add 2 more questions
-        ]
+        self.questionList = SPOT.QUESTIONS_LIST
 
         self.search_timer = QTimer()
         self.search_timer.setSingleShot(True)
@@ -46,11 +45,10 @@ class UsersTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
+
+        main_layout_widget = QWidget()
+        main_layout = QVBoxLayout(main_layout_widget)
 
         header_section = QHBoxLayout()
         title = QLabel("View Users")  # Subtab header
@@ -59,13 +57,16 @@ class UsersTab(BaseTab):
         header_section.addStretch()  # Push to the left
 
         self.create_btn = QPushButton("Create New User")
+        self.create_btn.setFixedWidth(200)
         header_section.addWidget(self.create_btn)
 
-        layout.addLayout(header_section)  # Ends creation and adds header_section to window
+        main_layout.addLayout(header_section)  # Ends creation and adds header_section to window
 
-        hr1 = QLabel()  # HR Line to clear header
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        main_layout.addWidget(hr1)
 
         search_section_row_1 = QHBoxLayout()
 
@@ -83,11 +84,21 @@ class UsersTab(BaseTab):
         self.username_input.setPlaceholderText("Username")
         self.username_input.setMaxLength(30)
         self.username_input.setFixedWidth(265)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.username_input.setValidator(alpha_validator)
         self.username_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.username_input)
 
+        search_section_row_1.addWidget(QLabel("Admin:"))
+        self.admin_field = QComboBox()
+        self.admin_field.addItems(["True", "False"])
+        self.admin_field.setCurrentIndex(-1)
+        self.admin_field.setPlaceholderText("admin")
+        self.admin_field.currentIndexChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.admin_field)
+
         search_section_row_1.addStretch()
-        layout.addLayout(search_section_row_1)
+        main_layout.addLayout(search_section_row_1)
 
         search_section_row_2 = QHBoxLayout()
 
@@ -96,6 +107,7 @@ class UsersTab(BaseTab):
         self.first_name_input.setPlaceholderText("First Name")
         self.first_name_input.setMaxLength(30)
         self.first_name_input.setFixedWidth(265)
+        self.first_name_input.setValidator(alpha_validator)
         self.first_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.first_name_input)
 
@@ -104,40 +116,42 @@ class UsersTab(BaseTab):
         self.last_name_input.setPlaceholderText("Last Name")
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setFixedWidth(265)
+        self.last_name_input.setValidator(alpha_validator)
         self.last_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.last_name_input)
 
         search_section_row_2.addStretch()
-        layout.addLayout(search_section_row_2)
+        main_layout.addLayout(search_section_row_2)
 
         search_section_row_3 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setFixedWidth(200)
         search_section_row_3.addWidget(self.clear_btn)
-        layout.addLayout(search_section_row_3)
 
         search_section_row_3.addStretch()
         self.search_btn = QPushButton("Search")
         self.search_btn.setFixedWidth(200)
         search_section_row_3.addWidget(self.search_btn)
-        layout.addLayout(search_section_row_3)
+        main_layout.addLayout(search_section_row_3)
 
-        hr2 = QLabel()  # HR Line to clear header
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
+        main_layout.addWidget(hr2)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
 
         self.users_layout = QVBoxLayout()  # Users container
-        layout.addLayout(self.users_layout)
+        scroll_layout.addLayout(self.users_layout)
+        scroll_layout.addStretch()
 
-        users_section = QHBoxLayout()
-        layout.addLayout(users_section)
-        layout.addStretch()
-
-        # Set up the scroll area
         scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
-
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def clear(self):
@@ -161,6 +175,12 @@ class UsersTab(BaseTab):
             field.blockSignals(False)
             field.style().unpolish(field)
             field.style().polish(field)
+
+        self.admin_field.blockSignals(True)
+        self.admin_field.setCurrentIndex(-1)
+        self.admin_field.blockSignals(False)
+        self.admin_field.style().unpolish(self.admin_field)
+        self.admin_field.style().polish(self.admin_field)
 
         status_bar_instance.send_message("Query and Results cleared")
 
@@ -206,6 +226,11 @@ class UsersTab(BaseTab):
         if username:
             add_property("username", username, "CONTAINS")
 
+        admin_status = self.admin_field.currentText().strip().lower()
+        if admin_status:
+            admin_bool = admin_status == "true"
+            add_property("admin", admin_bool, "=")
+
         first_name = self.first_name_input.text().strip()
         if first_name:
             add_property("first_name", first_name, "CONTAINS")
@@ -242,7 +267,8 @@ class UsersTab(BaseTab):
                     'user_id': item.get('user_id'),
                     'username': item.get('username', ''),
                     'first_name': item.get('first_name', ''),
-                    'last_name': item.get('last_name', '')
+                    'last_name': item.get('last_name', ''),
+                    'admin': item.get('admin', ''),
                 })
 
             users.sort(key=lambda v: int(v['user_id']))
@@ -285,8 +311,10 @@ class UsersTab(BaseTab):
         user_id.setText(str(user_data['user_id']))
         user_id.setObjectName("READ_ONLY")
         user_id.setReadOnly(True)
-        user_id.setMaxLength(30)
+        user_id.setMaxLength(10)
         user_id.setFixedWidth(55)
+        user_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
+        user_id.setValidator(user_id_validator)
         line1_layout.addWidget(user_id)
 
         line1_layout.addWidget(QLabel("Username:"))
@@ -296,7 +324,18 @@ class UsersTab(BaseTab):
         username.setReadOnly(True)
         username.setMaxLength(30)
         username.setFixedWidth(265)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        username.setValidator(alpha_validator)
         line1_layout.addWidget(username)
+
+        line1_layout.addWidget(QLabel("Admin:"))
+        admin_field = QComboBox()
+        admin_field.addItems(["True", "False"])
+        admin_field.setObjectName("READ_ONLY")
+        admin_field.setEnabled(False)
+        current_index = 0 if user_data['admin'] == True else 1      # Set "Admin" value as True or False in GUI
+        admin_field.setCurrentIndex(current_index)
+        line1_layout.addWidget(admin_field)
 
         line1_layout.addStretch()
         section_layout.addLayout(line1_layout)
@@ -309,6 +348,7 @@ class UsersTab(BaseTab):
         first_name.setReadOnly(True)
         first_name.setMaxLength(30)
         first_name.setFixedWidth(265)
+        first_name.setValidator(alpha_validator)
         line2_layout.addWidget(first_name)
 
         # last name
@@ -319,6 +359,7 @@ class UsersTab(BaseTab):
         last_name.setReadOnly(True)
         last_name.setMaxLength(30)
         last_name.setFixedWidth(265)
+        last_name.setValidator(alpha_validator)
         line2_layout.addWidget(last_name)
 
         line2_layout.addStretch()
@@ -333,13 +374,11 @@ class UsersTab(BaseTab):
         edit_btn.setObjectName("red_btn")
         line3_layout.addWidget(edit_btn)
 
-        del_btn = QPushButton("Delete")
-        del_btn.setObjectName("red_btn")
-        line3_layout.addWidget(del_btn)
-
         section_layout.addLayout(line3_layout)
 
-        hr = QLabel() # HR Line between entries
+        hr = QFrame()
+        hr.setFrameShape(QFrame.Shape.HLine)
+        hr.setFrameShadow(QFrame.Shadow.Sunken)
         hr.setObjectName("hr")
         section_layout.addWidget(hr)
 
@@ -390,16 +429,20 @@ class UsersTab(BaseTab):
         layout.addWidget(QLabel("Username:"))
         username_input = QLineEdit()
         username_input.setObjectName("username_input")
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        username_input.setValidator(alpha_validator)
         layout.addWidget(username_input)
 
         layout.addWidget(QLabel("First Name:"))
         first_name_input = QLineEdit()
         first_name_input.setObjectName("first_name_input")
+        first_name_input.setValidator(alpha_validator)
         layout.addWidget(first_name_input)
 
         layout.addWidget(QLabel("Last Name:"))
         last_name_input = QLineEdit()
         last_name_input.setObjectName("last_name_input")
+        last_name_input.setValidator(alpha_validator)
         layout.addWidget(last_name_input)
 
         layout.addWidget(QLabel("Password:"))
@@ -426,7 +469,9 @@ class UsersTab(BaseTab):
         question1_response.setMaxLength(255)
         layout.addWidget(question1_response)
 
-        hr2 = QLabel()
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         layout.addWidget(hr2)
 
@@ -448,6 +493,17 @@ class UsersTab(BaseTab):
         question2_response.setObjectName("response2")
         question2_response.setMaxLength(255)
         layout.addWidget(question2_response)
+
+        # Admin
+        admin_q_label = QLabel("Admin")
+        admin_q_label.setObjectName("label")
+        layout.addWidget(admin_q_label)
+        admin_question = QComboBox()
+        admin_question.addItems(["True", "False"])
+        admin_question.setObjectName("admin_question")
+        admin_question.setCurrentIndex(-1)
+        layout.addWidget(admin_question)
+
 
         layout.addStretch()
 
@@ -506,15 +562,15 @@ class UsersTab(BaseTab):
         """
         raw_user_data = {
             "user_id": self.generate_new_user_id(),
-            "username": dialog.findChild(QLineEdit, "username_input").text(),
-            "first_name": dialog.findChild(QLineEdit, "first_name_input").text(),
-            "last_name": dialog.findChild(QLineEdit, "last_name_input").text(),
-            "password": hash_password(dialog.findChild(QLineEdit, "password_input").text()),
-            "q1_q": dialog.findChild(QComboBox, "question1").currentText(),
-            "q1_a": dialog.findChild(QLineEdit, "response1").text(),
-            "q2_q": dialog.findChild(QComboBox, "question2").currentText(),
-            "q2_a": dialog.findChild(QLineEdit, "response2").text(),
-            "admin": False,
+            "username": dialog.findChild(QLineEdit, "username_input").text().strip(),
+            "first_name": dialog.findChild(QLineEdit, "first_name_input").text().strip(),
+            "last_name": dialog.findChild(QLineEdit, "last_name_input").text().strip(),
+            "password": hash_password(dialog.findChild(QLineEdit, "password_input").text().strip()),
+            "q1_q": dialog.findChild(QComboBox, "question1").currentText().strip(),
+            "q1_a": dialog.findChild(QLineEdit, "response1").text().strip(),
+            "q2_q": dialog.findChild(QComboBox, "question2").currentText().strip(),
+            "q2_a": dialog.findChild(QLineEdit, "response2").text().strip(),
+            "admin": True if dialog.findChild(QComboBox, "admin_question").currentText().strip() == "True" else False,
             "type": "user"
         }
         return raw_user_data
@@ -524,7 +580,7 @@ class UsersTab(BaseTab):
         :Purpose: generates new user_id incrementing max value of database property by 1
         :Author(s): Joe Lee
         """
-        new_id = get_max_value("Entities", "user_id") + 1
+        new_id = int(get_max_value("Entities", "user_id")) + 1
         return new_id
 
     def hash_security_q_and_a(self):

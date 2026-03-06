@@ -4,7 +4,11 @@ from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtCore import Qt
-from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+from decimal import Decimal
+from decimal import ROUND_HALF_UP
+from decimal import InvalidOperation
+
+import utils.logger.logger as log
 
 class RevenueGeneration(QWidget):
     def __init__(self):
@@ -36,7 +40,7 @@ class RevenueGeneration(QWidget):
         header_layout.addWidget(vendor_header)
 
         # Percentage header
-        percentage_header = QLabel("Percentage")
+        percentage_header = QLabel("Amount Sold")
         percentage_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         percentage_header.setFixedWidth(100)
         header_layout.addWidget(percentage_header)
@@ -143,7 +147,6 @@ class RevenueGeneration(QWidget):
                 self.revenue_records[i]['super_x'].setText(record.get('super_x', '$0.00'))
 
     @staticmethod
-    @staticmethod
     def calculate_revenues(price, quantity, percentile, rate=25):
         """
         gross = (price * quantity) * percentile
@@ -193,8 +196,34 @@ class RevenueGeneration(QWidget):
             if diff != 0:
                 vendor = (vendor + diff).quantize(q2, rounding=ROUND_HALF_UP)
 
-            return {"gross": f"{gross:.2f}", "vendor": f"{vendor:.2f}", "super_x": f"{super_x:.2f}"}
+            return {"gross": gross, 
+                    "vendor": vendor, 
+                    "super_x": super_x}
 
         except (InvalidOperation, ValueError, TypeError):
             return -1
 
+    @staticmethod
+    def calculate_total(price, quantity, rate):
+        """
+        :Purpose: calculates the fee-applied total of a product
+        :Author(s): Joe Lee
+        """
+        try:
+            rate = Decimal(int(rate))
+        except (InvalidOperation, ValueError, TypeError):
+            log.error("Invalid rate")
+        d_rate = rate / 100
+        d_return_rate = 1 - d_rate
+        try:
+            d_price = Decimal(str(price))
+            d_qty = int(quantity)
+            if d_price is None or d_price < 0:
+                log.error("Invalid price")
+            if d_qty is None or d_qty < 0:
+                log.error("Invalid quantity")
+
+            total = round(d_price * d_qty * d_return_rate, 2)
+            return total
+        except (InvalidOperation, ValueError, TypeError):
+            return -1

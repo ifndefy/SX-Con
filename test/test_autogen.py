@@ -11,30 +11,24 @@ def test_autogen_ticket_num():
     author: Tyler Slagboom
     """
 
-    try:
-        container = db_connection.connect('Consignments')
-        property = 'ticket_number'
+    container = db_connection.connect('Consignments')
+    property = 'ticket_number'
 
-        query = f"SELECT VALUE MAX(c.{property}) FROM c"
+    query = f"SELECT VALUE MAX(c.{property}) FROM c"
 
-        items = list(container.query_items(
-            query=query,
-            enable_cross_partition_query=True
-        ))
+    items = list(container.query_items(
+        query=query,
+        enable_cross_partition_query=True
+    ))
 
-        if items and items[0] is not None:
-            max_ticket = int(items[0])
-        else:
-            return -1
+    if items and items[0] is not None:
+        max_ticket = int(items[0])
+    else:
+        assert False, "Max Ticket number not found"
 
-        ticket_num = int(autogen_ticket_num())
-        if ticket_num - max_ticket == 1:
-            return 0
-
-        return -1
-
-    except Exception:
-        return -1
+    ticket_num = int(autogen_ticket_num())
+    if not ticket_num - max_ticket == 1:
+        assert False, "New ticket number is not an increment of max ticket number"
 
 def test_autogen_date():
 
@@ -43,20 +37,10 @@ def test_autogen_date():
     return: 0 on success, else -1
     author: Tyler Slagboom
     """
+    now = datetime.now()
+    format = "%m/%d/%y -- %H:%M:%S"
+    now = now.strftime(format)
+    auto_time = generate_host_datetime(include_seconds=True)
 
-    try:
-        now = datetime.now()
-        format = "%m/%d/%y -- %H:%M:%S"
-        now = now.strftime(format)
-        auto_time = generate_host_datetime(include_seconds=True)
-
-        print(now)
-        print(auto_time)
-
-        if now == auto_time:
-            return 0
-
-        return -1
-
-    except Exception:
-        return -1
+    if not now == auto_time:
+        assert False, "Generated time is not the same as current system time"

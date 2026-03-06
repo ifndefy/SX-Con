@@ -15,6 +15,11 @@ QWidget#view_bg {
     font-size: 14px;
 }
 
+
+QWidget#transparent {
+    background-color: transparent;
+}
+
 /* TAB WIDGET */
 QTabWidget::pane {
     border: 1px solid #5C4033;
@@ -34,49 +39,42 @@ QTabBar::tab {
     border-top-right-radius: 4px;
     padding: 8px 16px;
     margin: 0px;
-    min-width: 80px;
-}
-
-QTabWidget#main_tabs QTabBar::tab:last {
-    background-color: #691601;
-}
-
-QTabWidget#main_tabs QTabBar::tab:last:selected {
-    background-color: #008000;
-    color: #ffffff;
-    border-color: #5C4033;
-    margin-bottom: -1px;
-    font-weight: bold;
+    width: 120px;
 }
 
 QTabWidget#subtabs QTabBar::tab {
     background-color: #691601;
+    width: 120px;
 }
 
 QTabWidget#subtabs QTabBar::tab:selected {
     background-color: #008000;
+    width: 120px;
 }
 
 QTabBar::tab:selected {
     background-color: #008000;
     color: #ffffff;
     border-color: #5C4033;
-    margin-bottom: -1px;
     font-weight: bold;
+    width: 120px;
 }
 
 QTabBar::tab:!selected {
     border-bottom: 1px solid #000000;
+    width: 120px;
 }
 
 QTabBar::tab:hover {
     background-color: #008000;
     color: #ffffff;
-    border: 2px solid #ffffff;
+    border: 1px solid #ffffff;
+    width: 120px;
 }
 
 QTabBar::tab:selected:hover {
     border-bottom: 1px solid #ffffff;
+    width: 120px;
 }
 
 /* BUTTON STYLING */
@@ -91,6 +89,10 @@ QPushButton {
 
 QPushButton#red_btn {
     background-color: #691601;
+}
+
+QPushButton#green_btn {
+    background-color: #008000;
 }
 
 QPushButton:hover {
@@ -349,4 +351,29 @@ ForgotPasswordScreen QComboBox QAbstractItemView::item:hover {
 ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
     background-color: #E5C59B;
     color: #000000;
+}
+
+/*Entry QSS : admin_settings->rates*/
+QWidget#entry_body {
+    background-color: #8A6A52;
+    border: 1px solid #5C4033;
+}
+
+QWidget#entry_body:hover,
+QWidget#entry_body[state="READ_WRITE"]{
+    background-color: #E5C59B;
+    border: 0 px solid #5C4033;
+}
+
+/*Default entry Style: all entry field objects fall back to here for missing properties/invalid states*/
+QLineEdit#entry_field{
+    background-color: #E5C59B;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+/*State 01: Read-Only -> we change the background of the field and then fall back to the default style for the rest*/
+QLineEdit#entry_field[state="READ_ONLY"] {
+    background-color: #B0B0B0;
 }

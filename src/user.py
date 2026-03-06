@@ -46,6 +46,7 @@ class User:
             self._raw_username = username
             self._hashed_username = self._hash_value(username)
             self._hashed_admin = self._hash_value(str(admin_status))
+            self._admin_status = admin_status
             
             return (self._hashed_username != "-1" and 
                     self._hashed_admin != "-1")

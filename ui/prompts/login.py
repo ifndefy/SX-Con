@@ -1,3 +1,4 @@
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -6,10 +7,14 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import Qt
 
+from src.imgs import img_helpers
+
 from src import SPOT
-from ui.forgot_pw import ForgotPasswordScreen
+from ui.prompts.forgot_pw import ForgotPasswordScreen
 from src.core.authenticate import authenticate_password
 from services.connect_database import db_connection
+import utils.logger.logger as log
+from src.user import current_user
 
 
 class LoginScreen(QDialog):
@@ -21,10 +26,11 @@ class LoginScreen(QDialog):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.setWindowTitle("SX-Con - Login")
-        self.setFixedSize(500, 400)
+        self.setFixedSize(500, 350)
         self.setModal(True)
 
         self.username = None
+        self.logo = img_helpers.get_login_logo_path()
         self.setup_ui()
 
         self.theme_manager.apply_default_theme(self)
@@ -35,18 +41,11 @@ class LoginScreen(QDialog):
         author(s): Joe Lee
         """
         layout = QVBoxLayout()
-
-        # todo: Insert Client Logo
-        logo = QLabel("CLIENT LOGO GOES HERE")
-        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo.setObjectName("logo")
-        layout.addWidget(logo)
-
-        # Title
-        title = QLabel("SX-Con Login")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setObjectName("login_title")
-        layout.addWidget(title)
+        label = QLabel(self)
+        logo_img = QPixmap(self.logo)
+        scaled_logo_image = logo_img.scaledToWidth(logo_img.width(), Qt.TransformationMode.SmoothTransformation)
+        label.setPixmap(scaled_logo_image)
+        layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Revision
         rev = QLabel(SPOT.APP_VERSION)
@@ -67,7 +66,7 @@ class LoginScreen(QDialog):
         layout.addWidget(QLabel("Password:"))
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("Enter password")
-        self.password_input.setMaxLength(255) # todo: require at least 8 characters in PW
+        self.password_input.setMaxLength(255)
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         layout.addWidget(self.password_input)
 
@@ -97,6 +96,27 @@ class LoginScreen(QDialog):
         password = self.password_input.text()
 
         if self.authenticate(username, password):
+            try:
+                users_container = db_connection.connect('Entities')
+                query = f"SELECT * FROM c WHERE c.username = '{username}'"
+                users = list(users_container.query_items(
+                    query=query,
+                    enable_cross_partition_query=True
+                ))
+                
+                if users:
+                    admin_status = users[0].get('admin', False)
+                    # Set the user in the global user class
+                    current_user.set_user(username, admin_status)
+                    log.info(f"User set: {current_user.get_username()}, Admin: {current_user.is_admin()}")
+                else:
+                    log.error("Error: User found in auth but not in user query?")
+                    
+            except Exception as e:
+                log.error(f"Error: Error setting user data: {e}")
+                # Still set basic user info even if admin status fails
+                current_user.set_user(username, False)
+            
             self.username = username
             self.accept()
         else:
@@ -134,7 +154,7 @@ class LoginScreen(QDialog):
             ))
             
             if not users:
-                print(f"No user found with username: {username}")
+                log.info(f"No user found with username: {username}")
                 return False
                 
             # Get the stored hash and authenticate
@@ -148,5 +168,5 @@ class LoginScreen(QDialog):
             return result == "1"
             
         except Exception as e:
-            print(f"Authentication error: {e}")
+            log.error(f"Authentication error: {e}")
             return False

@@ -24,8 +24,9 @@ def handler_live_pdf(vendor_data, product_data, revenue_data):
         "price_data": {
             "products": product_data
         },
-        "revenue_sharing": revenue_data
+        "revenue": revenue_data
     }
+    pdf.num_prods = len(product_data)
     pdf.vendor_data = {
         "first_name": vendor_data.get('first_name'),
         "last_name": vendor_data.get('last_name')

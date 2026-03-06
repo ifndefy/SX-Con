@@ -29,12 +29,24 @@ class DatabaseConnection:
             self.database = None
             status_bar_instance.send_message(f"Connection Error: Program starting in offline mode")
 
-
     def connect(self, container_name: str):
-        if container_name not in self._connections:
-            self._connections[container_name] = self.database.get_container_client(container_name)
-            log.debug(f"Connected to container: {container_name}")
-        return self._connections[container_name]
+        if self.database is None:
+            SPOT.OFFLINE = True
+            return None
+
+        try:
+            if container_name not in self._connections:
+                container = self.database.get_container_client(container_name)
+                container.read()
+                self._connections[container_name] = container
+                log.debug(f"Connected to container: {container_name}")
+            SPOT.OFFLINE = False  # reset on success
+            return self._connections[container_name]
+        except Exception as e:
+            SPOT.OFFLINE = True
+            log.debug(f"Could not connect to container: {container_name}")
+            status_bar_instance.send_message(f"Connection Error: Could not connect to container: {container_name}")
+            return None
 
 
 # create a global instance

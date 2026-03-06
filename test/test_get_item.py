@@ -14,25 +14,13 @@ def test_get_item() -> int:
         "Consignments": ["consignment"]
     }
 
-    entity_id = "1"
+    entity_id = "2"
     # --------------------------------------
 
-    try:
-        for container, entity_types in test_matrix.items():
-            for etype in entity_types:
+    for container, entity_types in test_matrix.items():
+        for etype in entity_types:
 
-                result = get_item(container, etype, entity_id)
+            result = get_item(container, etype, entity_id)
 
-                if result is None:
-                    print(
-                        f"FAIL -> container={container}, "
-                        f"type={etype}, id={entity_id}"
-                    )
-                    return -1
-
-        return 0
-
-    except Exception as e:
-        print(f"Exception occurred: {e}")
-        return -1
-
+            if result is None:
+                assert False, f"Could not get item {etype} {entity_id} db"

@@ -1,5 +1,8 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QApplication, QComboBox
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QComboBox
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
@@ -16,11 +19,16 @@ from handlers import handler_print
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
 from services.message_bus import status_bar_instance
+from src.core import generate_agg_data
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
+from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
-from ui.core import format_phone, format_price, excel
+from ui.core import format_phone
+from ui.core import format_price
+from ui.core import format_state
+from ui.core import excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 
@@ -107,7 +115,7 @@ class CreateNewTab(BaseTab):
         vendor_section_row_1.addWidget(QLabel("ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setObjectName("DEFAULT")
-        self.vendor_id_input.setPlaceholderText("4 INTS")
+        self.vendor_id_input.setPlaceholderText("V ID")
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
@@ -139,7 +147,7 @@ class CreateNewTab(BaseTab):
         # First Name
         vendor_section_row_2.addWidget(QLabel("First Name:"))
         self.first_name_input = QLineEdit()
-        self.first_name_input.setPlaceholderText("30 chars")
+        self.first_name_input.setPlaceholderText("First Name")
         self.first_name_input.setMaxLength(30)
         self.first_name_input.setMinimumWidth(263)
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
@@ -149,7 +157,7 @@ class CreateNewTab(BaseTab):
         # Middle Name
         vendor_section_row_2.addWidget(QLabel("Middle Name:"))
         self.middle_name_input = QLineEdit()
-        self.middle_name_input.setPlaceholderText("10 chars")
+        self.middle_name_input.setPlaceholderText("Middle Name")
         self.middle_name_input.setMaxLength(10)
         self.middle_name_input.setMinimumWidth(103)
         self.middle_name_input.setValidator(alpha_validator)
@@ -158,7 +166,7 @@ class CreateNewTab(BaseTab):
         # Last Name
         vendor_section_row_2.addWidget(QLabel("Last Name:"))
         self.last_name_input = QLineEdit()
-        self.last_name_input.setPlaceholderText("30 chars")
+        self.last_name_input.setPlaceholderText("Last Name")
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setMinimumWidth(263)
         self.last_name_input.setValidator(alpha_validator)
@@ -173,9 +181,9 @@ class CreateNewTab(BaseTab):
         # Address
         vendor_section_row_3.addWidget(QLabel("Address:"))
         self.address_input = QLineEdit()
-        self.address_input.setPlaceholderText("Street address")
+        self.address_input.setPlaceholderText("Address")
         self.address_input.setMaxLength(255)
-        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 .,#-]+"))
+        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 ]+"))
         self.address_input.setValidator(address_validator)
         vendor_section_row_3.addWidget(self.address_input)
 
@@ -189,8 +197,7 @@ class CreateNewTab(BaseTab):
 
         # State
         vendor_section_row_3.addWidget(QLabel("State:"))
-        self.state_input = QLineEdit()
-        self.state_input.setPlaceholderText("ST")
+        self.state_input = format_state.FormatState()
         self.state_input.setMaxLength(2)
         self.state_input.setFixedWidth(50)
         self.state_input.setValidator(alpha_validator)
@@ -199,7 +206,7 @@ class CreateNewTab(BaseTab):
         # Zip Code
         vendor_section_row_3.addWidget(QLabel("Zip Code:"))
         self.zip_input = QLineEdit()
-        self.zip_input.setPlaceholderText("XXXXX")
+        self.zip_input.setPlaceholderText("Zip")
         self.zip_input.setMaxLength(5)
         self.zip_input.setFixedWidth(70)
         zip_validator = QIntValidator(0, 99999, self)
@@ -210,7 +217,9 @@ class CreateNewTab(BaseTab):
         layout.addLayout(vendor_section_row_3)
 
         # HR Line between Vendor and Product sections
-        hr1 = QLabel()
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
         layout.addWidget(hr1)
 
@@ -247,7 +256,9 @@ class CreateNewTab(BaseTab):
         layout.addStretch(1)
 
         # HR Line between Product and Revenue sections
-        hr2 = QLabel()
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         layout.addWidget(hr2)
 
@@ -256,37 +267,75 @@ class CreateNewTab(BaseTab):
 
         clear_section = QVBoxLayout()
         # Clear Form button on left bottom
+
         clear_section.addStretch()
         self.clear_btn = QPushButton("Clear Form")
         self.clear_btn.setObjectName("crit_large_btn")
         clear_section.addWidget(self.clear_btn)
 
         combo_section_row_0.addLayout(clear_section)
+
+        # HR Line to separate clear button from revenue fields
+        vr1 = QFrame()
+        vr1.setFrameShape(QFrame.Shape.VLine)
+        vr1.setFrameShadow(QFrame.Shadow.Sunken)
+        vr1.setObjectName("hr")
+        combo_section_row_0.addWidget(vr1)
         combo_section_row_0.addStretch()
 
-        # Revenue Sharing section
+        # wrap bottom middle to enable calculate button to expand
+        bot_mid_widget = QWidget()
+        bot_mid_layout = QVBoxLayout(bot_mid_widget)
+        bot_mid_layout.setContentsMargins(0, 0, 0, 0)
+
+        # top half of the bottom contains the revenue data
+        middle_top_row = QHBoxLayout()
+
+        rev_by_prod_widget = QWidget()
+        rev_prod_section = QVBoxLayout(rev_by_prod_widget)
+        rev_by_prod_title = QLabel("Revenue by Product Type")
+        rev_by_prod_title.setObjectName("post_title")
+        rev_prod_section.addWidget(rev_by_prod_title, alignment=Qt.AlignmentFlag.AlignRight)
+        self.rev_by_prod = RevenueByProdType()
+        rev_prod_section.addWidget(self.rev_by_prod)
+        middle_top_row.addWidget(rev_by_prod_widget)
+
+        vr2 = QFrame()
+        vr2.setFrameShape(QFrame.Shape.VLine)
+        vr2.setFrameShadow(QFrame.Shadow.Sunken)
+        vr2.setObjectName("hr")
+        middle_top_row.addWidget(vr2)
+
         revenue_widget = QWidget()
         revenue_section = QVBoxLayout(revenue_widget)
         revenue_title = QLabel("Revenue Sharing")
         revenue_title.setObjectName("post_title")
         revenue_section.addWidget(revenue_title, alignment=Qt.AlignmentFlag.AlignCenter)
-
         self.revenue_generation = RevenueGeneration()
         revenue_section.addWidget(self.revenue_generation)
+        revenue_section.addStretch()
+        middle_top_row.addWidget(revenue_widget)
+
+        bot_mid_layout.addLayout(middle_top_row)
 
         self.calc_btn = QPushButton("Calculate")
         self.calc_btn.setObjectName("post_title")
-        revenue_section.addWidget(self.calc_btn)
+        bot_mid_layout.addWidget(self.calc_btn)
 
-        revenue_section.addStretch()
-
-        combo_section_row_0.addWidget(revenue_widget)
+        combo_section_row_0.addWidget(bot_mid_widget)
         combo_section_row_0.addStretch()
+
+        # HR Line to separate revenue fields from action buttons
+        vr3 = QFrame()
+        vr3.setFrameShape(QFrame.Shape.VLine)
+        vr3.setFrameShadow(QFrame.Shadow.Sunken)
+        vr3.setObjectName("hr")
+        combo_section_row_0.addWidget(vr3)
 
         # Action buttons
         action_layout = QVBoxLayout()
 
-        self.excel_btn = excel.ExcelButton(self.gather_record, xls_gen.generate_excel, "Excel")
+        self.excel_btn = QPushButton("Excel")
         self.pdf_btn = QPushButton("PDF")
         self.print_btn = QPushButton("Print")
 
@@ -303,11 +352,6 @@ class CreateNewTab(BaseTab):
 
         combo_section_row_0.addLayout(action_layout)
         layout.addLayout(combo_section_row_0)
-
-        # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
-        hr3.setObjectName("hr")
-        layout.addWidget(hr3)
 
         # Set up the scroll area
         scroll.setWidget(scroll_content)
@@ -333,7 +377,7 @@ class CreateNewTab(BaseTab):
         # Product ID - Fixed width for 10 integers
         line1_layout.addWidget(QLabel("ID:"))
         product_id_input = QLineEdit()
-        product_id_input.setPlaceholderText("10 INTS")
+        product_id_input.setPlaceholderText("P ID")
         product_id_input.setMaxLength(10)
         product_id_input.setFixedWidth(120)
         product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
@@ -348,10 +392,10 @@ class CreateNewTab(BaseTab):
         line1_layout.addWidget(product_type_label)
 
         product_type_input = QComboBox()
-        product_types = ["Hot Food", "General Item", "Produce"]
+        product_types = ["Hot Food", "General", "Produce"]
         product_type_input.addItems(product_types)
         product_type_input.setCurrentIndex(-1)
-        product_type_input.setPlaceholderText("SELECT")
+        product_type_input.setPlaceholderText("Type")
         line1_layout.addWidget(product_type_input)
         product_section['product_type'] = product_type_input
 
@@ -388,12 +432,13 @@ class CreateNewTab(BaseTab):
         # Rate - integer only, placed to the right of Notes
         line2_layout.addWidget(QLabel("Rate:"))
         rate_input = QLineEdit()
+        rate_input.setReadOnly(True)
         rate_input.setObjectName("READ_ONLY")
         rate_input.setPlaceholderText(str(BASE_RATE))
         rate_input.setFixedWidth(80)
         rate_input.setValidator(QIntValidator(0, 100, self))
         # Default to BASE_RATE until type indicates otherwise
-        rate_input.setText(str(BASE_RATE))
+        rate_input.textChanged.connect(self.handle_total)
         line2_layout.addWidget(rate_input)
         product_section['rate'] = rate_input
 
@@ -404,6 +449,7 @@ class CreateNewTab(BaseTab):
         price_input.setFixedWidth(100)
         price_input.setMaxLength(9)
         price_input.setValidator(QIntValidator(0, 2147483647, self))
+        price_input.textChanged.connect(self.handle_total)
 
         line2_layout.addWidget(price_input)
         product_section['price'] = price_input
@@ -411,11 +457,22 @@ class CreateNewTab(BaseTab):
         # Quantity - Fixed width (same as price)
         line2_layout.addWidget(QLabel("Qty:"))
         quantity_input = QLineEdit()
-        quantity_input.setPlaceholderText("0")
+        quantity_input.setPlaceholderText("Qty")
         quantity_input.setFixedWidth(100)
-        quantity_input.setValidator(QIntValidator(0, 9999, self))
+        quantity_input.setValidator(QRegularExpressionValidator(QRegularExpression(r'^\d*$')))
+        quantity_input.textChanged.connect(self.handle_total)
         line2_layout.addWidget(quantity_input)
         product_section['quantity'] = quantity_input
+
+        # Total - Fixed width (same as price)
+        line2_layout.addWidget(QLabel("Total:"))
+        total_input = QLineEdit()
+        total_input.setPlaceholderText("$0.00")
+        total_input.setReadOnly(True)
+        total_input.setObjectName("READ_ONLY")
+        total_input.setFixedWidth(100)
+        line2_layout.addWidget(total_input)
+        product_section['total'] = total_input
 
         section_layout.addLayout(line2_layout)
 
@@ -428,6 +485,45 @@ class CreateNewTab(BaseTab):
         self.product_sections.append(product_section)
         self.product_counter += 1
         status_bar_instance.send_message(f"Added product line. Total: {len(self.product_sections)}")
+
+    def handle_total(self):
+        widget = self.sender()
+        if not widget:
+            return
+
+        section = self.get_sending_widget(widget)
+        if section:
+            self.on_price_qty_changed(section)
+
+    def get_sending_widget(self, widget):
+        for section in self.product_sections:
+            if (section['price'] is widget or section['quantity'] is widget or section['rate'] is widget):
+                return section
+        return None
+
+    def on_price_qty_changed(self, section):
+        price_text = section['price'].text().strip()
+        qty_text = section['quantity'].text().strip()
+        rate_text = section['rate'].text().strip()
+
+        if not price_text or not qty_text or not rate_text:
+            # require all fields, prevent invalid data
+            section['total'].setText("$0.00")
+            return
+
+        fixed_price = generate_agg_data.convert_price(price_text)
+        if fixed_price is None:
+            section['total'].setText("$0.00")
+            return
+
+        try:
+            qty = int(qty_text)
+        except ValueError:
+            section['total'].setText("$0.00")
+            return
+
+        total = RevenueGeneration.calculate_total(fixed_price, qty, rate_text)
+        section['total'].setText(f"${total:.2f}")
 
     def _on_product_type_changed(self, product_section: dict):
         try:
@@ -489,8 +585,14 @@ class CreateNewTab(BaseTab):
         return {
             'vendor_info': vendor_info,
             'prod_info': product_info,
-            'revenue_info': revenue_data
+            'revenue_shared': revenue_data['shared'],
+            'revenue_grouped': revenue_data['grouped']
         }
+
+    def handle_excel_btn(self):
+        self.handle_calc_btn()
+        data = self.gather_record()
+        xls_gen.generate_excel(data)
 
     def setup_button_connections(self):
         """
@@ -501,7 +603,8 @@ class CreateNewTab(BaseTab):
         self.create_btn.clicked.connect(self.create_record)
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
-        self.calc_btn.clicked.connect(self.update_revenue_fields)
+        self.calc_btn.clicked.connect(self.handle_calc_btn)
+        self.excel_btn.clicked.connect(self.handle_excel_btn)
         self.pdf_btn.clicked.connect(self.on_pdf_clicked)
         self.print_btn.clicked.connect(self.on_print_clicked)
 
@@ -514,14 +617,19 @@ class CreateNewTab(BaseTab):
         if not self.on_pdf_clicked():
             return
 
-        handler_print.handler_print(ticket)
-        log.info(f"Print requested for ticket {ticket}")
+        try:
+            handler_print.handler_print(ticket)
+            log.info(f"Print requested for ticket {ticket}")
+        except Exception as e:
+            QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket}:\n\n{e}")
 
     def on_pdf_clicked(self):
         vendor_data = self._gather_vendor_data()
         products_data = self._gather_products_data()
         self.update_revenue_fields()
+        self.rev_by_prod.handle_updating(self.product_sections)
         revenue_data = self._gather_revenue_data()
+
         try:
             if self._validate_required_fields(vendor_data, products_data):
                 handler_live_pdf(vendor_data, products_data, revenue_data)
@@ -532,6 +640,7 @@ class CreateNewTab(BaseTab):
                 return False
         except Exception as e:
             log.error(f"ERROR generating PDF for ticket {vendor_data['ticket_number']}: {e}")
+            return False
 
     def create_record(self):
         """
@@ -568,8 +677,8 @@ class CreateNewTab(BaseTab):
             record_id = self._post_to_database(record_data)
 
             if record_id != -1:
-                status_bar_instance.send_message(f"Record created successfully! ID: {record_id}")
                 self.clear_form()
+                status_bar_instance.send_message(f"Record created successfully! ID: {record_id}")
                 return record_id
             else:
                 log.error("Failed to create record")
@@ -617,19 +726,23 @@ class CreateNewTab(BaseTab):
                 'notes': product_section['notes'].text().strip() or "NULL",
                 'rate': product_section.get('rate').text().strip() if product_section.get('rate') else "NULL",
                 'price': product_section['price'].text().strip() or "NULL",
-                'quantity': product_section['quantity'].text().strip() or "NULL"
+                'quantity': product_section['quantity'].text().strip() or "NULL",
+                'total': product_section['total'].text().strip() or "NULL"
             }
             products_data.append(product_data)
         return products_data
 
     def _gather_revenue_data(self):
         """
-        :author(s): Alexander Bubienko
         :purpose: Gather revenue data and convert empty strings to NULL
-        :return: Dictionary containing revenue data
+        :return: Dictionary containing shared revenue and grouped revenue
+        :author(s): Alexander Bubienko, Joe Lee
         """
         # Revenue sharing data
-        return self.revenue_generation.get_revenue_data()
+        return {
+            'shared': self.revenue_generation.get_revenue_data(),
+            'grouped': self.rev_by_prod.get_revenue_data()
+        }
 
     def _validate_required_fields(self, vendor_data, products_data=None):
         """
@@ -693,7 +806,6 @@ class CreateNewTab(BaseTab):
 
             log.info(f"Creating vendor document with ID: vendor_{vendor_id}")
 
-            # todo: need a ticket to check if vendor_id already exists
             try:
                 vendor_response = entities_container.upsert_item(body=vendor_document)
                 log.info("Vendor document created successfully")
@@ -701,7 +813,6 @@ class CreateNewTab(BaseTab):
                 log.error(f"Error creating vendor document: {e}")
                 return -1
 
-            # todo: need a ticket to check if product_id already exists
             product_ids = []
             for i, product in enumerate(record_data['products']):
                 if self._has_product_data(product):
@@ -726,6 +837,7 @@ class CreateNewTab(BaseTab):
                         'product_name': self._convert_null(product['product_name']),
                         'product_type': self._convert_null(product['product_type']),
                         'rate': rate_value,
+                        'total': product['total'],
                     }
                     log.info(f"Creating product document: product_{product_id}")
                     try:
@@ -763,13 +875,18 @@ class CreateNewTab(BaseTab):
                             ),
                             'price': self._convert_null(product['price']),
                             'quantity': self._convert_quantity(product['quantity']),
+                            'total': product['total'],
                             'sold': 0,
+                            'remaining': self._convert_quantity(product['quantity'])
                         }
                         for product in record_data['products']
                         if self._has_product_data(product)
                     ]
                 },
-                'revenue_sharing': record_data['revenue']
+                'revenue': {
+                    'shared': record_data['revenue']['shared'],
+                    'grouped': record_data['revenue']['grouped']
+                }
             }
 
             log.info(f"Creating consignment document with ID: {ticket_number}")
@@ -905,6 +1022,7 @@ class CreateNewTab(BaseTab):
         :return: None
         :author(s): Joe Lee, Colin Henderson
         """
+        self.rev_by_prod.clear()
         self.ticket_input.clear()
 
         fields = [
@@ -968,6 +1086,25 @@ class CreateNewTab(BaseTab):
             )
         except Exception:
             return False
+
+    def handle_calc_btn(self):
+        self.val_prod_sections()
+        self.handle_total()
+        self.update_revenue_fields()
+        self.rev_by_prod.handle_updating(self.product_sections)
+
+    def val_prod_sections(self):
+        for prod in self.product_sections:
+            if prod['price'] is None:
+                log.error("Invalid price")
+                return False
+            if prod['quantity'] is None:
+                log.error("Invalid quantity")
+                return False
+            if prod['rate'] is None:
+                log.error("Invalid rate")
+                return False
+        return True
 
     def update_revenue_fields(self) -> int:
         """

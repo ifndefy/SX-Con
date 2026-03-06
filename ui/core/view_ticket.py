@@ -1,17 +1,28 @@
+from PyQt6.QtCore import QObject
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout
+from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtWidgets import QFrame
 
+from src.core.update_quantities import update_quantities
 from services.get_item import get_item
-from services.update_property import update_property
+from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
 
+import utils.logger.logger as log
 
-class ViewTicket:
-    @staticmethod
-    def view_ticket_details(ticket_section, ticket_details):
+class ViewTicket(QObject):
+    def __init__(self, ticket_id):
+        super().__init__()
+        self.ticket_id = ticket_id
+        self.product_widgets = {}
+
+    def setup_ui(self, ticket_section, ticket_details):
         details_container = ticket_section['details_container']
         details_container.setObjectName("view_bg")
 
@@ -23,20 +34,21 @@ class ViewTicket:
                 child.widget().deleteLater()
 
         ticket_data = ticket_details['ticket_data']
-        ticket_id = ticket_data.get('id', '')
         products = ticket_data.get('price_data', {}).get('products', [])
-        revenue_sharing = ticket_data.get('revenue_sharing', [])
+        revenue_sharing = ticket_data.get('revenue', []).get('shared', [])
+        revenue_grouped = ticket_data.get('revenue', []).get('grouped', [])
 
         # Products section
-        valid_products = [p for p in products if p.get('product_id') and p.get('product_id') != 'NULL']
+        valid_products = []
+        for prod in products:
+            if prod.get('product_id') and prod.get('product_id') != 'NULL':
+                valid_products.append(prod)
 
-        for index, product in enumerate(valid_products):
+        for product in valid_products:
             product_id = product.get('product_id')
 
-            # Line 1: Product ID and Product Name
             line1_layout = QHBoxLayout()
 
-            # Product ID
             line1_layout.addWidget(QLabel("ID:"))
             product_id_input = QLineEdit(product_id)
             product_id_input.setFixedWidth(120)
@@ -47,7 +59,7 @@ class ViewTicket:
             # Product Type
             line1_layout.addWidget(QLabel("Type:"))
             product_type_input = QComboBox()
-            product_types = ["SELECT", "Hot Food", "General Item", "Produce"]
+            product_types = ["SELECT", "Hot Food", "General", "Produce"]
             product_type_input.addItems(product_types)
             product_type_from_db = product.get('product_type', '')
             if product_type_from_db in product_types:
@@ -60,7 +72,7 @@ class ViewTicket:
 
             # Product Name
             line1_layout.addWidget(QLabel("Name:"))
-            product_name = product.get('product_type', 'Unknown Product')
+            product_name = product.get('product_type', '')
             if product_id and product_id != 'NULL':
                 product_entity = get_item('Entities', 'product', product_id)
                 if product_entity:
@@ -72,13 +84,17 @@ class ViewTicket:
 
             line1_layout.addStretch()
 
+            # Sold field
             line1_layout.addWidget(QLabel("Sold:"))
-            sold_input = QLineEdit(str(product.get('sold', 0)))
-            sold_input.setFixedWidth(100)
-            line1_layout.addWidget(sold_input)
+            sold_edit = QLineEdit(str(product.get('sold', 0)))
+            sold_edit.setFixedWidth(100)
+            line1_layout.addWidget(sold_edit)
 
             update_btn = QPushButton("Update")
+            update_btn.product_id = product_id
+            update_btn.clicked.connect(self.handle_update_clicked)
             line1_layout.addWidget(update_btn)
+
             product_layout.addLayout(line1_layout)
 
             # Line 2: Notes, Price, Quantity
@@ -93,62 +109,200 @@ class ViewTicket:
 
             # Price
             line2_layout.addWidget(QLabel("Price:"))
-            price = (product.get('price', 0)) if product.get('price') else 0
-            price = fix_price(price)
+            price = product.get('price', 0) if product.get('price') else 0
+            price = self.fix_price(price)
             price_input = QLineEdit(price)
             price_input.setFixedWidth(100)
             price_input.setObjectName("READ_ONLY")
             price_input.setReadOnly(True)
             line2_layout.addWidget(price_input)
 
-            # Quantity
-            line2_layout.addWidget(QLabel("Qty:"))
+            # Quantity Signed
+            line2_layout.addWidget(QLabel("Qty Signed:"))
             quantity_input = QLineEdit(str(product.get('quantity', 0)))
             quantity_input.setFixedWidth(100)
             quantity_input.setObjectName("READ_ONLY")
             quantity_input.setReadOnly(True)
             line2_layout.addWidget(quantity_input)
 
-            line2_layout.addStretch()
+            # Quantity Remaining
+            line2_layout.addWidget(QLabel("Qty Remaining:"))
+            remaining_display = QLineEdit(str(product.get('remaining', 0)))
+            remaining_display.setFixedWidth(100)
+            remaining_display.setObjectName("READ_ONLY")
+            remaining_display.setReadOnly(True)
+            line2_layout.addWidget(remaining_display)
 
+            # Quantity Sold
+            line2_layout.addWidget(QLabel("Qty Sold:"))
+            sold_display = QLineEdit(str(product.get('sold', 0)))
+            sold_display.setFixedWidth(100)
+            sold_display.setObjectName("READ_ONLY")
+            sold_display.setReadOnly(True)
+            line2_layout.addWidget(sold_display)
+
+            line2_layout.addStretch()
             product_layout.addLayout(line2_layout)
 
-        def make_update_handler(product_index, sold_widget):
-            def handler():
-                sold_value = sold_widget.text()
-                try:
-                    sold_int = int(sold_value)
-                    result = update_property("Consignments", "consignment", "100000",
-                                             f"price_data.products[{product_index}].sold", sold_int)
-                    if result == 0:
-                        print(f"Successfully updated sold quantity to {sold_int}")
-                    else:
-                        print(f"Failed to update sold quantity")
-                except ValueError:
-                    print(f"Invalid sold value: {sold_value}. Please enter a valid number.")
+            # HR Line to separate products
+            line3_layout = QHBoxLayout()
+            hr1 = QFrame()
+            hr1.setFrameShape(QFrame.Shape.HLine)
+            hr1.setFrameShadow(QFrame.Shadow.Sunken)
+            hr1.setObjectName("hr")
+            line3_layout.addWidget(hr1)
 
-            return handler
+            product_layout.addLayout(line3_layout)
 
-            update_btn.clicked.connect(make_update_handler(index, sold_input))
+            self.product_widgets[product_id] = {
+                'sold_edit': sold_edit,
+                'remaining_display': remaining_display,
+                'quantity_display': quantity_input,
+                'sold_display': sold_display
+            }
 
-        # Revenue Sharing section
+        # Revenue section
         if revenue_sharing:
             revenue_container_layout = QHBoxLayout()
             revenue_container_layout.setObjectName("view_bg")
-            revenue_container_layout.addStretch(1)
+
+            if revenue_grouped:
+                grouped_layout = QVBoxLayout()
+                grouped_label = QLabel("Grouped")
+                grouped_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                grouped_layout.addWidget(grouped_label)
+                hr1 = QFrame()
+                hr1.setFrameShape(QFrame.Shape.HLine)
+                hr1.setFrameShadow(QFrame.Shadow.Sunken)
+                hr1.setObjectName("hr")
+                grouped_layout.addWidget(hr1)
+                rev_by_type = RevenueByProdType()
+                rev_by_type.setObjectName("view_bg")
+                totals = {item['product_type']: float(item['total'].replace('$', '')) for item in revenue_grouped}
+                rev_by_type.update_display_values(totals)
+                grouped_layout.addWidget(rev_by_type)
+                revenue_container_layout.addLayout(grouped_layout)
+
+                vr1 = QFrame()
+                vr1.setFrameShape(QFrame.Shape.VLine)
+                vr1.setFrameShadow(QFrame.Shadow.Sunken)
+                vr1.setObjectName("hr")
+                revenue_container_layout.addWidget(vr1)
+
+            shared_layout = QVBoxLayout()
+            shared_label = QLabel("Signed")
+            shared_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            shared_layout.addWidget(shared_label)
+            hr2 = QFrame()
+            hr2.setFrameShape(QFrame.Shape.HLine)
+            hr2.setFrameShadow(QFrame.Shadow.Sunken)
+            hr2.setObjectName("hr")
+            shared_layout.addWidget(hr2)
             revenue_widget = RevenueGeneration()
+            revenue_widget.setObjectName("view_bg")
             revenue_widget.set_revenue_data(revenue_sharing)
-            revenue_container_layout.addWidget(revenue_widget)
+            shared_layout.addWidget(revenue_widget)
+            revenue_container_layout.addLayout(shared_layout)
+
+            vr2 = QFrame()
+            vr2.setFrameShape(QFrame.Shape.VLine)
+            vr2.setFrameShadow(QFrame.Shadow.Sunken)
+            vr2.setObjectName("hr")
+            revenue_container_layout.addWidget(vr2)
+
+            # todo: this is temporary for payout
+            payout_layout = QVBoxLayout()
+            payout_label = QLabel("Payout")
+            payout_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            payout_layout.addWidget(payout_label)
+            hr2 = QFrame()
+            hr2.setFrameShape(QFrame.Shape.HLine)
+            hr2.setFrameShadow(QFrame.Shadow.Sunken)
+            hr2.setObjectName("hr")
+            payout_layout.addWidget(hr2)
+            revenue_widget = RevenueGeneration()
+            revenue_widget.setObjectName("view_bg")
+            revenue_widget.set_revenue_data(revenue_sharing)
+            payout_layout.addWidget(revenue_widget)
+            revenue_container_layout.addLayout(payout_layout)
+
+            revenue_container_layout.addStretch(1)
             product_layout.addLayout(revenue_container_layout)
 
-def fix_price(price_val):
-    """
-    :Purpose: inserts dollar sign in front of price should it not have it (this is due to how older records did not insert $"
-    :Parameter: price
-    :Return: $ + price if not startswith("$")
-    :Author(s): Joe Lee
-    """
-    price_str = str(price_val)
-    if not price_str.startswith('$'):
-        price_str = '$' + price_str
-    return price_str
+    def handle_update_clicked(self):
+        product_id, widgets = self.get_product_and_widgets()
+        if not product_id or not widgets:
+            return
+
+        new_sold, quantity = self.val_quantities(widgets)
+        if new_sold is None or quantity is None:
+            return
+        if new_sold > quantity:
+            QMessageBox.warning(self.sender(), "Invalid Input", f"Sold quantity ({new_sold}) exceeds Signed quantity ({quantity})")
+            log.error(f"Update failed: Sold quantity exceeds signed quantity")
+            return
+        if new_sold < 0:
+            QMessageBox.warning(self.sender(), "Invalid Input", f"Sold quantity ({new_sold}) must be positive")
+            log.error(f"Update failed: Sold quantity must be positive")
+            return
+
+        success, new_remaining, error = update_quantities(
+            self.ticket_id, product_id, new_sold
+        )
+        if success:
+            widgets['sold_edit'].setText(str(new_sold))
+            widgets['remaining_display'].setText(str(new_remaining))
+            widgets['sold_display'].setText(str(new_sold))
+        else:
+            log.error(f"Update failed: {error}")
+
+    def get_product_and_widgets(self):
+        """
+        :Purpose: get product and widget data for parsing
+        :Author(s): Joe Lee
+        """
+        button = self.sender()
+        if button is None:
+            return None, None
+
+        product_id = getattr(button, 'product_id', None)
+        if product_id is None:
+            log.error("Update button missing product data.")
+            return None, None
+
+        widgets = self.product_widgets.get(product_id)
+        if not widgets:
+            log.error(f"No widgets found for product {product_id}")
+            return None, None
+
+        return product_id, widgets
+
+    def val_quantities(self, widgets):
+        """
+        :Purpose: Validate values from widgets
+        :Returns: new_sold, quantity
+        :Author(s): Joe Lee
+        """
+        sold_input = widgets['sold_edit']
+        quantity_display = widgets['quantity_display']
+
+        try:
+            new_sold = int(sold_input.text())
+        except ValueError:
+            log.error(f"Invalid sold value: {sold_input.text()}")
+            return None, None
+
+        try:
+            quantity = int(quantity_display.text())
+        except ValueError:
+            log.error(f"Invalid quantity value: {quantity_display.text()}")
+            return None, None
+
+        return new_sold, quantity
+
+    @staticmethod
+    def fix_price(price_val):
+        price_str = str(price_val)
+        if not price_str.startswith('$'):
+            price_str = '$' + price_str
+        return price_str
