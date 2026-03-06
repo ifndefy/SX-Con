@@ -414,7 +414,7 @@ class CreateNewTab(BaseTab):
         rate_input = QLineEdit()
         rate_input.setReadOnly(True)
         rate_input.setObjectName("READ_ONLY")
-        rate_input.setPlaceholderText("N/A")
+        rate_input.setPlaceholderText("Rate")
         rate_input.setFixedWidth(80)
         rate_input.setValidator(QIntValidator(0, 100, self))
         # Default to BASE_RATE until type indicates otherwise
@@ -1101,7 +1101,13 @@ class CreateNewTab(BaseTab):
                 for section in self.product_sections:
                     price = self._parse_money(section['price'].text())
                     qty = self._parse_int(section['quantity'].text())
-                    rate = self.rates_container[section['product_type'].currentText()]
+                    #This will catch both empty values and values that don't exist in the table for some reason (i.e somehow someone tries 'Car' product type)
+                    try:
+                        rate_key = section['product_type'].currentText()
+                        rate = self.rates_container[rate_key]
+                    except KeyError:
+                        log.warning(f"Product type {rate_key} has no matching rate")
+                        continue
 
                     if price < 0 or qty < 0:
                         log.error("Error: Negative price or quantity")
@@ -1175,7 +1181,7 @@ class CreateNewTab(BaseTab):
                             if item and "rate" in item and item["rate"] is not None:
                                 product_section['rate'].setText(str(item["rate"]))
                         else:
-                         product_section['rate'].setText(self.rates_container[item.get("product_type")] if item else "")
+                         product_section['rate'].setText(str(self.rates_container[item.get("product_type")]) if item else "")
 
                     else:
                         # Product doesn't exist - clear and unlock
@@ -1192,7 +1198,7 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].style().polish(product_section['product_type'])
 
                         if 'rate' in product_section:
-                            product_section['rate'].setText("N/A")
+                            product_section['rate'].setText("Rate")
                     break
         except Exception as e:
             log.error(f"Failed to fetch record: {e}")
@@ -1246,7 +1252,7 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].style().polish(product_section['product_type'])
 
                         product_section['rate'].setObjectName("DEFAULT")
-                        product_section['rate'].setText("N/A")
+                        product_section['rate'].setText("Rate")
                     break
         except Exception as e:
             log.error(f"Failed to fetch record by name: {e}")
