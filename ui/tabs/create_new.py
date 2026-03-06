@@ -21,6 +21,7 @@ from services.get_item_by_property import get_item_by_property
 from services.message_bus import status_bar_instance
 from services.parse_consignment_table import fetch_consignment_data
 from src.core import generate_agg_data
+from src.user import current_user
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
@@ -574,7 +575,8 @@ class CreateNewTab(BaseTab):
             'vendor_info': vendor_info,
             'prod_info': product_info,
             'revenue_shared': revenue_data['shared'],
-            'revenue_grouped': revenue_data['grouped']
+            'revenue_grouped': revenue_data['grouped'],
+            'revenue_payout': []
         }
 
     def handle_excel_btn(self):
@@ -729,7 +731,8 @@ class CreateNewTab(BaseTab):
         # Revenue sharing data
         return {
             'shared': self.revenue_generation.get_revenue_data(),
-            'grouped': self.rev_by_prod.get_revenue_data()
+            'grouped': self.rev_by_prod.get_revenue_data(),
+            'payout': []
         }
 
     def _validate_required_fields(self, vendor_data, products_data=None):
@@ -846,34 +849,33 @@ class CreateNewTab(BaseTab):
                 'type': 'consignment',
                 'ticket_number': int(ticket_number),
                 'vendor_id': int(vendor_id),
-                'product_ids': product_ids,
+                'user_id': int(current_user.get_user_id()),
                 'datetime': record_data['vendor']['datetime'],
                 'status': "OPEN",
-                'price_data': {
-                    'products': [
-                        {
-                            'product_id': product['product_id'],
-                            'product_type': product['product_type'],
-                            'product_name': product['product_name'],
-                            'notes': product['notes'],
-                            'rate': (
-                                self._convert_rate(product.get('rate'))
-                                if self._convert_rate(product.get('rate')) is not None
-                                else self.rates_container[product.get('product_type')]
-                            ),
-                            'price': self._convert_null(product['price']),
-                            'quantity': self._convert_quantity(product['quantity']),
-                            'total': product['total'],
-                            'sold': 0,
-                            'remaining': self._convert_quantity(product['quantity'])
-                        }
-                        for product in record_data['products']
-                        if self._has_product_data(product)
-                    ]
-                },
+                'products': [
+                    {
+                        'product_id': product['product_id'],
+                        'product_type': product['product_type'],
+                        'product_name': product['product_name'],
+                        'notes': product['notes'],
+                        'rate': (
+                            self._convert_rate(product.get('rate'))
+                            if self._convert_rate(product.get('rate')) is not None
+                            else self.rates_container[product.get('product_type')]
+                        ),
+                        'price': self._convert_null(product['price']),
+                        'quantity': self._convert_quantity(product['quantity']),
+                        'total': product['total'],
+                        'sold': 0,
+                        'remaining': self._convert_quantity(product['quantity'])
+                    }
+                    for product in record_data['products']
+                    if self._has_product_data(product)
+                    ],
                 'revenue': {
                     'shared': record_data['revenue']['shared'],
-                    'grouped': record_data['revenue']['grouped']
+                    'grouped': record_data['revenue']['grouped'],
+                    'payout': record_data['revenue']['payout'],
                 }
             }
 

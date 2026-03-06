@@ -90,6 +90,21 @@ class User:
         user_data = get_item_by_property("Entities", "user", "username", self.get_username())
         return user_data
 
+    def get_user_id(self):
+        """
+        purpose: Return user id or None if offline
+        author(s): Joe Lee
+        """
+        if not self._raw_username:
+            return ""
+        try:
+            user_data = self.fetch_user_data()
+            if not user_data:
+                return ""
+            return user_data["user_id"]
+        except Exception:
+            return ""
+
     def get_user_full_name(self):
         """
         purpose: Return the user's full name or empty string if offline
