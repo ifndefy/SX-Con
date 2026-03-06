@@ -123,19 +123,6 @@ class UsersTab(BaseTab):
         search_section_row_2.addStretch()
         main_layout.addLayout(search_section_row_2)
 
-        search_section_row_last_consignment = QHBoxLayout()
-
-        search_section_row_last_consignment.addWidget(QLabel("Last Consignment:"))
-        self.last_consignment_input = QLineEdit()
-        self.last_consignment_input.setPlaceholderText("Last Consignment")
-        self.last_consignment_input.setMaxLength(30)
-        self.last_consignment_input.setFixedWidth(265)
-        self.last_consignment_input.textChanged.connect(self.on_search_input_changed)
-        search_section_row_last_consignment.addWidget(self.last_consignment_input)
-
-        search_section_row_last_consignment.addStretch()
-        layout.addLayout(search_section_row_last_consignment)
-
         search_section_row_3 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setFixedWidth(200)
