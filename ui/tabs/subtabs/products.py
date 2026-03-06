@@ -94,6 +94,19 @@ class ProductsTab(BaseTab):
         product_section_row_1.addStretch()
         main_layout.addLayout(product_section_row_1)
 
+        product_section_row_last_consignment = QHBoxLayout()
+
+        product_section_row_last_consignment.addWidget(QLabel("Last Consignment:"))
+        self.last_consignment_input = QLineEdit()
+        self.last_consignment_input.setPlaceholderText("Last Consignment")
+        self.last_consignment_input.setMaxLength(30)
+        self.last_consignment_input.setFixedWidth(265)
+        self.last_consignment_input.textChanged.connect(self.on_search_input_changed)
+        product_section_row_last_consignment.addWidget(self.last_consignment_input)
+
+        product_section_row_last_consignment.addStretch()
+        layout.addLayout(product_section_row_last_consignment)
+
         search_section_1 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setFixedWidth(200)
