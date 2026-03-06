@@ -640,6 +640,7 @@ class CreateNewTab(BaseTab):
         """
         try:
             self.update_revenue_fields()
+            self.rev_by_prod.handle_updating(self.product_sections)
             self.repaint()
             QApplication.processEvents()
 
@@ -709,15 +710,18 @@ class CreateNewTab(BaseTab):
         # Product information
         products_data = []
         for i, product_section in enumerate(self.product_sections):
+            if not product_section['product_id'].text().strip():
+                continue
+
             product_data = {
                 'product_id': int(product_section['product_id'].text().strip()) or "NULL",
                 'product_type': product_section['product_type'].currentText().strip() or "NULL",
                 'product_name': product_section['product_name'].text().strip() or "NULL",
-                'notes': product_section['notes'].text().strip() or "NULL",
+                'notes': product_section['notes'].text().strip() or "",
                 'rate': product_section.get('rate').text().strip() if product_section.get('rate') else "NULL",
-                'price': product_section['price'].text().strip() or "NULL",
-                'quantity': product_section['quantity'].text().strip() or "NULL",
-                'total': product_section['total'].text().strip() or "NULL"
+                'price': self._parse_money(product_section['price'].text()) or 0.0,
+                'quantity': int(product_section['quantity'].text().strip()) or "NULL",
+                'total': self._parse_money(product_section['total'].text()) or 0.0,
             }
             products_data.append(product_data)
         return products_data
@@ -750,10 +754,15 @@ class CreateNewTab(BaseTab):
 
         has_valid_product = False
         for product in products_data:
-            if (product['product_id'] and product['product_id'] != "NULL" and
-                    product['product_type'] and product['product_type'] != "SELECT" and
-                    product['price'] and product['price'] != "NULL" and
-                    product['quantity'] and product['quantity'] != "NULL"):
+            if (
+                    product['product_id'] and product['product_id'] != "NULL"
+                    and
+                    product['product_type'] and product['product_type'] != "SELECT"
+                    and
+                    product['price'] and product['price'] > 0
+                    and
+                    product['quantity'] and product['quantity'] != "NULL"
+            ):
                 has_valid_product = True
                 break
 

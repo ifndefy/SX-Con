@@ -5,7 +5,7 @@ import utils.logger.logger as log
 def _fetch_consignment(consignment_id: str):
     """
     :Purpose: gets the consignment doc from db
-    :Param: consignment_id str
+    :Param: consignment_id as a string
     :Author(s): Joe Lee
     """
     consignment = get_item("Consignments", "consignment", consignment_id)
@@ -17,9 +17,9 @@ def _fetch_consignment(consignment_id: str):
 def _find_product_index(products: list, product_id: str):
     """
     :Purpose: finds the index of the product in the displayed GUI
-    :Param: products list
-    :Param: product_id str
-    :Return: product index
+    :Param: products section list
+    :Param: product_id as a string
+    :Return: product index as an int
     :Author(s): Joe Lee
     """
     for i, prod in enumerate(products):
@@ -46,12 +46,12 @@ def _validate_sold(new_sold: int, quantity: int):
 def _update_sold(consignment_id: str, idx: int, new_sold: int):
     """
     :Purpose: updates the sold field for the given product index
-    :Param: consignment_id str
-    :Param: idx int
-    :Param: new_sold int
+    :Param: consignment_id as a string
+    :Param: index as an integer
+    :Param: new_sold as an integer
     :Author(s): Joe Lee
     """
-    sold_path = f"price_data.products[{idx}].sold"
+    sold_path = f"products[{idx}].sold"
     result = update_property("Consignments", "consignment", consignment_id, sold_path, new_sold)
     if result != 0:
         log.error(f"Remaining update failed after sold update for product {idx}")
@@ -61,12 +61,12 @@ def _update_sold(consignment_id: str, idx: int, new_sold: int):
 def _update_remaining(consignment_id: str, idx: int, new_remaining: int):
     """
     :Purpose: updates the remaining field for the given product index
-    :Param: consignment_id str
-    :Param: idx int
-    :Param: new_remaining int
+    :Param: consignment_id as a string
+    :Param: index as an integer
+    :Param: new_remaining as an integer
     :Author(s): Joe Lee
     """
-    remaining_path = f"price_data.products[{idx}].remaining"
+    remaining_path = f"products[{idx}].remaining"
     result = update_property("Consignments", "consignment", consignment_id, remaining_path, new_remaining)
     if result != 0:
         log.error(f"Remaining update failed after sold update for product at index {idx}")
@@ -75,12 +75,12 @@ def _update_remaining(consignment_id: str, idx: int, new_remaining: int):
 
 def update_quantities(consignment_id: str, product_id: str, new_sold: int):
     """
-    :Purpose: Update a product's sold and remaining fields in a consignment.
-    :Return: bool, new_remaining
+    :Purpose: Update a product's sold and remaining fields in a consignment
+    :Return: bool, new_remaining, and empty string
     :Author(s): Joe Lee
     """
     consignment = _fetch_consignment(consignment_id)
-    products = consignment.get('price_data', {}).get('products', [])
+    products = consignment.get('products', [])
     idx = _find_product_index(products, product_id)
     quantity = products[idx].get('quantity', 0)
     if not _validate_sold(new_sold, quantity):

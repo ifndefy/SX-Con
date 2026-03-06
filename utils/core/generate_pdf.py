@@ -35,9 +35,9 @@ class PDF:
 
         self.num_prods = 0
         if self.ticket_data:
-            for p in self.ticket_data["products"]:
-                for f in ("product_id", "product_name", "price", "quantity"):
-                    if p.get(f) not in (None, "", "NULL", "$0.00", "0"):
+            for product in self.ticket_data["products"]:
+                for prop in ("product_id", "product_name", "price", "quantity"):
+                    if product.get(prop) not in (None, "", "NULL", 0, 0.0, "$0.00", "0"):
                         self.num_prods += 1
                         break
 
@@ -115,14 +115,14 @@ class PDF:
         self.save_y(y)
 
     @staticmethod
-    def _is_valid_product(p):
+    def _is_valid_product(product):
         """
         :purpose: validate if a product is fully null
         :Author(s): Joe lee
         """
-        check_fields = ("product_id", "product_name", "price", "quantity")
-        for f in check_fields:
-            if p.get(f) not in (None, "", "NULL", "$0.00", "0"):
+        property = ("product_id", "product_name", "price", "quantity")
+        for prop in property:
+            if product.get(prop) not in (None, "", "NULL", 0, 0.0, "$0.00", "0"):
                 return True
         return False
 
@@ -140,19 +140,19 @@ class PDF:
             c.setFont("Helvetica-Bold", 10)
             c.drawString(30, y_prod, "Product ID:")
             c.rect(85, y_prod - 3, 34, 15)
-            c.drawString(85 + 3, y_prod + 1, prod.get("product_id", ""))
+            c.drawString(85 + 3, y_prod + 1, str(prod.get("product_id", "")))
             c.drawString(124, y_prod, "Product Name:")
             c.rect(196, y_prod - 3, 173, 15)
             c.drawString(196 + 3, y_prod + 1, prod.get("product_name", ""))
             c.drawString(376, y_prod, "Price:")
             c.rect(405, y_prod - 3, 43, 15)
-            c.drawString(405 + 3, y_prod + 1, prod.get("price", ""))
+            c.drawString(405 + 3, y_prod + 1, f"${prod.get('price', 0):.2f}")
             c.drawString(452, y_prod, "Qty:")
             c.rect(473, y_prod - 3, 29, 15)
             c.drawString(473 + 3, y_prod + 1, str(prod.get("quantity", "")))
             c.drawString(505, y_prod, "Total:")
             c.rect(533, y_prod - 3, 48, 15)
-            c.drawString(533 + 3, y_prod + 1, prod.get("total", ""))
+            c.drawString(533 + 3, y_prod + 1, f"${prod.get('total', 0):.2f}")
             y_prod -= 20
             count += 1
             if count == 27 and self.num_prods < 33: # can fit 27 items per page with tables and footing
@@ -187,10 +187,10 @@ class PDF:
         if shared:
             last_cut = shared[-1]
             c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, str(last_cut.get("vendor")))
+            c.drawString(34, y_pot, f"${last_cut.get('vendor', 0):.2f}")
             c.rect(34 - 3, y_pot - 3, 60, 15)
             c.drawCentredString(118, y_pot, str(last_cut.get("percentage")))
-            c.drawString(148, y_pot, str(last_cut.get("super_x")))
+            c.drawString(148, y_pot, f"${last_cut.get('super_x', 0):.2f}")
             c.rect(148 - 3, y_pot - 3, 60, 15)
             y_pot -= 18
 
@@ -227,11 +227,11 @@ class PDF:
 
         c.setFont("Helvetica-Bold", 10)
         for type in ["Hot Food", "General", "Produce", "Total"]:
-            total = prod_type_total.get(type, "$0.00")
+            total = prod_type_total.get(type, 0)
             c.setFont("Helvetica", 10)
             c.drawString(216, y_type, str(type))
             c.rect(216 - 3, y_type - 3, 60, 15)
-            c.drawString(290, y_type, total)
+            c.drawString(290, y_type, f"${total:.2f}")
             c.rect(290 - 3, y_type - 3, 60, 15)
             y_type -= 18
 

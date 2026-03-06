@@ -13,7 +13,7 @@ def test_val_check_does_not_exist() -> int:
     Author(s): Colin Henderson
     """
 
-    existing_name = "Bananas"
+    existing_name = "Produce"
 
     fail_result = val_check_does_not_exists(
         "Entities",

@@ -51,6 +51,12 @@ def generate_excel(data):
         for column in excel_sheet.columns:
             excel_sheet.column_dimensions[column[0].column_letter].auto_size = True
 
+        currency_format = '"$"#,##0.00'
+        for row in excel_sheet.iter_rows():
+            for cell in row:
+                if isinstance(cell.value, float):
+                    cell.number_format = currency_format
+
         excel_file.save(file_path[0])
     except Exception as e:
         log.error(f"Excel Creation failed: {e}")
