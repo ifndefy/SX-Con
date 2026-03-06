@@ -29,7 +29,6 @@ from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone
 from ui.core import format_price
 from ui.core import format_state
-from ui.core import excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 

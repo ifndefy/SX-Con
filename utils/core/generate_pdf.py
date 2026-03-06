@@ -3,6 +3,8 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
+from src.user import current_user
+from src.imgs import img_helpers
 from services.get_item_by_property import get_item_by_property
 
 
@@ -85,11 +87,13 @@ class PDF:
         y = y_axis
         c = cursor
 
-        logo_path = os.path.join(self.project_root, "src", "imgs", "logo.jpg")
+        logo_path = img_helpers.get_window_logo_path()
         logo = ImageReader(logo_path)
 
-        c.setFont("Helvetica-Bold", 24)
-        c.drawImage(logo, 20, y - 50, width=365, height=71)
+        c.saveState()
+        c.setStrokeColorRGB(1, 1, 1, 0)
+        c.drawImage(logo, 30, y - 50, width=305, height=73, preserveAspectRatio=True, mask='auto')
+        c.restoreState()
 
         c.setFont("Helvetica-Bold", 16)
         c.drawString(400, y, "Consignment Ticket")
@@ -170,7 +174,7 @@ class PDF:
         self.save_y(y)
 
         c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(118, y, "Shared Revenues")
+        c.drawCentredString(118, y, "Potential at Signing")
         y_pot = y - 15
 
         c.setFont("Helvetica-Bold", 10)
@@ -179,12 +183,32 @@ class PDF:
         c.drawCentredString(175, y_pot, "Super X")
         y_pot -= 18
 
-        for cut in self.ticket_data["revenue"]["shared"]:
+        shared = self.ticket_data["revenue"]["shared"]
+        if shared:
+            last_cut = shared[-1]
             c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, str(cut.get("vendor")))
+            c.drawString(34, y_pot, str(last_cut.get("vendor")))
             c.rect(34 - 3, y_pot - 3, 60, 15)
-            c.drawCentredString(118, y_pot, str(cut.get("percentage")))
-            c.drawString(148, y_pot, str(cut.get("super_x")))
+            c.drawCentredString(118, y_pot, str(last_cut.get("percentage")))
+            c.drawString(148, y_pot, str(last_cut.get("super_x")))
+            c.rect(148 - 3, y_pot - 3, 60, 15)
+            y_pot -= 18
+
+        y_pot -= 18
+        c.setFont("Helvetica-Bold", 10)
+        c.drawCentredString(118, y_pot, "Payout")
+        y_pot -= 18
+        # payout = self.ticket_data['revenue']['payout']
+        # if payout:
+        if True:
+        #     cashed_out = payout[-1]
+            c.setFont("Helvetica", 10)
+            c.drawString(34, y_pot, "TODO")
+            # c.drawString(34, y_pot, str(cashed_out.get("vendor")))
+            c.rect(34 - 3, y_pot - 3, 60, 15)
+        #     c.drawCentredString(118, y_pot, str(cashed_out.get("percentage")))
+        #     c.drawString(148, y_pot, str(cashed_out.get("super_x")))
+            c.drawString(148, y_pot, "TODO")
             c.rect(148 - 3, y_pot - 3, 60, 15)
             y_pot -= 18
 
@@ -223,10 +247,9 @@ class PDF:
         c.line(447, y, 582, y)
         y -= 20
 
-        # todo: populate employee fields
         c.drawString(360, y, "Employee Name:")
         c.rect(442, y - 3, 140, 15)
-        c.drawString(445, y + 1, "123456789012345678901234") # todo: popoulate with user data
+        c.drawString(445, y + 1, f"{current_user.get_user_full_name()}")
         y -= 18
         c.drawString(360, y, "Employee Signature: ")
         c.line(460, y, 582, y)
@@ -235,3 +258,6 @@ class PDF:
 
     def save_y(self, y_axis):
         self.y = y_axis
+
+test = PDF(100067)
+test.create_supermarket_ticket()
