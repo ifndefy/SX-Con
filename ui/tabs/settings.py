@@ -477,7 +477,9 @@ class SettingsTab(BaseTab):
 
         user_prefs = self._get_user_preferences(user_id)
         if user_prefs is None:
-            return
+            if not silent:
+                QMessageBox.information(self, "Settings Loaded", "No preference found. \nPlease save a preference first.")
+                return
 
         preferences = json_to_dict(user_prefs)
         self._apply_theme_from_preferences(preferences)
@@ -518,8 +520,8 @@ class SettingsTab(BaseTab):
             )
             # get_property returns "-1" on error, otherwise the string value
             if preferences_json == "-1":
-                log.warning(f"No preferences found for user ID {user_id}; using empty object.")
-                return "{}"
+                log.warning(f"No preferences found for user ID {user_id}; Save a preference first.")
+                return None
             return preferences_json
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to fetch preferences: {str(e)}")

@@ -35,7 +35,7 @@ class PDF:
 
         self.num_prods = 0
         if self.ticket_data:
-            for p in self.ticket_data["price_data"]["products"]:
+            for p in self.ticket_data["products"]:
                 for f in ("product_id", "product_name", "price", "quantity"):
                     if p.get(f) not in (None, "", "NULL", "$0.00", "0"):
                         self.num_prods += 1
@@ -131,7 +131,7 @@ class PDF:
         c = cursor
 
         valid_products = []
-        for prod in self.ticket_data["price_data"]["products"]:
+        for prod in self.ticket_data["products"]:
             if self._is_valid_product(prod):
                 valid_products.append(prod)
 

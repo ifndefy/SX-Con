@@ -67,14 +67,6 @@ class RecordsTab(BaseTab):
         self.ticket_number_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.ticket_number_input)
 
-        search_section_row_1.addWidget(QLabel("Datetime:"))
-        self.datetime_input = QLineEdit()
-        self.datetime_input.setPlaceholderText("Datetime")
-        self.datetime_input.setMaxLength(30)
-        self.datetime_input.setFixedWidth(160)
-        self.datetime_input.textChanged.connect(self.on_search_input_changed)
-        search_section_row_1.addWidget(self.datetime_input)
-
         search_section_row_1.addWidget(QLabel("Status:"))
         self.status_input = QLineEdit()
         self.status_input.setPlaceholderText("Status")
@@ -83,24 +75,46 @@ class RecordsTab(BaseTab):
         self.status_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.status_input)
 
-        search_section_row_1.addWidget(QLabel("Vendor ID:"))
+        search_section_row_1.addStretch()
+
+        search_section_row_1.addWidget(QLabel("Datetime:"))
+        self.datetime_input = QLineEdit()
+        self.datetime_input.setPlaceholderText("Datetime")
+        self.datetime_input.setMaxLength(30)
+        self.datetime_input.setFixedWidth(160)
+        self.datetime_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.datetime_input)
+
+        main_layout.addLayout(search_section_row_1)
+
+        search_section_row_2 = QHBoxLayout()
+
+        search_section_row_2.addWidget(QLabel("User ID:"))
+        self.user_id_input = QLineEdit()
+        self.user_id_input.setPlaceholderText("V ID")
+        self.user_id_input.setFixedWidth(80)
+        self.user_id_input.setValidator(QIntValidator(0, 9999, self))
+        self.user_id_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_2.addWidget(self.user_id_input)
+
+        search_section_row_2.addWidget(QLabel("Vendor ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setPlaceholderText("V ID")
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
         self.vendor_id_input.textChanged.connect(self.on_search_input_changed)
-        search_section_row_1.addWidget(self.vendor_id_input)
+        search_section_row_2.addWidget(self.vendor_id_input)
 
-        search_section_row_1.addWidget(QLabel("Product ID:"))
+        search_section_row_2.addWidget(QLabel("Product ID:"))
         self.product_id_input = QLineEdit()
         self.product_id_input.setPlaceholderText("P ID")
         self.product_id_input.setFixedWidth(80)
         self.product_id_input.setValidator(QIntValidator(0, 9999, self))
         self.product_id_input.textChanged.connect(self.on_search_input_changed)
-        search_section_row_1.addWidget(self.product_id_input)
+        search_section_row_2.addWidget(self.product_id_input)
 
-        search_section_row_1.addStretch()
-        main_layout.addLayout(search_section_row_1)
+        search_section_row_2.addStretch()
+        main_layout.addLayout(search_section_row_2)
 
         search_section_row_2 = QHBoxLayout()
         self.clear_btn = QPushButton("Clear")
@@ -196,6 +210,22 @@ class RecordsTab(BaseTab):
             except ValueError:
                 pass
 
+        status = self.status_input.text().strip()
+        if status:
+            add_property("status", status, "CONTAINS")
+
+        datetime = self.datetime_input.text().strip()
+        if datetime:
+            add_property("datetime", datetime, "CONTAINS")
+
+        user_id = self.user_id_input.text().strip()
+        if user_id:
+            try:
+                user_id_int = int(user_id)
+                add_property("user_id", user_id_int, "=")
+            except ValueError:
+                pass
+
         vendor_id = self.vendor_id_input.text().strip()
         if vendor_id:
             try:
@@ -205,21 +235,13 @@ class RecordsTab(BaseTab):
                 pass
 
         product_id = self.product_id_input.text().strip()
-        if product_id: # this needs to iterate through a list todo:
+        if product_id:
             try:
                 product_id_int = int(product_id)
-                conditions.append("ARRAY_CONTAINS(c.product_ids, @product_id_int)")
+                conditions.append("EXISTS(SELECT VALUE p FROM p IN c.products WHERE p.product_id = @product_id_int)")
                 properties.append({"name": "@product_id_int", "value": product_id_int})
             except ValueError:
                 pass
-
-        datetime = self.datetime_input.text().strip()
-        if datetime:
-            add_property("datetime", datetime, "CONTAINS")
-
-        status = self.status_input.text().strip()
-        if status:
-            add_property("status", status, "CONTAINS")
 
         if len(conditions) == 1:
             self.fetch()
@@ -248,7 +270,7 @@ class RecordsTab(BaseTab):
                 tickets.append({
                     'ticket_number': item.get('ticket_number'),
                     'vendor_id': item.get('vendor_id', ''),
-                    'product_ids': item.get('product_ids', ''),
+                    'products': item.get('products', []),
                     'datetime': item.get('datetime', ''),
                     'status': item.get('status', ''),
                 })
@@ -266,6 +288,10 @@ class RecordsTab(BaseTab):
                 if last_section['status'].text().strip() == "OPEN":
                     last_section['open_btn'].hide()
                 last_section['vendor_id'].setText(str(ticket['vendor_id']))
+                product_id_parts = []
+                for product in ticket.get('products', []):
+                    product_id_parts.append(str(product.get('product_id', '')))
+                last_section['product_id'].setText(", ".join(product_id_parts))
 
             if not tickets:
                 status_bar_instance.send_message("No tickets found")
@@ -330,7 +356,7 @@ class RecordsTab(BaseTab):
         rec_section['status'] = status_input
 
         # vendor id
-        line1_layout.addWidget(QLabel("Vendor ID:"))
+        line1_layout.addWidget(QLabel("V ID:"))
         vendor_id_input = QLineEdit()
         vendor_id_input.setObjectName("READ_ONLY")
         vendor_id_input.setReadOnly(True)
@@ -338,16 +364,17 @@ class RecordsTab(BaseTab):
         line1_layout.addWidget(vendor_id_input)
         rec_section['vendor_id'] = vendor_id_input
 
+        line1_layout.addStretch()
+
         # prod id
-        line1_layout.addWidget(QLabel("Product ID:"))
+        line1_layout.addWidget(QLabel("P ID:"))
         product_id_input = QLineEdit()
         product_id_input.setObjectName("READ_ONLY")
         product_id_input.setReadOnly(True)
-        product_id_input.setFixedWidth(80)
+        product_id_input.setFixedWidth(210)
         line1_layout.addWidget(product_id_input)
         rec_section['product_id'] = product_id_input
 
-        line1_layout.addStretch()
         section_layout.addLayout(line1_layout)
 
         line2_layout = QHBoxLayout()

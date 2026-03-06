@@ -12,16 +12,16 @@ def get_latest_price(product_id):
 
     if price_data is None:
         log.error("price_data cannot be NoneType")
-        return -1
+        return 0
     elif not price_data:
         log.error("price_data is empty")
-        return -1
+        return 0
     
     dataframe = pd.DataFrame(price_data)
 
     if 'price' not in dataframe.columns:
         log.error("no price field found in price_data")
-        return -1
+        return 0
     
     #Strip dollar signs
     dataframe['price'] = dataframe['price'].astype(str).str.replace('$', '')
@@ -41,12 +41,12 @@ def _fetch_price_history(product_id):
         query = """
                     SELECT c.ticket_number, c.datetime, p.product_id, p.price
                     FROM c
-                    JOIN p IN c.price_data.products
+                    JOIN p IN c.products
                     WHERE c.type = 'consignment'
                     AND p.product_id = @prod_id
                     """
 
-        parameters = [{"name": "@prod_id", "value": str(product_id)}]
+        parameters = [{"name": "@prod_id", "value": product_id}]
 
         results = list(container.query_items(
             query=query,

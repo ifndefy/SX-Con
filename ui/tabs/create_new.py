@@ -710,7 +710,7 @@ class CreateNewTab(BaseTab):
         products_data = []
         for i, product_section in enumerate(self.product_sections):
             product_data = {
-                'product_id': product_section['product_id'].text().strip() or "NULL",
+                'product_id': int(product_section['product_id'].text().strip()) or "NULL",
                 'product_type': product_section['product_type'].currentText().strip() or "NULL",
                 'product_name': product_section['product_name'].text().strip() or "NULL",
                 'notes': product_section['notes'].text().strip() or "NULL",
@@ -833,7 +833,7 @@ class CreateNewTab(BaseTab):
                     log.info(f"Creating product document: product_{product_id}")
                     try:
                         product_response = entities_container.upsert_item(body=product_doc)
-                        product_ids.append(int(product_id))
+                        product_ids.append(product_id)
                         log.info(f"Product document created: {product_id}")
                     except Exception as e:
                         log.error(f"Error creating product document {product_id}: {e}")
