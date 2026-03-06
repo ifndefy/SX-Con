@@ -46,13 +46,11 @@ def get_last_consignment(entity_type: str, entity_id: str) -> datetime | None:
         ))
 
         if items and items[0] is not None:
-            # If datetime stored as string, convert it:
-            if isinstance(items[0], str):
-                return datetime.fromisoformat(items[0])
-
             return items[0]
-
+        log.error(f"Could not retrieve datetime for {entity_type} {entity_id}")
         return None
+
+
 
     except Exception as e:
         log.error(f"Error in get_last_consignment: {e}")
