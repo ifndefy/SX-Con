@@ -1,34 +1,54 @@
-from PyQt6.QtWidgets import QLineEdit
-from PyQt6.QtCore import Qt
 
 # This class clones format_phone
 # Modifications are made to fit into the mold of the price field
 
-class PriceField(QLineEdit):
+from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtCore import Qt
 
-    def __init__(self, parent = None):
-        """
-            Param: self and parent (widgets)
-            Purpose: input text widget, aligns it to the right and has a placeholder of "$0.00". Connects to user edits
-            Author(s): Kyle Valdez
-        """
+"""
+    Param: self and parent (widgets)
+    Purpose: input text widget, aligns it to the right and has a placeholder of "$0.00". Connects to user edits. Leading Zeroes.
+    Author(s): Kyle Valdez
+"""
+
+
+
+class PriceField(QLineEdit):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.setPlaceholderText("$0.00")
-        self.textEdited.connect(self.__placeholder_manager)
+        self.textEdited.connect(self._format_price)
 
-    def __placeholder_manager(self, string):
-        """
-            Param: self and string (current text of user)
-            Purpose: Make sure only integer digits are taken, formats the text as currency with looking for the last two numbers as cents.
-                    QLineEdit is edited in real time.
-            Author(s): Kyle Valdez
-        """
-        raw_text = "".join(filter(str.isdigit, string))
+    def _format_price(self, text: str) -> None:
 
-        if len(raw_text) <= 2:
-            formatted = f"${raw_text.zfill(1)}"
+        cursor_from_end = len(text) - self.cursorPosition()
+
+        digits = "".join(ch for ch in text if ch.isdigit())
+
+        # If user deleted everything (or only non-digits), show placeholder by clearing text
+        if not digits:
+            self.blockSignals(True)
+            self.setText("")
+            self.blockSignals(False)
+            return
+
+        # Build dollars/cents
+        if len(digits) == 1:
+            dollars = "0"
+            cents = "0" + digits
         else:
-            formatted = f"${raw_text[:-2]}.{raw_text[-2:]}"
+            dollars = digits[:-2]
+            cents = digits[-2:]
 
+        # Remove leading zeros in dollars, but keep at least one digit
+        dollars = dollars.lstrip("0") or "0"
+
+        formatted = f"${dollars}.{cents}"
+
+        self.blockSignals(True)
         self.setText(formatted)
+        # restore cursor
+        new_pos = max(0, len(formatted) - cursor_from_end)
+        self.setCursorPosition(new_pos)
+        self.blockSignals(False)
