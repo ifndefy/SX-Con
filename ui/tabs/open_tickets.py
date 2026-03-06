@@ -1,4 +1,6 @@
 from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
@@ -8,9 +10,11 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
 
+from handlers.handler_open_close import handler_open_close_btns
 from handlers.handler_print import handler_print
 from handlers.handler_pdf import handler_db_pdf
 from services.get_item import get_item
+from services.get_property import get_property
 from ui.core import excel
 from ui.core.view_ticket import ViewTicket
 from utils.core import generate_excel as xls_gen
@@ -33,11 +37,12 @@ class OpenTicketsTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
+
+        main_layout_widget = QWidget()
+        main_layout_widget.setObjectName("main_layout")
+        main_layout = QVBoxLayout(main_layout_widget)
+
 
         # Line 0 Creation
         header_section = QHBoxLayout()
@@ -51,39 +56,39 @@ class OpenTicketsTab(BaseTab):
         header_section.addStretch()
 
         # Ends creation and adds header_section to window
-        layout.addLayout(header_section)
+        main_layout.addLayout(header_section)
 
         # HR Line between Vendor and Tickets sections
-        hr1 = QLabel()
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        main_layout.addWidget(hr1)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
 
         # Ticket Line 1: Tickets sections container
         self.tickets_layout = QVBoxLayout()
+        scroll_layout.addLayout(self.tickets_layout)
 
-        layout.addLayout(self.tickets_layout)
-
-        tickets_section = QHBoxLayout()
-
-        layout.addLayout(tickets_section)
-        layout.addStretch()
-
-        # HR Line to separate buttons at the bottom
-        hr3 = QLabel()
-        hr3.setObjectName("hr")
-        layout.addWidget(hr3)
-
-        # Set up the scroll area
+        scroll_layout.addStretch()
         scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
 
-        # Set up update button separate from the scrollable area
-        vendor_section_row_3 = QHBoxLayout()
-        self.update_btn = QPushButton("Update")
-        vendor_section_row_3.addWidget(self.update_btn)
-        main_layout.addLayout(vendor_section_row_3)
+        # HR Line to separate buttons at the bottom
+        hr2 = QFrame()
+        hr2.setFrameShape(QFrame.Shape.HLine)
+        hr2.setFrameShadow(QFrame.Shadow.Sunken)
+        hr2.setObjectName("hr")
+        main_layout.addWidget(hr2)
 
+        # Set up update button separate from the scrollable area
+        self.update_btn = QPushButton("Update")
+        main_layout.addWidget(self.update_btn)
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def add_ticket_section(self, ticket_data=None):
@@ -109,11 +114,6 @@ class OpenTicketsTab(BaseTab):
         ticket_number_input.setPlaceholderText("XXXX")
         ticket_number_input.setReadOnly(True)
         ticket_number_input.setFixedWidth(80)
-
-        # Set ticket number if provided
-        if ticket_data:
-            ticket_number_input.setText(str(ticket_data.get('ticket_number', '')))
-
         line1_layout.addWidget(ticket_number_input)
         tickets_section['ticket_num'] = ticket_number_input
 
@@ -123,11 +123,6 @@ class OpenTicketsTab(BaseTab):
         datetime_input.setObjectName("READ_ONLY")
         datetime_input.setReadOnly(True)
         datetime_input.setFixedWidth(175)
-
-        # Set datetime if provided
-        if ticket_data:
-            datetime_input.setText(str(ticket_data.get('datetime', '')))
-
         line1_layout.addWidget(datetime_input)
         tickets_section['datetime'] = datetime_input
 
@@ -138,11 +133,6 @@ class OpenTicketsTab(BaseTab):
         status_input.setPlaceholderText("OPEN")
         status_input.setReadOnly(True)
         status_input.setFixedWidth(70)
-
-        # Set status if provided
-        if ticket_data:
-            status_input.setText(str(ticket_data.get('status', '')))
-
         line1_layout.addWidget(status_input)
         tickets_section['status'] = status_input
 
@@ -166,6 +156,18 @@ class OpenTicketsTab(BaseTab):
         line1_layout.addWidget(print_btn)
         tickets_section['print_btn'] = print_btn
 
+        close_btn = QPushButton("Close")
+        close_btn.setObjectName("red_btn")
+        close_btn.setFixedWidth(68)
+        line1_layout.addWidget(close_btn)
+        tickets_section['close_btn'] = close_btn
+
+        open_btn = QPushButton("Open")
+        open_btn.setObjectName("green_btn")
+        open_btn.setFixedWidth(68)
+        line1_layout.addWidget(open_btn)
+        tickets_section['open_btn'] = open_btn
+
         section_layout.addLayout(line1_layout)
 
         # Create details container (initially hidden)
@@ -173,14 +175,19 @@ class OpenTicketsTab(BaseTab):
         details_container.setObjectName("view_bg")
         details_container.setVisible(False)
         details_layout = QVBoxLayout(details_container)
-        details_layout.setContentsMargins(20, 10, 10, 10)
+        details_layout.setContentsMargins(10, 10, 10, 10)
 
         product_details_layout = QVBoxLayout()
         tickets_section['product_details_layout'] = product_details_layout
         details_layout.addLayout(product_details_layout)
-
         section_layout.addWidget(details_container)
         tickets_section['details_container'] = details_container
+
+        hr = QFrame()
+        hr.setFrameShape(QFrame.Shape.HLine)
+        hr.setFrameShadow(QFrame.Shadow.Sunken)
+        hr.setObjectName("hr")
+        section_layout.addWidget(hr)
 
         # Add to container
         self.tickets_layout.addWidget(section_widget)
@@ -191,22 +198,52 @@ class OpenTicketsTab(BaseTab):
 
         # Connect the view button
         view_btn.clicked.connect(self.make_view_handler(ticket_index))
-        pdf_btn.clicked.connect(self.make_pdf_handler(ticket_number_input.text()))
+        pdf_btn.clicked.connect(self.make_pdf_handler(ticket_number_input))
         excel_btn.link_gather_function(self.make_form_handler(ticket_index))
-        print_btn.clicked.connect(self.make_print_handler(ticket_number_input.text()))
+        print_btn.clicked.connect(self.make_print_handler(ticket_number_input))
+        close_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "closed"))
+        open_btn.clicked.connect(self.handle_open_close_btns(ticket_index, "open"))
 
         self.tickets_section.append(tickets_section)
 
-    def make_print_handler(self, ticket_number):
+    def handle_open_close_btns(self, ticket_index, action):
         def handler():
+            try:
+                ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
+                if action == "open":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"OPENED ticket {ticket_number}")
+                    self.tickets_section[ticket_index]['status'].setText("OPEN")
+                    self.tickets_section[ticket_index]['open_btn'].hide()
+                    self.tickets_section[ticket_index]['close_btn'].show()
+                elif action == "closed":
+                    handler_open_close_btns(ticket_number, action.upper())
+                    log.info(f"CLOSED ticket {ticket_number}")
+                    self.tickets_section[ticket_index]['status'].setText("CLOSED")
+                    self.tickets_section[ticket_index]['close_btn'].hide()
+                    self.tickets_section[ticket_index]['open_btn'].show()
+                self.tickets_section[ticket_index]['status'].setText(
+                    get_property("Consignments", "status", "consignment", ticket_number)
+                )
+                self.parent().setFocus()
+            except Exception as e:
+                log.error(f"Could not {action} ticket {ticket_number}: {e}")
+        return handler
+
+    def make_print_handler(self, ticket_number_input):
+        def handler():
+            ticket_number = ticket_number_input.text().strip()
             try:
                 handler_db_pdf(int(ticket_number))
             except Exception as e:
                 log.error(f"Could not generate PDF for ticket {ticket_number}: {e}")
                 return
 
-            handler_print(ticket_number)
-            log.info(f"Print requested for ticket {ticket_number}")
+            try:
+                handler_print(ticket_number)
+                log.info(f"Print requested for ticket {ticket_number}")
+            except Exception as e:
+                QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket_number}:\n\n{e}")
         return handler
 
     def make_form_handler(self, ticket_index):
@@ -232,9 +269,10 @@ class OpenTicketsTab(BaseTab):
 
         return gather_ticket
 
-    def make_pdf_handler(self, ticket_number):
+    def make_pdf_handler(self, ticket_number_input):
         def handler():
-            self.handle_pdf_btn_clicked(int(ticket_number))
+            ticket_number = int(ticket_number_input.text().strip())
+            self.handle_pdf_btn_clicked(ticket_number)
         return handler
 
     def handle_pdf_btn_clicked(self, ticket_number):
@@ -274,9 +312,9 @@ class OpenTicketsTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        self.update_btn.clicked.connect(self.fetch_on_clicked)
+        self.update_btn.clicked.connect(self.on_fetch_clicked)
 
-    def fetch_on_clicked(self):
+    def on_fetch_clicked(self):
         """
         :purpose: calls fetch method and adds ticket sections
         :return: None
@@ -288,7 +326,15 @@ class OpenTicketsTab(BaseTab):
             log.warning(f"No tickets found for Status: OPEN")
         else:
             for ticket in tickets:
-                self.add_ticket_section(ticket)  # Pass ticket data to populate fields
+                self.add_ticket_section()  # Pass ticket data to populate fields
+                last_section = self.tickets_section[-1]
+                last_section['ticket_num'].setText(str(ticket['ticket_number']))
+                last_section['datetime'].setText(str(ticket['datetime']))
+                last_section['status'].setText(ticket['status'])
+                if last_section['status'].text().strip() == "CLOSED":
+                    last_section['close_btn'].hide()
+                if last_section['status'].text().strip() == "OPEN":
+                    last_section['open_btn'].hide()
 
     def fetch(self, status):
         try:

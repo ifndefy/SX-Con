@@ -1,7 +1,5 @@
 import random
-import time
 from services.delete_item import delete_item
-from services.get_item import get_item
 from services.get_property import get_property
 from services.insert_item import insert_item
 from services.update_property import update_property
@@ -45,47 +43,37 @@ def test_update_property():
         'state': "CA",
         'zip': 95820
     }
+    # insert items
+    insert_item("Entities", "user", user_doc)
+    insert_item("Entities", "vendor", vendor_doc)
 
+    # get properties to save for comparison
+    user_comp = get_property("Entities", "last_name", "user", user_id)
+    vendor_comp = get_property("Entities", "city", "vendor", str(seed))
 
-    try:
-        # insert items
-        insert_item("Entities", "user", user_doc)
-        insert_item("Entities", "vendor", vendor_doc)
+    # initial comparison so there are no false positives
+    if new_val == user_comp:
+        assert False, "User value is already equal to new value that will be inserted"
+    if new_val == vendor_comp:
+        assert False, "Vendor value is already equal to new value that will be inserted"
 
-        # get properties to save for comparison
-        user_comp = get_property("Entities", "last_name", "user", user_id)
-        vendor_comp = get_property("Entities", "city", "vendor", str(seed))
+    # update prop
+    update_property("Entities", "user", str(seed), "last_name", str(new_val))
+    update_property("Entities", "vendor", str(seed), "city", str(new_val))
 
-        # initial comparison so there are no false positives
-        if new_val == user_comp:
-            return -1
-        if new_val == vendor_comp:
-            return -1
+    # get properties after update for comparison
+    user_comp = get_property("Entities", "last_name", "user", str(seed))
+    vendor_comp = get_property("Entities", "city", "vendor", str(seed))
 
-        # update prop
-        update_property("Entities", "user", str(seed), "last_name", str(new_val))
-        update_property("Entities", "vendor", str(seed), "city", str(new_val))
+    # Compare after updating
+    if new_val != user_comp:
+        assert False, "User value did not update to new value after insertion"
+    if new_val != vendor_comp:
+        assert False, "Vendor value did not update to new value after insertion"
 
-        # get properties after update for comparison
-        user_comp = get_property("Entities", "last_name", "user", str(seed))
-        vendor_comp = get_property("Entities", "city", "vendor", str(seed))
-
-        # Compare after updating
-        if new_val != user_comp:
-            return -1
-        if new_val != vendor_comp:
-            return -1
-
-        del1 = delete_item("Entities", "user", seed)
-        if del1 == -1:
-            return -1
-        del2 = delete_item("Entities", "vendor", seed)
-        if del2 == -1:
-            return -1
-
-        return 0
-
-    except Exception:
-        return -1
-
-print(test_update_property())
+    del1 = delete_item("Entities", "user", seed)
+    if del1 == -1:
+        assert False, "Failed to delete user item"
+    del2 = delete_item("Entities", "vendor", seed)
+    if del2 == -1:
+        assert False, "Failed to delete vendor item"

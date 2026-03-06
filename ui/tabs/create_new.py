@@ -283,6 +283,14 @@ class CreateNewTab(BaseTab):
         combo_section_row_0.addWidget(vr1)
         combo_section_row_0.addStretch()
 
+        # wrap bottom middle to enable calculate button to expand
+        bot_mid_widget = QWidget()
+        bot_mid_layout = QVBoxLayout(bot_mid_widget)
+        bot_mid_layout.setContentsMargins(0, 0, 0, 0)
+
+        # top half of the bottom contains the revenue data
+        middle_top_row = QHBoxLayout()
+
         rev_by_prod_widget = QWidget()
         rev_prod_section = QVBoxLayout(rev_by_prod_widget)
         rev_by_prod_title = QLabel("Revenue by Product Type")
@@ -290,32 +298,31 @@ class CreateNewTab(BaseTab):
         rev_prod_section.addWidget(rev_by_prod_title, alignment=Qt.AlignmentFlag.AlignRight)
         self.rev_by_prod = RevenueByProdType()
         rev_prod_section.addWidget(self.rev_by_prod)
-        combo_section_row_0.addWidget(rev_by_prod_widget)
+        middle_top_row.addWidget(rev_by_prod_widget)
 
-        # HR Line to separate revenue fields
         vr2 = QFrame()
         vr2.setFrameShape(QFrame.Shape.VLine)
         vr2.setFrameShadow(QFrame.Shadow.Sunken)
         vr2.setObjectName("hr")
-        combo_section_row_0.addWidget(vr2)
+        middle_top_row.addWidget(vr2)
 
-        # Revenue Sharing section
         revenue_widget = QWidget()
         revenue_section = QVBoxLayout(revenue_widget)
         revenue_title = QLabel("Revenue Sharing")
         revenue_title.setObjectName("post_title")
         revenue_section.addWidget(revenue_title, alignment=Qt.AlignmentFlag.AlignCenter)
-
         self.revenue_generation = RevenueGeneration()
         revenue_section.addWidget(self.revenue_generation)
+        revenue_section.addStretch()
+        middle_top_row.addWidget(revenue_widget)
+
+        bot_mid_layout.addLayout(middle_top_row)
 
         self.calc_btn = QPushButton("Calculate")
         self.calc_btn.setObjectName("post_title")
-        revenue_section.addWidget(self.calc_btn)
+        bot_mid_layout.addWidget(self.calc_btn)
 
-        revenue_section.addStretch()
-
-        combo_section_row_0.addWidget(revenue_widget)
+        combo_section_row_0.addWidget(bot_mid_widget)
         combo_section_row_0.addStretch()
 
         # HR Line to separate revenue fields from action buttons
@@ -328,7 +335,7 @@ class CreateNewTab(BaseTab):
         # Action buttons
         action_layout = QVBoxLayout()
 
-        self.excel_btn = excel.ExcelButton(self.gather_record, xls_gen.generate_excel, "Excel")
+        self.excel_btn = QPushButton("Excel")
         self.pdf_btn = QPushButton("PDF")
         self.print_btn = QPushButton("Print")
 
@@ -452,7 +459,7 @@ class CreateNewTab(BaseTab):
         quantity_input = QLineEdit()
         quantity_input.setPlaceholderText("Qty")
         quantity_input.setFixedWidth(100)
-        quantity_input.setValidator(QIntValidator(0, 9999, self))
+        quantity_input.setValidator(QRegularExpressionValidator(QRegularExpression(r'^\d*$')))
         quantity_input.textChanged.connect(self.handle_total)
         line2_layout.addWidget(quantity_input)
         product_section['quantity'] = quantity_input
@@ -582,6 +589,11 @@ class CreateNewTab(BaseTab):
             'revenue_grouped': revenue_data['grouped']
         }
 
+    def handle_excel_btn(self):
+        self.handle_calc_btn()
+        data = self.gather_record()
+        xls_gen.generate_excel(data)
+
     def setup_button_connections(self):
         """
         :purpose: links buttons with methods
@@ -592,6 +604,7 @@ class CreateNewTab(BaseTab):
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
         self.calc_btn.clicked.connect(self.handle_calc_btn)
+        self.excel_btn.clicked.connect(self.handle_excel_btn)
         self.pdf_btn.clicked.connect(self.on_pdf_clicked)
         self.print_btn.clicked.connect(self.on_print_clicked)
 
@@ -604,14 +617,19 @@ class CreateNewTab(BaseTab):
         if not self.on_pdf_clicked():
             return
 
-        handler_print.handler_print(ticket)
-        log.info(f"Print requested for ticket {ticket}")
+        try:
+            handler_print.handler_print(ticket)
+            log.info(f"Print requested for ticket {ticket}")
+        except Exception as e:
+            QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket}:\n\n{e}")
 
     def on_pdf_clicked(self):
         vendor_data = self._gather_vendor_data()
         products_data = self._gather_products_data()
         self.update_revenue_fields()
+        self.rev_by_prod.handle_updating(self.product_sections)
         revenue_data = self._gather_revenue_data()
+
         try:
             if self._validate_required_fields(vendor_data, products_data):
                 handler_live_pdf(vendor_data, products_data, revenue_data)
@@ -622,6 +640,7 @@ class CreateNewTab(BaseTab):
                 return False
         except Exception as e:
             log.error(f"ERROR generating PDF for ticket {vendor_data['ticket_number']}: {e}")
+            return False
 
     def create_record(self):
         """

@@ -1,6 +1,8 @@
 from PyQt6.QtCore import QTimer
-from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import QVBoxLayout, QFrame
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -15,6 +17,8 @@ from ui.tabs.base import BaseTab
 
 from services.insert_item import insert_item
 import utils.logger.logger as log
+from src.core import get_average_price as avg
+from src.core import get_latest_price as latest
 
 class ProductsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -33,41 +37,39 @@ class ProductsTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
 
-        # Line 0 Creation
+        main_layout_widget = QWidget()
+        main_layout = QVBoxLayout(main_layout_widget)
+
         header_section = QHBoxLayout()
-
-        # Product Header
         title = QLabel("View Products")
         title.setObjectName("post_title")
         header_section.addWidget(title)
         header_section.addStretch() # push to the left
 
         self.create_btn = QPushButton("Create New Product")
+        self.create_btn.setFixedWidth(200)
         header_section.addWidget(self.create_btn)
 
         # Ends creation and adds header_section to window
-        layout.addLayout(header_section)
+        main_layout.addLayout(header_section)
 
         hr1 = QFrame()
         hr1.setFrameShape(QFrame.Shape.HLine)
         hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        main_layout.addWidget(hr1)
 
         product_section_row_1 = QHBoxLayout()
 
         product_section_row_1.addWidget(QLabel("ProductID:"))
         self.product_id_input = QLineEdit()
         self.product_id_input.setPlaceholderText("P ID")
-        self.product_id_input.setMaxLength(30)
+        self.product_id_input.setMaxLength(10)
         self.product_id_input.setFixedWidth(102)
-        self.product_id_input.setValidator(QIntValidator(0, 9999, self))
+        product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
+        self.product_id_input.setValidator(product_id_validator)
         self.product_id_input.textChanged.connect(self.on_search_input_changed)
         product_section_row_1.addWidget(self.product_id_input)
 
@@ -76,6 +78,8 @@ class ProductsTab(BaseTab):
         self.product_name_input.setPlaceholderText("Produce Name")
         self.product_name_input.setMaxLength(30)
         self.product_name_input.setFixedWidth(265)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.product_name_input.setValidator(alpha_validator)
         self.product_name_input.textChanged.connect(self.on_search_input_changed)
         product_section_row_1.addWidget(self.product_name_input)
 
@@ -88,7 +92,7 @@ class ProductsTab(BaseTab):
         product_section_row_1.addWidget(self.product_type_input)
 
         product_section_row_1.addStretch()
-        layout.addLayout(product_section_row_1)
+        main_layout.addLayout(product_section_row_1)
 
         product_section_row_last_consignment = QHBoxLayout()
 
@@ -112,26 +116,27 @@ class ProductsTab(BaseTab):
         self.search_btn = QPushButton("Search")
         self.search_btn.setFixedWidth(200)
         search_section_1.addWidget(self.search_btn)
-        layout.addLayout(search_section_1)
+        main_layout.addLayout(search_section_1)
 
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
+        main_layout.addWidget(hr2)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
 
         # Products sections container
         self.products_layout = QVBoxLayout()
-        layout.addLayout(self.products_layout)
-        products_section = QHBoxLayout()
-        layout.addLayout(products_section)
-        layout.addStretch()
+        scroll_layout.addLayout(self.products_layout)
+        scroll_layout.addStretch()
 
-        # Set up the scroll area
         scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
-
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def clear(self):
@@ -238,6 +243,7 @@ class ProductsTab(BaseTab):
                     'product_name': item.get('product_name', ''),
                     'product_type': item.get('product_type', ''),
                     'rate': item.get('rate', 'NA'),
+
                 })
 
             products.sort(key=lambda v: int(v['product_id']))
@@ -297,6 +303,15 @@ class ProductsTab(BaseTab):
         product_name.setFixedWidth(265)
         line1_layout.addWidget(product_name)
 
+        line1_layout.addWidget(QLabel("Product Type:"))
+        product_type_input = QComboBox()
+        product_type_input.addItems(self.list_prod_types)
+        product_type_input.setPlaceholderText("Produce Type")
+        index = product_type_input.findText(prod_data['product_type'])
+        product_type_input.setCurrentIndex(index)
+        product_type_input.setObjectName("READ_ONLY")
+        product_type_input.setEnabled(False)
+        line1_layout.addWidget(product_type_input)
         line1_layout.addStretch()
 
         section_layout.addLayout(line1_layout)
@@ -304,7 +319,8 @@ class ProductsTab(BaseTab):
         line2_layout = QHBoxLayout()
         line2_layout.addWidget(QLabel("Average Price:"))
         avg_price = QLineEdit()
-        avg_price.setText("TBD") # todo:
+        avg_price_value = avg.get_average_price(prod_data['product_id'])
+        avg_price.setText(f"${avg_price_value:,.2f}")
         avg_price.setObjectName("READ_ONLY")
         avg_price.setReadOnly(True)
         avg_price.setMaxLength(30)
@@ -315,7 +331,8 @@ class ProductsTab(BaseTab):
 
         line2_layout.addWidget(QLabel("last Price:"))
         last_price = QLineEdit()
-        last_price.setText("TBD")
+        latest_price_val = latest.get_latest_price(prod_data['product_id'])
+        last_price.setText(f"${latest_price_val:,.2f}")
         last_price.setObjectName("READ_ONLY")
         last_price.setReadOnly(True)
         last_price.setMaxLength(30)
@@ -342,9 +359,6 @@ class ProductsTab(BaseTab):
         self.edit_btn = QPushButton("Edit")
         self.edit_btn.setObjectName("red_btn")
         line3_layout.addWidget(self.edit_btn)
-        self.del_btn = QPushButton("Delete")
-        self.del_btn.setObjectName("red_btn")
-        line3_layout.addWidget(self.del_btn)
 
         section_layout.addLayout(line3_layout)
 

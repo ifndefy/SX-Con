@@ -1,5 +1,8 @@
 from PyQt6.QtCore import QObject
-from PyQt6.QtWidgets import QHBoxLayout, QMessageBox
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QHBoxLayout
+from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QComboBox
@@ -8,6 +11,7 @@ from PyQt6.QtWidgets import QFrame
 
 from src.core.update_quantities import update_quantities
 from services.get_item import get_item
+from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
 
 import utils.logger.logger as log
@@ -31,7 +35,8 @@ class ViewTicket(QObject):
 
         ticket_data = ticket_details['ticket_data']
         products = ticket_data.get('price_data', {}).get('products', [])
-        revenue_sharing = ticket_data.get('revenue_sharing', [])
+        revenue_sharing = ticket_data.get('revenue', []).get('shared', [])
+        revenue_grouped = ticket_data.get('revenue', []).get('grouped', [])
 
         # Products section
         valid_products = []
@@ -156,14 +161,72 @@ class ViewTicket(QObject):
                 'sold_display': sold_display
             }
 
-        # Revenue Sharing section
+        # Revenue section
         if revenue_sharing:
             revenue_container_layout = QHBoxLayout()
             revenue_container_layout.setObjectName("view_bg")
-            revenue_container_layout.addStretch(1)
+
+            if revenue_grouped:
+                grouped_layout = QVBoxLayout()
+                grouped_label = QLabel("Grouped")
+                grouped_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                grouped_layout.addWidget(grouped_label)
+                hr1 = QFrame()
+                hr1.setFrameShape(QFrame.Shape.HLine)
+                hr1.setFrameShadow(QFrame.Shadow.Sunken)
+                hr1.setObjectName("hr")
+                grouped_layout.addWidget(hr1)
+                rev_by_type = RevenueByProdType()
+                rev_by_type.setObjectName("view_bg")
+                totals = {item['product_type']: float(item['total'].replace('$', '')) for item in revenue_grouped}
+                rev_by_type.update_display_values(totals)
+                grouped_layout.addWidget(rev_by_type)
+                revenue_container_layout.addLayout(grouped_layout)
+
+                vr1 = QFrame()
+                vr1.setFrameShape(QFrame.Shape.VLine)
+                vr1.setFrameShadow(QFrame.Shadow.Sunken)
+                vr1.setObjectName("hr")
+                revenue_container_layout.addWidget(vr1)
+
+            shared_layout = QVBoxLayout()
+            shared_label = QLabel("Signed")
+            shared_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            shared_layout.addWidget(shared_label)
+            hr2 = QFrame()
+            hr2.setFrameShape(QFrame.Shape.HLine)
+            hr2.setFrameShadow(QFrame.Shadow.Sunken)
+            hr2.setObjectName("hr")
+            shared_layout.addWidget(hr2)
             revenue_widget = RevenueGeneration()
+            revenue_widget.setObjectName("view_bg")
             revenue_widget.set_revenue_data(revenue_sharing)
-            revenue_container_layout.addWidget(revenue_widget)
+            shared_layout.addWidget(revenue_widget)
+            revenue_container_layout.addLayout(shared_layout)
+
+            vr2 = QFrame()
+            vr2.setFrameShape(QFrame.Shape.VLine)
+            vr2.setFrameShadow(QFrame.Shadow.Sunken)
+            vr2.setObjectName("hr")
+            revenue_container_layout.addWidget(vr2)
+
+            # todo: this is temporary for payout
+            payout_layout = QVBoxLayout()
+            payout_label = QLabel("Payout")
+            payout_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            payout_layout.addWidget(payout_label)
+            hr2 = QFrame()
+            hr2.setFrameShape(QFrame.Shape.HLine)
+            hr2.setFrameShadow(QFrame.Shadow.Sunken)
+            hr2.setObjectName("hr")
+            payout_layout.addWidget(hr2)
+            revenue_widget = RevenueGeneration()
+            revenue_widget.setObjectName("view_bg")
+            revenue_widget.set_revenue_data(revenue_sharing)
+            payout_layout.addWidget(revenue_widget)
+            revenue_container_layout.addLayout(payout_layout)
+
+            revenue_container_layout.addStretch(1)
             product_layout.addLayout(revenue_container_layout)
 
     def handle_update_clicked(self):

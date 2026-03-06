@@ -1,6 +1,10 @@
 from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import QVBoxLayout, QDialog, QFrame
+from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QPushButton
@@ -32,11 +36,10 @@ class VendorsTab(BaseTab):
         :purpose: initializes the "vendors subtab" tab
         :author(s): Joe Lee
         """
-        # Enable scrolling for when the content exceeds the height of the window
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
+        background = QVBoxLayout(self)
+
+        main_layout_widget = QWidget()
+        main_layout = QVBoxLayout(main_layout_widget)
 
         header_section = QHBoxLayout()
         title = QLabel("View Vendors") # Subtab header
@@ -45,15 +48,16 @@ class VendorsTab(BaseTab):
         header_section.addStretch() # Push to the left
 
         self.create_btn = QPushButton("Create New Vendor")
+        self.create_btn.setFixedWidth(200)
         header_section.addWidget(self.create_btn)
 
-        layout.addLayout(header_section) # Ends creation and adds header_section to window
+        main_layout.addLayout(header_section) # Ends creation and adds header_section to window
 
         hr1 = QFrame()
         hr1.setFrameShape(QFrame.Shape.HLine)
         hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
-        layout.addWidget(hr1)
+        main_layout.addWidget(hr1)
 
         search_section_row_1 = QHBoxLayout()
 
@@ -74,7 +78,7 @@ class VendorsTab(BaseTab):
         search_section_row_1.addWidget(self.phone_number_input)
 
         search_section_row_1.addStretch()
-        layout.addLayout(search_section_row_1)
+        main_layout.addLayout(search_section_row_1)
 
         search_section_row_2 = QHBoxLayout()
 
@@ -103,7 +107,7 @@ class VendorsTab(BaseTab):
         search_section_row_2.addWidget(self.last_name_input)
 
         search_section_row_2.addStretch()
-        layout.addLayout(search_section_row_2)
+        main_layout.addLayout(search_section_row_2)
 
         search_section_row_3 = QHBoxLayout()
 
@@ -136,7 +140,7 @@ class VendorsTab(BaseTab):
         search_section_row_3.addWidget(self.zip_input)
 
         search_section_row_3.addStretch()
-        layout.addLayout(search_section_row_3)
+        main_layout.addLayout(search_section_row_3)
 
         search_section_row_last_consignment = QHBoxLayout()
 
@@ -160,26 +164,26 @@ class VendorsTab(BaseTab):
         self.search_btn = QPushButton("Search")
         self.search_btn.setFixedWidth(200)
         search_section_row_4.addWidget(self.search_btn)
-        layout.addLayout(search_section_row_4)
+        main_layout.addLayout(search_section_row_4)
 
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
-        layout.addWidget(hr2)
+        main_layout.addWidget(hr2)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
 
         self.vendors_layout = QVBoxLayout() # Vendors container
-        layout.addLayout(self.vendors_layout)
+        scroll_layout.addLayout(self.vendors_layout)
+        scroll_layout.addStretch()
 
-        vendors_section = QHBoxLayout()
-        layout.addLayout(vendors_section)
-        layout.addStretch()
-
-        # Set up the scroll area
         scroll.setWidget(scroll_content)
-        main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
-
+        background.addWidget(main_layout_widget)
         self.setup_button_connections()
 
     def clear(self):
@@ -359,8 +363,7 @@ class VendorsTab(BaseTab):
 
         # Phone Number
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
-        phone_input = QLineEdit()
-        phone_input.setText(str(vendor['phone']))
+        phone_input = format_phone.PhoneNumField()
         phone_input.setObjectName("READ_ONLY")
         phone_input.setReadOnly(True)
         phone_input.setMaxLength(12)
@@ -430,8 +433,7 @@ class VendorsTab(BaseTab):
 
         # State
         vendor_section_row_3.addWidget(QLabel("State:"))
-        state_input = QLineEdit()
-        state_input.setText(vendor['state'])
+        state_input = format_state.FormatState()
         state_input.setObjectName("READ_ONLY")
         state_input.setReadOnly(True)
         state_input.setMaxLength(2)
@@ -458,9 +460,6 @@ class VendorsTab(BaseTab):
         self.edit_btn = QPushButton("Edit")
         self.edit_btn.setObjectName("red_btn")
         line3_layout.addWidget(self.edit_btn)
-        self.del_btn = QPushButton("Delete")
-        self.del_btn.setObjectName("red_btn")
-        line3_layout.addWidget(self.del_btn)
 
         section_layout.addLayout(line3_layout)
         # HR Line between Vendor and Product sections
@@ -517,46 +516,68 @@ class VendorsTab(BaseTab):
         layout.addWidget(QLabel("VendorID:"))
         vendor_id_input = QLineEdit()
         vendor_id_input.setObjectName("vendor_id_input")
+        vendor_id_input.setPlaceholderText("V ID")
+        vendor_id_input.setMaxLength(4)
+        vendor_id_input.setValidator(QIntValidator(0, 9999))
         layout.addWidget(vendor_id_input)
 
         layout.addWidget(QLabel("Phone Number:"))
-        phone_number_input = QLineEdit()
+        phone_number_input = format_phone.PhoneNumField()
         phone_number_input.setObjectName("phone_number_input")
         layout.addWidget(phone_number_input)
 
         layout.addWidget(QLabel("First Name:"))
         first_name_input = QLineEdit()
         first_name_input.setObjectName("first_name_input")
+        first_name_input.setPlaceholderText("First Name")
+        first_name_input.setMaxLength(30)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        first_name_input.setValidator(alpha_validator)
         layout.addWidget(first_name_input)
 
         layout.addWidget(QLabel("Middle Name:"))
         middle_name_input = QLineEdit()
         middle_name_input.setObjectName("middle_name_input")
+        middle_name_input.setPlaceholderText("Middle Name")
+        middle_name_input.setMaxLength(10)
+        middle_name_input.setValidator(alpha_validator)
         layout.addWidget(middle_name_input)
 
         layout.addWidget(QLabel("Last Name:"))
         last_name_input = QLineEdit()
         last_name_input.setObjectName("last_name_input")
+        last_name_input.setPlaceholderText("Last Name")
+        last_name_input.setMaxLength(30)
+        last_name_input.setValidator(alpha_validator)
         layout.addWidget(last_name_input)
 
         layout.addWidget(QLabel("Address:"))
         address_input = QLineEdit()
         address_input.setObjectName("address_input")
+        address_input.setPlaceholderText("Address")
+        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 ]+"))
+        address_input.setValidator(address_validator)
         layout.addWidget(address_input)
 
         layout.addWidget(QLabel("City:"))
         city_input = QLineEdit()
         city_input.setObjectName("city_input")
+        city_input.setPlaceholderText("City")
+        city_input.setValidator(alpha_validator)
         layout.addWidget(city_input)
 
         layout.addWidget(QLabel("State:"))
-        state_input = QLineEdit()
+        state_input = format_state.FormatState()
         state_input.setObjectName("state_input")
+        state_input.setValidator(alpha_validator)
         layout.addWidget(state_input)
 
         layout.addWidget(QLabel("Zip Code:"))
         zip_code_input = QLineEdit()
         zip_code_input.setObjectName("zip_code_input")
+        zip_code_input.setPlaceholderText("Zip")
+        zip_validator = QIntValidator(0, 99999)
+        zip_code_input.setValidator(zip_validator)
         layout.addWidget(zip_code_input)
 
         layout.addStretch()
