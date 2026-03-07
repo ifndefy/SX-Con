@@ -1,10 +1,7 @@
 import bcrypt
-from typing import Optional, Tuple
-
-from dulwich.porcelain import fetch
+from typing import Optional
 
 from services.get_item_by_property import get_item_by_property
-from services.get_property import get_property
 
 
 class User:
