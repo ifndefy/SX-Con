@@ -413,6 +413,7 @@ class VendorsTab(BaseTab):
         # Phone Number
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
         phone_input = format_phone.PhoneNumField()
+        phone_input.setText(vendor['phone'])
         phone_input.setObjectName("READ_ONLY")
         phone_input.setReadOnly(True)
         phone_input.setMaxLength(12)

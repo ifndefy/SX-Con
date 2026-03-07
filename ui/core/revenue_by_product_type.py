@@ -78,7 +78,7 @@ class RevenueByProdType(QWidget):
         """
         product_types = ["Hot Food", "General", "Produce"]
         totals = {}
-        grand_total = Decimal("0.00")
+        grand_total = 0.0
 
         for prod_type in product_types:
             type_total = Decimal("0.00")
@@ -102,7 +102,7 @@ class RevenueByProdType(QWidget):
                 if result == -1:
                     continue
                 type_total += result['vendor']
-            totals[prod_type] = type_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            totals[prod_type] = float(type_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
             grand_total += totals[prod_type]
 
         totals['Total'] = float(Decimal(str(grand_total)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
@@ -135,3 +135,9 @@ class RevenueByProdType(QWidget):
         for prod_type, total in self.totals.items():
             rev_data.append({'product_type': prod_type, 'total': total})
         return rev_data
+
+    def clear(self):
+        self.totals = {}
+        for rec in self.revenue_records:
+            self.totals[rec['product_type']] = 0.0
+        self.update_display_values(self.totals)
