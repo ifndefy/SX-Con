@@ -98,6 +98,12 @@ class CreateNewTab(BaseTab):
         # Ends creation and adds vendor_section_row_0 to window
         layout.addLayout(vendor_section_row_0)
 
+        hr0 = QFrame()
+        hr0.setFrameShape(QFrame.Shape.HLine)
+        hr0.setFrameShadow(QFrame.Shadow.Sunken)
+        hr0.setObjectName("hr")
+        layout.addWidget(hr0)
+
         # Vendor Line 1 Creation: Vendor ID + Phone Number + Date and Time
         vendor_section_row_1 = QHBoxLayout()
 
@@ -120,10 +126,13 @@ class CreateNewTab(BaseTab):
         self.phone_input.returnPressed.connect(self.auto_pop_vend_by_phone)
         vendor_section_row_1.addWidget(self.phone_input)
 
+        vendor_section_row_1.addStretch()
+
         # Date and Time - Read-only
         vendor_section_row_1.addWidget(QLabel("DateTime:"))
         self.datetime_input = QLineEdit()
         self.datetime_input.setObjectName("READ_ONLY")
+        self.datetime_input.setFixedWidth(263)
         self.update_datetime()
         self.datetime_input.setReadOnly(True)
         vendor_section_row_1.addWidget(self.datetime_input)
@@ -360,6 +369,12 @@ class CreateNewTab(BaseTab):
         section_widget = QWidget()
         section_layout = QVBoxLayout(section_widget)
         section_layout.setContentsMargins(0, 0, 0, 0)
+
+        hr1 = QFrame()
+        hr1.setFrameShape(QFrame.Shape.HLine)
+        hr1.setFrameShadow(QFrame.Shadow.Sunken)
+        hr1.setObjectName("hr")
+        section_layout.addWidget(hr1)
 
         # Line 1: Product ID and Product Name
         line1_layout = QHBoxLayout()
@@ -697,7 +712,7 @@ class CreateNewTab(BaseTab):
             'address': self.address_input.text().strip() or "NULL",
             'city': self.city_input.text().strip() or "NULL",
             'state': self.state_input.text().strip() or "NULL",
-            'zip': int(self.zip_input.text().strip() or "NULL")
+            'zip': int(self.zip_input.text().strip()) if self.zip_input.text().strip() else None
         }
         return vendor_data
     
