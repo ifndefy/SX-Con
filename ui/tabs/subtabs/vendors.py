@@ -760,8 +760,11 @@ class VendorsTab(BaseTab):
         btn.clicked.connect(self.on_edit_clicked)
 
         for widget in section_widget.findChildren(QLineEdit):
+            value = widget.text().strip()
+            if widget.property("edit_field") == "zip":
+                value = int(value)
             if widget.objectName() == "DEFAULT":
-                update_property("Entities", "vendor", vendor_id, widget.property("edit_field"), widget.text().strip())
+                update_property("Entities", "vendor", vendor_id, widget.property("edit_field"), value)
                 widget.setReadOnly(True)
                 widget.setObjectName("READ_ONLY")
                 widget.style().unpolish(widget)

@@ -647,12 +647,14 @@ class ProductsTab(BaseTab):
         btn.clicked.connect(self.on_edit_clicked)
 
         for widget in section_widget.findChildren(QLineEdit):
-            if widget.objectName() == "DEFAULT":
-                update_property("Entities", "product", product_id, widget.property("edit_field"), widget.text().strip())
-                widget.setReadOnly(True)
-                widget.setObjectName("READ_ONLY")
-                widget.style().unpolish(widget)
-                widget.style().polish(widget)
+            value = widget.text().strip()
+            if widget.property("edit_field") == "rate":
+                value = int(value)
+            update_property("Entities", "product", product_id, widget.property("edit_field"), value)
+            widget.setReadOnly(True)
+            widget.setObjectName("READ_ONLY")
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
 
         for widget in section_widget.findChildren(QComboBox):
             if widget.objectName() == "DEFAULT":
