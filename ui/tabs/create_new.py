@@ -238,7 +238,8 @@ class CreateNewTab(BaseTab):
         # Product Line 1: Product sections container
         self.products_layout = QVBoxLayout()
 
-        # Add the first two product sections by default
+        # Add the first three product sections by default
+        self.add_product_section()
         self.add_product_section()
         self.add_product_section()
 
@@ -612,9 +613,6 @@ class CreateNewTab(BaseTab):
         self.excel_btn.clicked.connect(self.handle_excel_btn)
         self.pdf_btn.clicked.connect(self.on_pdf_clicked)
         self.print_btn.clicked.connect(self.on_print_clicked)
-
-        # wire up Clear Form
-        self.clear_btn.clicked.connect(self.clear_form)
 
     def on_print_clicked(self):
         ticket = self.ticket_input.text().strip()
@@ -1066,6 +1064,7 @@ class CreateNewTab(BaseTab):
 
         self.product_sections.clear()
         self.product_counter = 1
+        self.add_product_section()
         self.add_product_section()
         self.add_product_section()
         self.revenue_generation.clear_revenue_data()
