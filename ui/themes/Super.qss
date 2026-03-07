@@ -15,7 +15,6 @@ QWidget#view_bg {
     font-size: 14px;
 }
 
-
 QWidget#transparent {
     background-color: transparent;
 }
@@ -148,7 +147,8 @@ QComboBox QAbstractItemView::item:hover {
     font-size: 18px;
 }
 
-QComboBox#READ_ONLY {
+QComboBox#READ_ONLY,
+QComboBox#LOCKED {
     background-color: #B0B0B0;
     color: #000000;
     border: 1px solid #5C4033;
@@ -195,7 +195,8 @@ QWidget QLineEdit {
     padding: 4px 8px;
 }
 
-QWidget QLineEdit#READ_ONLY {
+QWidget QLineEdit#READ_ONLY,
+QWidget QLineEdit#LOCKED {
     background-color: #B0B0B0;
     border: 1px solid #5C4033;
     border-radius: 3px;
