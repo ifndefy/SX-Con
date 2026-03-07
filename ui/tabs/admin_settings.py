@@ -10,7 +10,7 @@ from ui.tabs.subtabs.records import RecordsTab
 from ui.tabs.subtabs.users import UsersTab
 from ui.tabs.subtabs.vendors import VendorsTab
 from ui.tabs.subtabs.products import ProductsTab
-from ui.tabs.subtabs.consignment_rate import CRTab
+from ui.tabs.subtabs.rates import CRTab
 import utils.logger.logger as log
 
 

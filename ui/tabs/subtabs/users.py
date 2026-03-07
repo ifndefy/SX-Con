@@ -19,12 +19,15 @@ from src import SPOT
 
 from datetime import datetime
 
+from ui.prompts.password_dialog import PasswordChangeDialog
+from services.get_item import get_item
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
+from services.update_property import update_property
 from src.core.hash_qa import hash_security_question_answer
 from src.core.hash_password import hash_password
 import utils.logger.logger as log
-from services.message_bus import status_bar_instance
+from utils.message_bus import status_bar_instance
 
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -386,7 +389,8 @@ class UsersTab(BaseTab):
         line1_layout.addWidget(QLabel("UserID:"))
         user_id = QLineEdit()
         user_id.setText(str(user_data['user_id']))
-        user_id.setObjectName("READ_ONLY")
+        user_id.setProperty('pk', 'user_id')
+        user_id.setObjectName("LOCKED")
         user_id.setReadOnly(True)
         user_id.setMaxLength(10)
         user_id.setFixedWidth(55)
@@ -397,6 +401,7 @@ class UsersTab(BaseTab):
         line1_layout.addWidget(QLabel("Username:"))
         username = QLineEdit()
         username.setText(str(user_data['username']))
+        username.setProperty('edit_field', 'username')
         username.setObjectName("READ_ONLY")
         username.setReadOnly(True)
         username.setMaxLength(30)
@@ -410,7 +415,7 @@ class UsersTab(BaseTab):
         line1_layout.addWidget(QLabel("Last Consignment:"))
         last_consignment_input = QLineEdit()
         last_consignment_input.setText(user_data.get('last_consignment') or '')
-        last_consignment_input.setObjectName("READ_ONLY")
+        last_consignment_input.setObjectName("LOCKED")
         last_consignment_input.setReadOnly(True)
         last_consignment_input.setMaxLength(30)
         last_consignment_input.setFixedWidth(265)
@@ -422,6 +427,7 @@ class UsersTab(BaseTab):
         line2_layout.addWidget(QLabel("First Name:"))
         first_name = QLineEdit()
         first_name.setText(str(user_data['first_name']))
+        first_name.setProperty('edit_field', 'first_name')
         first_name.setObjectName("READ_ONLY")
         first_name.setReadOnly(True)
         first_name.setMaxLength(30)
@@ -433,6 +439,7 @@ class UsersTab(BaseTab):
         line2_layout.addWidget(QLabel("Last Name:"))
         last_name = QLineEdit()
         last_name.setText(str(user_data['last_name']))
+        last_name.setProperty('edit_field', 'last_name')
         last_name.setObjectName("READ_ONLY")
         last_name.setReadOnly(True)
         last_name.setMaxLength(30)
@@ -445,6 +452,7 @@ class UsersTab(BaseTab):
         line2_layout.addWidget(QLabel("Admin:"))
         admin_field = QComboBox()
         admin_field.addItems(["True", "False"])
+        admin_field.setProperty('edit_field', 'admin_field')
         admin_field.setObjectName("READ_ONLY")
         admin_field.setEnabled(False)
         current_index = 0 if user_data['admin'] == True else 1      # Set "Admin" value as True or False in GUI
@@ -455,12 +463,15 @@ class UsersTab(BaseTab):
 
         line3_layout = QHBoxLayout()
 
-        view_btn = QPushButton("View")
-        line3_layout.addWidget(view_btn)
+        change_pw_btn = QPushButton("Reset Password")
+        change_pw_btn.setObjectName("red_btn")
+        change_pw_btn.clicked.connect(self.on_change_pw_clicked)
+        line3_layout.addWidget(change_pw_btn)
 
         edit_btn = QPushButton("Edit")
         edit_btn.setObjectName("red_btn")
         line3_layout.addWidget(edit_btn)
+        edit_btn.clicked.connect(self.on_edit_clicked)
 
         section_layout.addLayout(line3_layout)
 
@@ -751,3 +762,122 @@ class UsersTab(BaseTab):
             if banned in lower_username:
                 return False
         return True
+
+    def on_change_pw_clicked(self):
+        """
+        :purpose: Allows admin to reset the password of any user
+        :author(s): Joe Lee
+        """
+        btn = self.sender()
+        section_widget = btn.parent()
+
+        user_id = None
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.property("pk") == "user_id":
+                user_id = widget.text()
+                break
+
+        if not user_id:
+            QMessageBox.critical(self, "Error", "Could not determine user ID")
+            return
+
+        username = None
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.property("edit_field") == "username":
+                username = widget.text()
+                break
+
+        dialog = PasswordChangeDialog(None, self)
+        dialog.setWindowTitle(f"Reset Password — {username}")
+
+        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.new_password:
+            hashed_password = hash_password(dialog.new_password)
+
+            if hashed_password == "-1":
+                QMessageBox.critical(self, "Error", "Failed to hash password")
+                return
+
+            result = update_property(
+                container_name="Entities",
+                entity_type="user",
+                entity_id=str(user_id),
+                property_name="password",
+                property_value=hashed_password
+            )
+
+            if result == 0:
+                QMessageBox.information(self, "Success", f"Password reset successfully for {username}")
+                log.info(f"Admin reset password for user_id: {user_id}")
+            else:
+                QMessageBox.critical(self, "Error", f"Failed to update password for {username}")
+                log.error(f"Password reset failed for user_id: {user_id}")
+
+    def on_edit_clicked(self):
+        btn = self.sender()
+        section_widget = btn.parent()
+
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.objectName() == "READ_ONLY":
+                widget.setReadOnly(False)
+                widget.setObjectName("DEFAULT")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+
+        for widget in section_widget.findChildren(QComboBox):
+            if widget.objectName() == "READ_ONLY":
+                widget.setEnabled(True)
+                widget.setObjectName("DEFAULT")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+
+        btn.setObjectName("DEFAULT")
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+        btn.setText("Save")
+        btn.clicked.disconnect(self.on_edit_clicked)
+        btn.clicked.connect(self.on_save_clicked)
+
+    def on_save_clicked(self):
+        btn = self.sender()
+        section_widget = btn.parent()
+
+        user_id = None
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.property("pk") == "user_id":
+                user_id = widget.text()
+                break
+
+        btn.setText("Edit")
+        btn.setObjectName("red_btn")
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+        btn.clicked.disconnect(self.on_save_clicked)
+        btn.clicked.connect(self.on_edit_clicked)
+
+        try:
+            existing_item = get_item("Entities", "user", user_id, True) or {}
+        except Exception as e:
+            log.error(f"Failed to fetch existing user data: {e}")
+            existing_item = {}
+
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.objectName() == "DEFAULT":
+                field = widget.property("edit_field")
+                new_value = widget.text().strip()
+                if str(existing_item.get(field, "")) != new_value:
+                    update_property("Entities", "user", user_id, field, new_value)
+                widget.setReadOnly(True)
+                widget.setObjectName("READ_ONLY")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+
+        for widget in section_widget.findChildren(QComboBox):
+            if widget.objectName() == "DEFAULT":
+                field = widget.property("edit_field")
+                new_value = widget.currentText() == "True"
+                if existing_item.get(field) != new_value:
+                    update_property("Entities", "user", user_id, field, new_value)
+                widget.setEnabled(False)
+                widget.setObjectName("READ_ONLY")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)

@@ -5,7 +5,7 @@ from services.connect_database import db_connection
 from src import SPOT
 import utils.logger.logger as log
 
-def get_item(container_name: str, entity_type: str, id: str) -> Any | None:
+def get_item(container_name: str, entity_type: str, id: str, silent: bool = False) -> Any | None:
     """
     :purpose: Gets an entire document by ID and entity type
     :param: container_name: the Cosmos DB container to query
@@ -26,10 +26,12 @@ def get_item(container_name: str, entity_type: str, id: str) -> Any | None:
 
         try:
             document = container.read_item(item=item_id, partition_key=partition_key)
-            log.info(f"Cosmos DB Container {container_name} found ID: {item_id} ID: {partition_key}")
+            if not silent:
+                log.info(f"Cosmos DB Container {container_name} found ID: {item_id} ID: {partition_key}")
             return document
         except CosmosResourceNotFoundError:
-            log.info(f"Cosmos DB container {container_name} not found ID: {item_id} ID: {partition_key}")
+            if not silent:
+                log.info(f"Cosmos DB container {container_name} not found ID: {item_id} ID: {partition_key}")
             return None
         except Exception as e:
             log.error(f"Error reading document: {e}")

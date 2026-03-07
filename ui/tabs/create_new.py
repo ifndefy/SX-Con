@@ -18,8 +18,8 @@ from handlers.handler_pdf import handler_live_pdf
 from handlers import handler_print
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
-from services.message_bus import status_bar_instance
-from services.parse_consignment_table import fetch_consignment_data
+from utils.message_bus import status_bar_instance
+from utils.parse_consignment_table import fetch_consignment_data
 from src.core import generate_agg_data
 from src.user import current_user
 from ui.tabs.base import BaseTab
@@ -634,15 +634,14 @@ class CreateNewTab(BaseTab):
         revenue_data = self._gather_revenue_data()
 
         try:
-            if self._validate_required_fields(vendor_data, products_data):
-                handler_live_pdf(vendor_data, products_data, revenue_data)
-                log.info(f"PDF generated for ticket {vendor_data['ticket_number']}")
-                return True
-            else:
-                log.error("PDF generation for ticket failed")
+            if not self._validate_required_fields(vendor_data, products_data):
+                log.warning(f"PDF generation skipped: Validation failed")
                 return False
+            handler_live_pdf(vendor_data, products_data, revenue_data)
+            log.info(f"PDF generated for Ticket {vendor_data['ticket_number']}")
+            return True
         except Exception as e:
-            log.error(f"ERROR generating PDF for ticket {vendor_data['ticket_number']}: {e}")
+            log.error(f"PDF generation failed for Ticket {vendor_data.get('ticket_number')}: {e}")
             return False
 
     def create_record(self):
@@ -682,7 +681,7 @@ class CreateNewTab(BaseTab):
 
             if record_id != -1:
                 self.clear_form()
-                status_bar_instance.send_message(f"Record created successfully! ID: {record_id}")
+                status_bar_instance.send_message(f"Ticket created successfully! Ticket Number: {record_id}")
                 return record_id
             else:
                 log.error("Failed to create record")
