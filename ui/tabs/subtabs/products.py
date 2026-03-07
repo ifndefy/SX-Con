@@ -12,13 +12,14 @@ from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QDialog
 
-from services.message_bus import status_bar_instance
+from utils.message_bus import status_bar_instance
 from ui.tabs.base import BaseTab
 
 from datetime import datetime
 
 from src.core import get_average_price as avg
 from src.core import get_latest_price as latest
+from services.get_item import get_item
 from services.insert_item import insert_item
 from services.update_property import update_property
 
@@ -646,20 +647,27 @@ class ProductsTab(BaseTab):
         btn.clicked.disconnect(self.on_save_clicked)
         btn.clicked.connect(self.on_edit_clicked)
 
+        existing_item = get_item("Entities", "product", product_id, silent=True) or {}
+
         for widget in section_widget.findChildren(QLineEdit):
-            value = widget.text().strip()
-            if widget.property("edit_field") == "rate":
-                value = int(value)
-            update_property("Entities", "product", product_id, widget.property("edit_field"), value)
-            widget.setReadOnly(True)
-            widget.setObjectName("READ_ONLY")
-            widget.style().unpolish(widget)
-            widget.style().polish(widget)
+            if widget.objectName() == "DEFAULT":
+                field = widget.property("edit_field")
+                new_value = widget.text().strip()
+                if field == "rate":
+                    new_value = int(new_value)
+                if existing_item.get(field) != new_value:
+                    update_property("Entities", "product", product_id, field, new_value)
+                widget.setReadOnly(True)
+                widget.setObjectName("READ_ONLY")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
 
         for widget in section_widget.findChildren(QComboBox):
             if widget.objectName() == "DEFAULT":
-                value = widget.currentText()
-                update_property("Entities", "product", product_id, widget.property("edit_field"), value)
+                field = widget.property("edit_field")
+                new_value = widget.currentText()
+                if existing_item.get(field) != new_value:
+                    update_property("Entities", "product", product_id, field, new_value)
                 widget.setEnabled(False)
                 widget.setObjectName("READ_ONLY")
                 widget.style().unpolish(widget)

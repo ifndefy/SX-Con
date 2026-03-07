@@ -18,11 +18,11 @@ from services.get_property import get_property
 from ui.core.view_ticket import ViewTicket
 from ui.tabs.base import BaseTab
 
-from ui.core import excel
+from ui.core import excel_button
 from utils.core import generate_excel as xls_gen
 
 import utils.logger.logger as log
-from services.message_bus import status_bar_instance
+from utils.message_bus import status_bar_instance
 
 class RecordsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -384,7 +384,7 @@ class RecordsTab(BaseTab):
         rec_section['view_btn'] = view_btn
 
         #Create excel button without gather function link once index is assigned
-        excel_btn = excel.ExcelButton(None, xls_gen.generate_excel, "Excel")
+        excel_btn = excel_button.ExcelButton(None, xls_gen.generate_excel, "Excel")
         line2_layout.addWidget(excel_btn)
         rec_section['excel_btn'] = excel_btn
 
@@ -499,7 +499,8 @@ class RecordsTab(BaseTab):
                 'ticket_info': ticket_header,
                 'product_data': unpacked_ticket['products'],
                 'revenue_shared': unpacked_ticket['revenue']['shared'],
-                'revenue_grouped': unpacked_ticket['revenue']['grouped']
+                'revenue_grouped': unpacked_ticket['revenue']['grouped'],
+                'revenue_payout': unpacked_ticket['revenue']['payout'],
             }
 
         return gather_ticket

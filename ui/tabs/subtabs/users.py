@@ -20,13 +20,14 @@ from src import SPOT
 from datetime import datetime
 
 from ui.prompts.password_dialog import PasswordChangeDialog
+from services.get_item import get_item
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
 from services.update_property import update_property
 from src.core.hash_qa import hash_security_question_answer
 from src.core.hash_password import hash_password
 import utils.logger.logger as log
-from services.message_bus import status_bar_instance
+from utils.message_bus import status_bar_instance
 
 class UsersTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -853,9 +854,18 @@ class UsersTab(BaseTab):
         btn.clicked.disconnect(self.on_save_clicked)
         btn.clicked.connect(self.on_edit_clicked)
 
+        try:
+            existing_item = get_item("Entities", "user", user_id, True) or {}
+        except Exception as e:
+            log.error(f"Failed to fetch existing user data: {e}")
+            existing_item = {}
+
         for widget in section_widget.findChildren(QLineEdit):
             if widget.objectName() == "DEFAULT":
-                update_property("Entities", "user", user_id, widget.property("edit_field"), widget.text().strip())
+                field = widget.property("edit_field")
+                new_value = widget.text().strip()
+                if str(existing_item.get(field, "")) != new_value:
+                    update_property("Entities", "user", user_id, field, new_value)
                 widget.setReadOnly(True)
                 widget.setObjectName("READ_ONLY")
                 widget.style().unpolish(widget)
@@ -863,8 +873,10 @@ class UsersTab(BaseTab):
 
         for widget in section_widget.findChildren(QComboBox):
             if widget.objectName() == "DEFAULT":
-                value = widget.currentText() == "True"
-                update_property("Entities", "user", user_id, widget.property("edit_field"), value)
+                field = widget.property("edit_field")
+                new_value = widget.currentText() == "True"
+                if existing_item.get(field) != new_value:
+                    update_property("Entities", "user", user_id, field, new_value)
                 widget.setEnabled(False)
                 widget.setObjectName("READ_ONLY")
                 widget.style().unpolish(widget)

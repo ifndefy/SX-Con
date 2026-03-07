@@ -4,7 +4,7 @@ from azure.cosmos import CosmosClient
 from pathlib import Path
 from src import SPOT
 import utils.logger.logger as log
-from services.message_bus import status_bar_instance
+from utils.message_bus import status_bar_instance
 
 class DatabaseConnection:
     _connections = {}

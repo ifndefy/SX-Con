@@ -17,11 +17,12 @@ from ui.tabs.base import BaseTab
 from datetime import datetime
 from ui.core import format_phone
 from ui.core import format_state
+from services.get_item import get_item
 from services.insert_item import insert_item
 from services.update_property import update_property
 
 import utils.logger.logger as log
-from services.message_bus import status_bar_instance
+from utils.message_bus import status_bar_instance
 
 class VendorsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -759,12 +760,16 @@ class VendorsTab(BaseTab):
         btn.clicked.disconnect(self.on_save_clicked)
         btn.clicked.connect(self.on_edit_clicked)
 
+        existing_item = get_item("Entities", "vendor", vendor_id, silent=True) or {}
+
         for widget in section_widget.findChildren(QLineEdit):
-            value = widget.text().strip()
-            if widget.property("edit_field") == "zip":
-                value = int(value)
             if widget.objectName() == "DEFAULT":
-                update_property("Entities", "vendor", vendor_id, widget.property("edit_field"), value)
+                field = widget.property("edit_field")
+                new_value = widget.text().strip()
+                if field == "zip":
+                    new_value = int(new_value)
+                if existing_item.get(field) != new_value:
+                    update_property("Entities", "vendor", vendor_id, field, new_value)
                 widget.setReadOnly(True)
                 widget.setObjectName("READ_ONLY")
                 widget.style().unpolish(widget)
