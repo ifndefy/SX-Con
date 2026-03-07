@@ -21,9 +21,7 @@ def handler_live_pdf(vendor_data, product_data, revenue_data):
     pdf.ticket_data = {
         "ticket_number": vendor_data.get('ticket_number'),
         "vendor_id": vendor_data.get('vendor_id'),
-        "price_data": {
-            "products": product_data
-        },
+        "products": product_data,
         "revenue": revenue_data
     }
     pdf.num_prods = len(product_data)

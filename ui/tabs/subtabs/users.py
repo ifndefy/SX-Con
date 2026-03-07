@@ -17,6 +17,8 @@ from PyQt6.QtWidgets import QMessageBox
 from ui.tabs.base import BaseTab
 from src import SPOT
 
+from datetime import datetime
+
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
 from src.core.hash_qa import hash_security_question_answer
@@ -216,7 +218,7 @@ class UsersTab(BaseTab):
             :Purpose: appends query conditions
             :Author(s): Joe Lee
             """
-            if value:
+            if value is not None:
                 prop_name = props
                 if operator == "CONTAINS":
                     conditions.append(f"CONTAINS(LOWER(c.{props}), LOWER(@{prop_name}))")
@@ -236,6 +238,33 @@ class UsersTab(BaseTab):
         if username:
             add_property("username", username, "CONTAINS")
 
+        last_consignment = self.last_consignment_input.text().strip()
+        if last_consignment:
+            try:
+                consignment_container = self.db_connection.connect("Consignments")
+                consignment_query = f"""
+                    SELECT DISTINCT c.user_id
+                    FROM c
+                    WHERE c.type = 'consignment'
+                    AND CONTAINS(c.datetime, '{last_consignment}')
+                """
+                results = list(consignment_container.query_items(
+                    query=consignment_query,
+                    enable_cross_partition_query=True
+                ))
+                matching_user_ids = [r['user_id'] for r in results if r.get('user_id')]
+
+                if not matching_user_ids:
+                    self.remove_user_section()
+                    status_bar_instance.send_message("No users found")
+                    return
+
+                id_list = ", ".join(str(uid) for uid in matching_user_ids)
+                conditions.append(f"c.user_id IN ({id_list})")
+            except Exception as e:
+                log.error(f"Error querying consignments: {e}")
+                return
+
         first_name = self.first_name_input.text().strip()
         if first_name:
             add_property("first_name", first_name, "CONTAINS")
@@ -245,9 +274,8 @@ class UsersTab(BaseTab):
             add_property("last_name", last_name, "CONTAINS")
 
         admin_status = self.admin_field.currentText().strip().lower()
-        if admin_status:
-            admin_bool = admin_status == "true"
-            add_property("admin", admin_bool, "=")
+        if admin_status in ("true", "false"):
+            add_property("admin", admin_status == "true", "=")
 
         if len(conditions) == 1:
             self.fetch()
@@ -282,9 +310,47 @@ class UsersTab(BaseTab):
                     'admin': item.get('admin', ''),
                 })
 
-            users.sort(key=lambda v: int(v['user_id']))
+            users.sort(key=lambda user: int(user['user_id']))
+
+            last_consignments = {}
+            try:
+                user_ids = [user['user_id'] for user in users]
+                user_id_list = ", ".join(str(user_id) for user_id in user_ids)
+                consignment_container = self.db_connection.connect("Consignments")
+                batch_query = f"""
+                    SELECT c.user_id, c.datetime
+                    FROM c
+                    WHERE c.type = 'consignment'
+                    AND c.user_id IN ({user_id_list})
+                """
+                last_cons = list(consignment_container.query_items(
+                    query=batch_query,
+                    enable_cross_partition_query=True
+                ))
+
+                last_consignments = {}
+                for consignment in last_cons:
+                    user_id = consignment['user_id']
+                    datetime_string = consignment.get('datetime', '')
+                    if not datetime_string:
+                        continue
+                    try:
+                        parsed_datetime = datetime.strptime(datetime_string, "%m/%d/%y -- %H:%M")
+                        if user_id not in last_consignments or parsed_datetime > last_consignments[user_id]['parsed']:
+                            last_consignments[user_id] = {
+                                'parsed': parsed_datetime,
+                                'raw': datetime_string
+                            }
+                    except ValueError:
+                        continue
+
+                last_consignments = {user_id: value['raw'] for user_id, value in last_consignments.items()}
+
+            except Exception as e:
+                log.error(f"Error fetching last consignments: {e}")
 
             for user in users:
+                user['last_consignment'] = last_consignments.get(user['user_id']) or ''
                 self.add_user_section(user)
 
             if not users:
@@ -339,9 +405,11 @@ class UsersTab(BaseTab):
         username.setValidator(alpha_validator)
         line1_layout.addWidget(username)
 
+        line1_layout.addStretch()
+
         line1_layout.addWidget(QLabel("Last Consignment:"))
         last_consignment_input = QLineEdit()
-        last_consignment_input.setPlaceholderText("Last Consignment")
+        last_consignment_input.setText(user_data.get('last_consignment') or '')
         last_consignment_input.setObjectName("READ_ONLY")
         last_consignment_input.setReadOnly(True)
         last_consignment_input.setMaxLength(30)

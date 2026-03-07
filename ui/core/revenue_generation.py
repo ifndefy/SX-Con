@@ -109,9 +109,9 @@ class RevenueGeneration(QWidget):
         revenue_data = []
         for record in self.revenue_records:
             revenue_data.append({
-                'vendor': record['vendor'].text(),
+                'vendor': float(record['vendor'].text().replace('$', '')),
                 'percentage': record['percentage'].text(),
-                'super_x': record['super_x'].text()
+                'super_x': float(record['super_x'].text().replace('$', ''))
             })
         return revenue_data
 
@@ -135,16 +135,16 @@ class RevenueGeneration(QWidget):
         """
         if revenue_data is None:
             revenue_data = [
-                {'vendor': '$0.00', 'super_x': '$0.00'},
-                {'vendor': '$0.00', 'super_x': '$0.00'},
-                {'vendor': '$0.00', 'super_x': '$0.00'},
-                {'vendor': '$0.00', 'super_x': '$0.00'}
+                {'vendor': 0.0, 'super_x': 0.0},
+                {'vendor': 0.0, 'super_x': 0.0},
+                {'vendor': 0.0, 'super_x': 0.0},
+                {'vendor': 0.0, 'super_x': 0.0}
             ]
 
         for i, record in enumerate(revenue_data):
             if i < len(self.revenue_records):
-                self.revenue_records[i]['vendor'].setText(record.get('vendor', '$0.00'))
-                self.revenue_records[i]['super_x'].setText(record.get('super_x', '$0.00'))
+                self.revenue_records[i]['vendor'].setText(f"${record.get('vendor', 0):.2f}")
+                self.revenue_records[i]['super_x'].setText(f"${record.get('super_x', 0):.2f}")
 
     @staticmethod
     def calculate_revenues(price, quantity, percentile, rate=25):
@@ -210,20 +210,14 @@ class RevenueGeneration(QWidget):
         :Author(s): Joe Lee
         """
         try:
-            rate = Decimal(int(rate))
-        except (InvalidOperation, ValueError, TypeError):
-            log.error("Invalid rate")
-        d_rate = rate / 100
-        d_return_rate = 1 - d_rate
-        try:
+            d_rate = Decimal(str(rate).strip()) / 100
+            d_return_rate = 1 - d_rate
             d_price = Decimal(str(price))
             d_qty = int(quantity)
-            if d_price is None or d_price < 0:
-                log.error("Invalid price")
-            if d_qty is None or d_qty < 0:
-                log.error("Invalid quantity")
-
-            total = round(d_price * d_qty * d_return_rate, 2)
+            if d_price < 0 or d_qty < 0:
+                log.error("Invalid price or quantity")
+                return -1
+            total = (d_price * d_qty * d_return_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             return total
         except (InvalidOperation, ValueError, TypeError):
             return -1

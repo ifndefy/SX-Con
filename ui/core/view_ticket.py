@@ -13,6 +13,7 @@ from src.core.update_quantities import update_quantities
 from services.get_item import get_item
 from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
+from ui.core.revenue_payout import RevenuePayout
 
 import utils.logger.logger as log
 
@@ -34,7 +35,7 @@ class ViewTicket(QObject):
                 child.widget().deleteLater()
 
         ticket_data = ticket_details['ticket_data']
-        products = ticket_data.get('price_data', {}).get('products', [])
+        products = ticket_data.get('products', [])
         revenue_sharing = ticket_data.get('revenue', []).get('shared', [])
         revenue_grouped = ticket_data.get('revenue', []).get('grouped', [])
 
@@ -50,7 +51,7 @@ class ViewTicket(QObject):
             line1_layout = QHBoxLayout()
 
             line1_layout.addWidget(QLabel("ID:"))
-            product_id_input = QLineEdit(product_id)
+            product_id_input = QLineEdit(str(product_id))
             product_id_input.setFixedWidth(120)
             product_id_input.setObjectName("READ_ONLY")
             product_id_input.setReadOnly(True)
@@ -166,29 +167,6 @@ class ViewTicket(QObject):
             revenue_container_layout = QHBoxLayout()
             revenue_container_layout.setObjectName("view_bg")
 
-            if revenue_grouped:
-                grouped_layout = QVBoxLayout()
-                grouped_label = QLabel("Grouped")
-                grouped_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                grouped_layout.addWidget(grouped_label)
-                hr1 = QFrame()
-                hr1.setFrameShape(QFrame.Shape.HLine)
-                hr1.setFrameShadow(QFrame.Shadow.Sunken)
-                hr1.setObjectName("hr")
-                grouped_layout.addWidget(hr1)
-                rev_by_type = RevenueByProdType()
-                rev_by_type.setObjectName("view_bg")
-                totals = {item['product_type']: float(item['total'].replace('$', '')) for item in revenue_grouped}
-                rev_by_type.update_display_values(totals)
-                grouped_layout.addWidget(rev_by_type)
-                revenue_container_layout.addLayout(grouped_layout)
-
-                vr1 = QFrame()
-                vr1.setFrameShape(QFrame.Shape.VLine)
-                vr1.setFrameShadow(QFrame.Shadow.Sunken)
-                vr1.setObjectName("hr")
-                revenue_container_layout.addWidget(vr1)
-
             shared_layout = QVBoxLayout()
             shared_label = QLabel("Signed")
             shared_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -204,29 +182,51 @@ class ViewTicket(QObject):
             shared_layout.addWidget(revenue_widget)
             revenue_container_layout.addLayout(shared_layout)
 
+            vr1 = QFrame()
+            vr1.setFrameShape(QFrame.Shape.VLine)
+            vr1.setFrameShadow(QFrame.Shadow.Sunken)
+            vr1.setObjectName("hr")
+            revenue_container_layout.addWidget(vr1)
+
+            grouped_layout = QVBoxLayout()
+            grouped_label = QLabel("Grouped")
+            grouped_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            grouped_layout.addWidget(grouped_label)
+            hr1 = QFrame()
+            hr1.setFrameShape(QFrame.Shape.HLine)
+            hr1.setFrameShadow(QFrame.Shadow.Sunken)
+            hr1.setObjectName("hr")
+            grouped_layout.addWidget(hr1)
+            rev_by_type = RevenueByProdType()
+            rev_by_type.setObjectName("view_bg")
+            totals = {}
+            for item in revenue_grouped:
+                totals[item['product_type']] = float(item['total'])
+            rev_by_type.update_display_values(totals)
+            grouped_layout.addWidget(rev_by_type)
+            revenue_container_layout.addLayout(grouped_layout)
+
             vr2 = QFrame()
             vr2.setFrameShape(QFrame.Shape.VLine)
             vr2.setFrameShadow(QFrame.Shadow.Sunken)
             vr2.setObjectName("hr")
             revenue_container_layout.addWidget(vr2)
 
-            # todo: this is temporary for payout
             payout_layout = QVBoxLayout()
             payout_label = QLabel("Payout")
             payout_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             payout_layout.addWidget(payout_label)
-            hr2 = QFrame()
-            hr2.setFrameShape(QFrame.Shape.HLine)
-            hr2.setFrameShadow(QFrame.Shadow.Sunken)
-            hr2.setObjectName("hr")
-            payout_layout.addWidget(hr2)
-            revenue_widget = RevenueGeneration()
-            revenue_widget.setObjectName("view_bg")
-            revenue_widget.set_revenue_data(revenue_sharing)
-            payout_layout.addWidget(revenue_widget)
+            hr3 = QFrame()
+            hr3.setFrameShape(QFrame.Shape.HLine)
+            hr3.setFrameShadow(QFrame.Shadow.Sunken)
+            hr3.setObjectName("hr")
+            payout_layout.addWidget(hr3)
+            payout_widget = RevenuePayout()
+            payout_widget.setObjectName("view_bg")
+            payout_widget.set_products(valid_products, self.ticket_id)
+            payout_layout.addWidget(payout_widget)
             revenue_container_layout.addLayout(payout_layout)
 
-            revenue_container_layout.addStretch(1)
             product_layout.addLayout(revenue_container_layout)
 
     def handle_update_clicked(self):
@@ -285,6 +285,10 @@ class ViewTicket(QObject):
         """
         sold_input = widgets['sold_edit']
         quantity_display = widgets['quantity_display']
+
+        if not sold_input.text().strip():
+            log.error("Sold field is empty")
+            return None, None
 
         try:
             new_sold = int(sold_input.text())

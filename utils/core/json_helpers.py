@@ -11,6 +11,6 @@ def json_to_dict(json_string):
     """
     try:
         return json.loads(json_string)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, TypeError):
         log.error(f"Invalid JSON string: {json_string}. Resetting to empty.")
         return {}

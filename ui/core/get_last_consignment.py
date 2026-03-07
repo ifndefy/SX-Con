@@ -36,6 +36,14 @@ def get_last_consignment(entity_type: str, entity_id: str) -> datetime | None:
                 AND ARRAY_CONTAINS(c.product_ids, {entity_id})
             """
 
+        elif entity_type == "user":
+            query = f"""
+                SELECT VALUE MAX(c.datetime)
+                FROM c
+                WHERE c.type = 'consignment'
+                AND c.user_id = {entity_id}
+            """
+
         else:
             log.error(f"Unsupported entity_type: {entity_type}")
             return None

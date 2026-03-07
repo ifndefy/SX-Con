@@ -15,6 +15,8 @@ from PyQt6.QtWidgets import QDialog
 from services.message_bus import status_bar_instance
 from ui.tabs.base import BaseTab
 
+from datetime import datetime
+
 from services.insert_item import insert_item
 import utils.logger.logger as log
 from src.core import get_average_price as avg
@@ -22,7 +24,7 @@ from src.core import get_latest_price as latest
 
 class ProductsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
-        self.list_prod_types = ['Hot_Food', 'General', 'Produce']
+        self.list_prod_types = ['Hot Food', 'General', 'Produce']
         self.products_section = []
         self.db_connection = db_connection
         super().__init__(api_handler, "products")
@@ -211,6 +213,43 @@ class ProductsTab(BaseTab):
         if product_name:
             add_property("product_name", product_name, "CONTAINS")
 
+        last_consignment = self.last_consignment_input.text().strip()
+        last_consignment = self.last_consignment_input.text().strip()
+        if last_consignment:
+            try:
+                consignment_container = self.db_connection.connect("Consignments")
+                consignment_query = f"""
+                    SELECT DISTINCT p.product_id
+                    FROM c
+                    JOIN p IN c.products
+                    WHERE c.type = 'consignment'
+                    AND CONTAINS(c.datetime, '{last_consignment}')
+                """
+                results = list(consignment_container.query_items(
+                    query=consignment_query,
+                    enable_cross_partition_query=True
+                ))
+
+                matching_product_ids = []
+                for r in results:
+                    if r.get('product_id'):
+                        matching_product_ids.append(int(r['product_id']))
+
+                if not matching_product_ids:
+                    self.remove_product_section()
+                    status_bar_instance.send_message("No products found")
+                    return
+
+                id_parts = []
+                for prod_id in matching_product_ids:
+                    id_parts.append(str(prod_id))
+                id_list = ", ".join(id_parts)
+
+                conditions.append(f"c.product_id IN ({id_list})")
+            except Exception as e:
+                log.error(f"Error querying consignments: {e}")
+                return
+
         product_type = self.product_type_input.currentText().strip()
         if product_type:
             add_property("product_type", product_type, "=")
@@ -244,13 +283,58 @@ class ProductsTab(BaseTab):
                     'product_name': item.get('product_name', ''),
                     'product_type': item.get('product_type', ''),
                     'rate': item.get('rate', 'NA'),
-
                 })
 
-            products.sort(key=lambda v: int(v['product_id']))
+            products.sort(key=lambda product: int(product['product_id']))
 
-            for prod in products:
-                self.add_product_section(prod)
+            last_consignments = {}
+            try:
+                product_ids = []
+                for product in products:
+                    product_ids.append(product['product_id'])
+
+                consignment_container = self.db_connection.connect("Consignments")
+
+                product_id_parts = []
+                for product_id in product_ids:
+                    product_id_parts.append(str(product_id))
+                product_id_list = ", ".join(product_id_parts)
+
+                last_cons_query = f"""
+                    SELECT c.products, c.datetime
+                    FROM c
+                    WHERE c.type = 'consignment'
+                    AND EXISTS(SELECT VALUE p FROM p IN c.products WHERE p.product_id IN ({product_id_list}))
+                """
+                last_cons = list(consignment_container.query_items(
+                    query=last_cons_query,
+                    enable_cross_partition_query=True
+                ))
+                for lc in last_cons:
+                    last_con = lc.get('datetime', '')
+                    if not last_con:
+                        continue
+                    try:
+                        split_date = datetime.strptime(last_con, "%m/%d/%y -- %H:%M")
+                        for product in lc.get('products', []):
+                            product_id = int(product.get('product_id'))
+                            if ((product_id not in last_consignments) or
+                                    (split_date > last_consignments[product_id]['date'])):
+                                last_consignments[product_id] = {
+                                    'date': split_date,
+                                    'full': last_con
+                                }
+                    except ValueError:
+                        continue
+
+                last_consignments = {product_id: value['full'] for product_id, value in last_consignments.items()}
+
+            except Exception as e:
+                log.error(f"Error fetching last consignments: {e}")
+
+            for product in products:
+                product['last_consignment'] = last_consignments.get(int(product['product_id'])) or ''
+                self.add_product_section(product)
 
             if not products:
                 status_bar_instance.send_message("No products found")
@@ -306,7 +390,7 @@ class ProductsTab(BaseTab):
 
         line1_layout.addWidget(QLabel("Last Consignment:"))
         last_consignment_input = QLineEdit()
-        last_consignment_input.setPlaceholderText("Last Consignment")
+        last_consignment_input.setText(prod_data.get('last_consignment') or '')
         last_consignment_input.setObjectName("READ_ONLY")
         last_consignment_input.setReadOnly(True)
         last_consignment_input.setMaxLength(30)
@@ -365,11 +449,11 @@ class ProductsTab(BaseTab):
 
         line3_layout = QHBoxLayout()
         # btns
-        self.view_btn = QPushButton("View")
-        line3_layout.addWidget(self.view_btn)
-        self.edit_btn = QPushButton("Edit")
-        self.edit_btn.setObjectName("red_btn")
-        line3_layout.addWidget(self.edit_btn)
+        view_btn = QPushButton("View")
+        line3_layout.addWidget(view_btn)
+        edit_btn = QPushButton("Edit")
+        edit_btn.setObjectName("red_btn")
+        line3_layout.addWidget(edit_btn)
 
         section_layout.addLayout(line3_layout)
 
@@ -504,7 +588,7 @@ class ProductsTab(BaseTab):
         :Author(s): Colin Heinselman, Joe Lee
         """
         raw_product_data = {
-            "product_id": dialog.findChild(QLineEdit, "product_id_input").text(),
+            "product_id": int(dialog.findChild(QLineEdit, "product_id_input").text()),
             "product_name": dialog.findChild(QLineEdit, "product_name_input").text(),
             "product_type": dialog.findChild(QComboBox, "product_type_input").currentText(),
             "rate": dialog.findChild(QLineEdit, "rate_input").text(),

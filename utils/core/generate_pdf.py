@@ -3,6 +3,8 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
+from src.user import current_user
+from src.imgs import img_helpers
 from services.get_item_by_property import get_item_by_property
 
 
@@ -33,9 +35,9 @@ class PDF:
 
         self.num_prods = 0
         if self.ticket_data:
-            for p in self.ticket_data["price_data"]["products"]:
-                for f in ("product_id", "product_name", "price", "quantity"):
-                    if p.get(f) not in (None, "", "NULL", "$0.00", "0"):
+            for product in self.ticket_data["products"]:
+                for prop in ("product_id", "product_name", "price", "quantity"):
+                    if product.get(prop) not in (None, "", "NULL", 0, 0.0, "$0.00", "0"):
                         self.num_prods += 1
                         break
 
@@ -85,11 +87,13 @@ class PDF:
         y = y_axis
         c = cursor
 
-        logo_path = os.path.join(self.project_root, "src", "imgs", "logo.jpg")
+        logo_path = img_helpers.get_window_logo_path()
         logo = ImageReader(logo_path)
 
-        c.setFont("Helvetica-Bold", 24)
-        c.drawImage(logo, 20, y - 50, width=365, height=71)
+        c.saveState()
+        c.setStrokeColorRGB(1, 1, 1, 0)
+        c.drawImage(logo, 30, y - 50, width=305, height=73, preserveAspectRatio=True, mask='auto')
+        c.restoreState()
 
         c.setFont("Helvetica-Bold", 16)
         c.drawString(400, y, "Consignment Ticket")
@@ -111,14 +115,14 @@ class PDF:
         self.save_y(y)
 
     @staticmethod
-    def _is_valid_product(p):
+    def _is_valid_product(product):
         """
         :purpose: validate if a product is fully null
         :Author(s): Joe lee
         """
-        check_fields = ("product_id", "product_name", "price", "quantity")
-        for f in check_fields:
-            if p.get(f) not in (None, "", "NULL", "$0.00", "0"):
+        property = ("product_id", "product_name", "price", "quantity")
+        for prop in property:
+            if product.get(prop) not in (None, "", "NULL", 0, 0.0, "$0.00", "0"):
                 return True
         return False
 
@@ -127,7 +131,7 @@ class PDF:
         c = cursor
 
         valid_products = []
-        for prod in self.ticket_data["price_data"]["products"]:
+        for prod in self.ticket_data["products"]:
             if self._is_valid_product(prod):
                 valid_products.append(prod)
 
@@ -136,19 +140,19 @@ class PDF:
             c.setFont("Helvetica-Bold", 10)
             c.drawString(30, y_prod, "Product ID:")
             c.rect(85, y_prod - 3, 34, 15)
-            c.drawString(85 + 3, y_prod + 1, prod.get("product_id", ""))
+            c.drawString(85 + 3, y_prod + 1, str(prod.get("product_id", "")))
             c.drawString(124, y_prod, "Product Name:")
             c.rect(196, y_prod - 3, 173, 15)
             c.drawString(196 + 3, y_prod + 1, prod.get("product_name", ""))
             c.drawString(376, y_prod, "Price:")
             c.rect(405, y_prod - 3, 43, 15)
-            c.drawString(405 + 3, y_prod + 1, prod.get("price", ""))
+            c.drawString(405 + 3, y_prod + 1, f"${prod.get('price', 0):.2f}")
             c.drawString(452, y_prod, "Qty:")
             c.rect(473, y_prod - 3, 29, 15)
             c.drawString(473 + 3, y_prod + 1, str(prod.get("quantity", "")))
             c.drawString(505, y_prod, "Total:")
             c.rect(533, y_prod - 3, 48, 15)
-            c.drawString(533 + 3, y_prod + 1, prod.get("total", ""))
+            c.drawString(533 + 3, y_prod + 1, f"${prod.get('total', 0):.2f}")
             y_prod -= 20
             count += 1
             if count == 27 and self.num_prods < 33: # can fit 27 items per page with tables and footing
@@ -170,7 +174,7 @@ class PDF:
         self.save_y(y)
 
         c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(118, y, "Shared Revenues")
+        c.drawCentredString(118, y, "Potential at Signing")
         y_pot = y - 15
 
         c.setFont("Helvetica-Bold", 10)
@@ -179,12 +183,32 @@ class PDF:
         c.drawCentredString(175, y_pot, "Super X")
         y_pot -= 18
 
-        for cut in self.ticket_data["revenue"]["shared"]:
+        shared = self.ticket_data["revenue"]["shared"]
+        if shared:
+            last_cut = shared[-1]
             c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, str(cut.get("vendor")))
+            c.drawString(34, y_pot, f"${last_cut.get('vendor', 0):.2f}")
             c.rect(34 - 3, y_pot - 3, 60, 15)
-            c.drawCentredString(118, y_pot, str(cut.get("percentage")))
-            c.drawString(148, y_pot, str(cut.get("super_x")))
+            c.drawCentredString(118, y_pot, str(last_cut.get("percentage")))
+            c.drawString(148, y_pot, f"${last_cut.get('super_x', 0):.2f}")
+            c.rect(148 - 3, y_pot - 3, 60, 15)
+            y_pot -= 18
+
+        y_pot -= 18
+        c.setFont("Helvetica-Bold", 10)
+        c.drawCentredString(118, y_pot, "Payout")
+        y_pot -= 18
+        # payout = self.ticket_data['revenue']['payout']
+        # if payout:
+        if True:
+        #     cashed_out = payout[-1]
+            c.setFont("Helvetica", 10)
+            c.drawString(34, y_pot, "TODO")
+            # c.drawString(34, y_pot, str(cashed_out.get("vendor")))
+            c.rect(34 - 3, y_pot - 3, 60, 15)
+        #     c.drawCentredString(118, y_pot, str(cashed_out.get("percentage")))
+        #     c.drawString(148, y_pot, str(cashed_out.get("super_x")))
+            c.drawString(148, y_pot, "TODO")
             c.rect(148 - 3, y_pot - 3, 60, 15)
             y_pot -= 18
 
@@ -203,11 +227,11 @@ class PDF:
 
         c.setFont("Helvetica-Bold", 10)
         for type in ["Hot Food", "General", "Produce", "Total"]:
-            total = prod_type_total.get(type, "$0.00")
+            total = prod_type_total.get(type, 0)
             c.setFont("Helvetica", 10)
             c.drawString(216, y_type, str(type))
             c.rect(216 - 3, y_type - 3, 60, 15)
-            c.drawString(290, y_type, total)
+            c.drawString(290, y_type, f"${total:.2f}")
             c.rect(290 - 3, y_type - 3, 60, 15)
             y_type -= 18
 
@@ -223,10 +247,9 @@ class PDF:
         c.line(447, y, 582, y)
         y -= 20
 
-        # todo: populate employee fields
         c.drawString(360, y, "Employee Name:")
         c.rect(442, y - 3, 140, 15)
-        c.drawString(445, y + 1, "123456789012345678901234") # todo: popoulate with user data
+        c.drawString(445, y + 1, f"{current_user.get_user_full_name()}")
         y -= 18
         c.drawString(360, y, "Employee Signature: ")
         c.line(460, y, 582, y)

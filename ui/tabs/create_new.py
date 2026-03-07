@@ -21,6 +21,7 @@ from services.get_item_by_property import get_item_by_property
 from services.message_bus import status_bar_instance
 from services.parse_consignment_table import fetch_consignment_data
 from src.core import generate_agg_data
+from src.user import current_user
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
@@ -29,7 +30,6 @@ from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone
 from ui.core import format_price
 from ui.core import format_state
-from ui.core import excel
 from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 
@@ -575,7 +575,8 @@ class CreateNewTab(BaseTab):
             'vendor_info': vendor_info,
             'prod_info': product_info,
             'revenue_shared': revenue_data['shared'],
-            'revenue_grouped': revenue_data['grouped']
+            'revenue_grouped': revenue_data['grouped'],
+            'revenue_payout': []
         }
 
     def handle_excel_btn(self):
@@ -639,6 +640,7 @@ class CreateNewTab(BaseTab):
         """
         try:
             self.update_revenue_fields()
+            self.rev_by_prod.handle_updating(self.product_sections)
             self.repaint()
             QApplication.processEvents()
 
@@ -695,7 +697,7 @@ class CreateNewTab(BaseTab):
             'address': self.address_input.text().strip() or "NULL",
             'city': self.city_input.text().strip() or "NULL",
             'state': self.state_input.text().strip() or "NULL",
-            'zip': self.zip_input.text().strip() or "NULL"
+            'zip': int(self.zip_input.text().strip() or "NULL")
         }
         return vendor_data
     
@@ -708,15 +710,18 @@ class CreateNewTab(BaseTab):
         # Product information
         products_data = []
         for i, product_section in enumerate(self.product_sections):
+            if not product_section['product_id'].text().strip():
+                continue
+
             product_data = {
-                'product_id': product_section['product_id'].text().strip() or "NULL",
+                'product_id': int(product_section['product_id'].text().strip()) or "NULL",
                 'product_type': product_section['product_type'].currentText().strip() or "NULL",
                 'product_name': product_section['product_name'].text().strip() or "NULL",
-                'notes': product_section['notes'].text().strip() or "NULL",
+                'notes': product_section['notes'].text().strip() or "",
                 'rate': product_section.get('rate').text().strip() if product_section.get('rate') else "NULL",
-                'price': product_section['price'].text().strip() or "NULL",
-                'quantity': product_section['quantity'].text().strip() or "NULL",
-                'total': product_section['total'].text().strip() or "NULL"
+                'price': self._parse_money(product_section['price'].text()) or 0.0,
+                'quantity': int(product_section['quantity'].text().strip()) or "NULL",
+                'total': self._parse_money(product_section['total'].text()) or 0.0,
             }
             products_data.append(product_data)
         return products_data
@@ -730,7 +735,8 @@ class CreateNewTab(BaseTab):
         # Revenue sharing data
         return {
             'shared': self.revenue_generation.get_revenue_data(),
-            'grouped': self.rev_by_prod.get_revenue_data()
+            'grouped': self.rev_by_prod.get_revenue_data(),
+            'payout': []
         }
 
     def _validate_required_fields(self, vendor_data, products_data=None):
@@ -748,10 +754,15 @@ class CreateNewTab(BaseTab):
 
         has_valid_product = False
         for product in products_data:
-            if (product['product_id'] and product['product_id'] != "NULL" and
-                    product['product_type'] and product['product_type'] != "SELECT" and
-                    product['price'] and product['price'] != "NULL" and
-                    product['quantity'] and product['quantity'] != "NULL"):
+            if (
+                    product['product_id'] and product['product_id'] != "NULL"
+                    and
+                    product['product_type'] and product['product_type'] != "SELECT"
+                    and
+                    product['price'] and product['price'] > 0
+                    and
+                    product['quantity'] and product['quantity'] != "NULL"
+            ):
                 has_valid_product = True
                 break
 
@@ -831,7 +842,7 @@ class CreateNewTab(BaseTab):
                     log.info(f"Creating product document: product_{product_id}")
                     try:
                         product_response = entities_container.upsert_item(body=product_doc)
-                        product_ids.append(int(product_id))
+                        product_ids.append(product_id)
                         log.info(f"Product document created: {product_id}")
                     except Exception as e:
                         log.error(f"Error creating product document {product_id}: {e}")
@@ -847,34 +858,33 @@ class CreateNewTab(BaseTab):
                 'type': 'consignment',
                 'ticket_number': int(ticket_number),
                 'vendor_id': int(vendor_id),
-                'product_ids': product_ids,
+                'user_id': int(current_user.get_user_id()),
                 'datetime': record_data['vendor']['datetime'],
                 'status': "OPEN",
-                'price_data': {
-                    'products': [
-                        {
-                            'product_id': product['product_id'],
-                            'product_type': product['product_type'],
-                            'product_name': product['product_name'],
-                            'notes': product['notes'],
-                            'rate': (
-                                self._convert_rate(product.get('rate'))
-                                if self._convert_rate(product.get('rate')) is not None
-                                else self.rates_container[product.get('product_type')]
-                            ),
-                            'price': self._convert_null(product['price']),
-                            'quantity': self._convert_quantity(product['quantity']),
-                            'total': product['total'],
-                            'sold': 0,
-                            'remaining': self._convert_quantity(product['quantity'])
-                        }
-                        for product in record_data['products']
-                        if self._has_product_data(product)
-                    ]
-                },
+                'products': [
+                    {
+                        'product_id': product['product_id'],
+                        'product_type': product['product_type'],
+                        'product_name': product['product_name'],
+                        'notes': product['notes'],
+                        'rate': (
+                            self._convert_rate(product.get('rate'))
+                            if self._convert_rate(product.get('rate')) is not None
+                            else self.rates_container[product.get('product_type')]
+                        ),
+                        'price': self._convert_null(product['price']),
+                        'quantity': self._convert_quantity(product['quantity']),
+                        'total': product['total'],
+                        'sold': 0,
+                        'remaining': self._convert_quantity(product['quantity'])
+                    }
+                    for product in record_data['products']
+                    if self._has_product_data(product)
+                    ],
                 'revenue': {
                     'shared': record_data['revenue']['shared'],
-                    'grouped': record_data['revenue']['grouped']
+                    'grouped': record_data['revenue']['grouped'],
+                    'payout': record_data['revenue']['payout'],
                 }
             }
 
@@ -1298,7 +1308,7 @@ class CreateNewTab(BaseTab):
                 if item is not None:
                     for field_name, input_field in field_mapping.items():
                         if field_name in item:
-                            input_field.setText(item[field_name])
+                            input_field.setText(str(item[field_name]))
                             input_field.setObjectName("READ_ONLY")
                             input_field.setReadOnly(True)
                 else:

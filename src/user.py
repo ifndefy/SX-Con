@@ -1,6 +1,11 @@
 import bcrypt
 from typing import Optional, Tuple
 
+from dulwich.porcelain import fetch
+
+from services.get_item_by_property import get_item_by_property
+from services.get_property import get_property
+
 
 class User:
     """
@@ -76,7 +81,45 @@ class User:
         return: Hashed admin status string or None if not set
         """
         return self._hashed_admin
-    
+
+    def fetch_user_data(self):
+        """
+        purpose: Fetch user data from database
+        author(s): Joe Lee
+        """
+        user_data = get_item_by_property("Entities", "user", "username", self.get_username())
+        return user_data
+
+    def get_user_id(self):
+        """
+        purpose: Return user id or None if offline
+        author(s): Joe Lee
+        """
+        if not self._raw_username:
+            return ""
+        try:
+            user_data = self.fetch_user_data()
+            if not user_data:
+                return ""
+            return user_data["user_id"]
+        except Exception:
+            return ""
+
+    def get_user_full_name(self):
+        """
+        purpose: Return the user's full name or empty string if offline
+        author(s): Joe Lee
+        """
+        if not self._raw_username:
+            return ""
+        try:
+            user_data = self.fetch_user_data()
+            if not user_data:
+                return ""
+            return " ".join([user_data["first_name"], user_data["last_name"]])
+        except Exception:
+            return ""
+
     def is_admin(self) -> bool:
         """
         purpose: Check if current user is an admin

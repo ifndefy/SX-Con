@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import QWidget
 
 from ui.tabs.base import BaseTab
 
+from datetime import datetime
 from ui.core import format_phone
 from ui.core import format_state
 from services.insert_item import insert_item
@@ -242,9 +243,10 @@ class VendorsTab(BaseTab):
             except ValueError:
                 pass
 
-        phone = self.phone_number_input.text().strip()
+        phone = self.phone_number_input.text().strip().replace('-', '')
         if phone:
-            add_property("phone", phone, "CONTAINS")
+            conditions.append("CONTAINS(REPLACE(c.phone, '-', ''), @phone)")
+            properties.append({"name": "@phone", "value": phone})
 
         last_con = self.last_consignment_input.text().strip()
         if last_con:
@@ -290,7 +292,8 @@ class VendorsTab(BaseTab):
 
         zip = self.zip_input.text().strip()
         if zip:
-            add_property("zip", zip, "CONTAINS")
+            conditions.append("CONTAINS(ToString(c.zip), @zip)")
+            properties.append({"name": "@zip", "value": zip})
 
         if len(conditions) == 1:
             self.fetch()
@@ -328,9 +331,46 @@ class VendorsTab(BaseTab):
                     'zip': item.get('zip', '')
                 })
 
-            vendors.sort(key=lambda v: int(v['vendor_id']))
+            vendors.sort(key=lambda vendor: int(vendor['vendor_id']))
+
+            last_consignments = {}
+            try:
+                vendor_ids = [vendor['vendor_id'] for vendor in vendors]
+                vendor_id_list = ", ".join(str(vendor_id) for vendor_id in vendor_ids)
+                consignment_container = self.db_connection.connect("Consignments")
+                last_cons_query = f"""
+                    SELECT c.vendor_id, c.datetime
+                    FROM c
+                    WHERE c.type = 'consignment'
+                    AND c.vendor_id IN ({vendor_id_list})
+                """
+                last_cons = list(consignment_container.query_items(
+                    query=last_cons_query,
+                    enable_cross_partition_query=True
+                ))
+                for consignment in last_cons:
+                    vendor_id = consignment['vendor_id']
+                    datetime_string = consignment.get('datetime', '')
+                    if not datetime_string:
+                        continue
+                    try:
+                        parsed_datetime = datetime.strptime(datetime_string, "%m/%d/%y -- %H:%M")
+                        if vendor_id not in last_consignments or parsed_datetime > last_consignments[vendor_id][
+                            'parsed']:
+                            last_consignments[vendor_id] = {
+                                'parsed': parsed_datetime,
+                                'raw': datetime_string
+                            }
+                    except ValueError:
+                        continue
+
+                last_consignments = {vendor_id: value['raw'] for vendor_id, value in last_consignments.items()}
+
+            except Exception as e:
+                log.error(f"Error fetching last consignments: {e}")
 
             for vendor in vendors:
+                vendor['last_consignment'] = last_consignments.get(vendor['vendor_id']) or ''
                 self.add_vendor_section(vendor)
 
             if not vendors:
@@ -375,6 +415,7 @@ class VendorsTab(BaseTab):
         # Phone Number
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
         phone_input = format_phone.PhoneNumField()
+        phone_input.setText(vendor['phone'])
         phone_input.setObjectName("READ_ONLY")
         phone_input.setReadOnly(True)
         phone_input.setMaxLength(12)
@@ -385,7 +426,7 @@ class VendorsTab(BaseTab):
 
         vendor_section_row_1.addWidget(QLabel("Last Consignment:"))
         last_consignment_input = QLineEdit()
-        last_consignment_input.setPlaceholderText("Last Consignment")
+        last_consignment_input.setText(vendor.get('last_consignment') or '')
         last_consignment_input.setObjectName("READ_ONLY")
         last_consignment_input.setFixedWidth(263)
         vendor_section_row_1.addWidget(last_consignment_input)
@@ -453,6 +494,7 @@ class VendorsTab(BaseTab):
         # State
         vendor_section_row_3.addWidget(QLabel("State:"))
         state_input = format_state.FormatState()
+        state_input.setText(vendor['state'])
         state_input.setObjectName("READ_ONLY")
         state_input.setReadOnly(True)
         state_input.setMaxLength(2)
@@ -462,7 +504,7 @@ class VendorsTab(BaseTab):
         # Zip Code
         vendor_section_row_3.addWidget(QLabel("Zip Code:"))
         zip_input = QLineEdit()
-        zip_input.setText(vendor['zip'])
+        zip_input.setText(str(vendor['zip']))
         zip_input.setObjectName("READ_ONLY")
         zip_input.setReadOnly(True)
         zip_input.setMaxLength(5)
@@ -662,7 +704,7 @@ class VendorsTab(BaseTab):
             "address": dialog.findChild(QLineEdit, "address_input").text(),
             "city": dialog.findChild(QLineEdit, "city_input").text(),
             "state": dialog.findChild(QLineEdit, "state_input").text(),
-            "zip": dialog.findChild(QLineEdit, "zip_code_input").text(),
+            "zip": int(dialog.findChild(QLineEdit, "zip_code_input").text()),
             "type": "vendor"
         }
         return vendor_doc
