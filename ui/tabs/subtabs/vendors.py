@@ -243,9 +243,10 @@ class VendorsTab(BaseTab):
             except ValueError:
                 pass
 
-        phone = self.phone_number_input.text().strip()
+        phone = self.phone_number_input.text().strip().replace('-', '')
         if phone:
-            add_property("phone", phone, "CONTAINS")
+            conditions.append("CONTAINS(REPLACE(c.phone, '-', ''), @phone)")
+            properties.append({"name": "@phone", "value": phone})
 
         last_con = self.last_consignment_input.text().strip()
         if last_con:
@@ -291,7 +292,8 @@ class VendorsTab(BaseTab):
 
         zip = self.zip_input.text().strip()
         if zip:
-            add_property("zip", zip, "CONTAINS")
+            conditions.append("CONTAINS(ToString(c.zip), @zip)")
+            properties.append({"name": "@zip", "value": zip})
 
         if len(conditions) == 1:
             self.fetch()
@@ -502,7 +504,7 @@ class VendorsTab(BaseTab):
         # Zip Code
         vendor_section_row_3.addWidget(QLabel("Zip Code:"))
         zip_input = QLineEdit()
-        zip_input.setText(vendor['zip'])
+        zip_input.setText(str(vendor['zip']))
         zip_input.setObjectName("READ_ONLY")
         zip_input.setReadOnly(True)
         zip_input.setMaxLength(5)
@@ -702,7 +704,7 @@ class VendorsTab(BaseTab):
             "address": dialog.findChild(QLineEdit, "address_input").text(),
             "city": dialog.findChild(QLineEdit, "city_input").text(),
             "state": dialog.findChild(QLineEdit, "state_input").text(),
-            "zip": dialog.findChild(QLineEdit, "zip_code_input").text(),
+            "zip": int(dialog.findChild(QLineEdit, "zip_code_input").text()),
             "type": "vendor"
         }
         return vendor_doc

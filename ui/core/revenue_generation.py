@@ -210,19 +210,13 @@ class RevenueGeneration(QWidget):
         :Author(s): Joe Lee
         """
         try:
-            rate = Decimal(int(rate))
-        except (InvalidOperation, ValueError, TypeError):
-            log.error("Invalid rate")
-        d_rate = rate / 100
-        d_return_rate = 1 - d_rate
-        try:
+            d_rate = Decimal(str(rate).strip()) / 100
+            d_return_rate = 1 - d_rate
             d_price = Decimal(str(price))
             d_qty = int(quantity)
-            if d_price is None or d_price < 0:
-                log.error("Invalid price")
-            if d_qty is None or d_qty < 0:
-                log.error("Invalid quantity")
-
+            if d_price < 0 or d_qty < 0:
+                log.error("Invalid price or quantity")
+                return -1
             total = (d_price * d_qty * d_return_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             return total
         except (InvalidOperation, ValueError, TypeError):

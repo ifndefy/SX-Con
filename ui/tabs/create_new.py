@@ -697,7 +697,7 @@ class CreateNewTab(BaseTab):
             'address': self.address_input.text().strip() or "NULL",
             'city': self.city_input.text().strip() or "NULL",
             'state': self.state_input.text().strip() or "NULL",
-            'zip': self.zip_input.text().strip() or "NULL"
+            'zip': int(self.zip_input.text().strip() or "NULL")
         }
         return vendor_data
     
@@ -1308,7 +1308,7 @@ class CreateNewTab(BaseTab):
                 if item is not None:
                     for field_name, input_field in field_mapping.items():
                         if field_name in item:
-                            input_field.setText(item[field_name])
+                            input_field.setText(str(item[field_name]))
                             input_field.setObjectName("READ_ONLY")
                             input_field.setReadOnly(True)
                 else:

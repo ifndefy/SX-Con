@@ -286,6 +286,10 @@ class ViewTicket(QObject):
         sold_input = widgets['sold_edit']
         quantity_display = widgets['quantity_display']
 
+        if not sold_input.text().strip():
+            log.error("Sold field is empty")
+            return None, None
+
         try:
             new_sold = int(sold_input.text())
         except ValueError:

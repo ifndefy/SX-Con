@@ -251,9 +251,10 @@ class VendorTicketsTab(BaseTab):
             except ValueError:
                 pass
 
-        phone = self.phone_number_input.text().strip()
+        phone = self.phone_number_input.text().strip().replace('-', '')
         if phone:
-            add_property("phone", phone, "CONTAINS")
+            conditions.append("CONTAINS(REPLACE(c.phone, '-', ''), @phone)")
+            properties.append({"name": "@phone", "value": phone})
 
         first_name = self.first_name_input.text().strip()
         if first_name:
@@ -281,7 +282,8 @@ class VendorTicketsTab(BaseTab):
 
         zip_code = self.zip_input.text().strip()
         if zip_code:
-            add_property("zip", zip_code, "CONTAINS")
+            conditions.append("CONTAINS(ToString(c.zip), @zip)")
+            properties.append({"name": "@zip", "value": zip_code})
 
         if len(conditions) == 1:
             self.fetch()
