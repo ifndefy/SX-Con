@@ -17,10 +17,12 @@ from ui.tabs.base import BaseTab
 
 from datetime import datetime
 
-from services.insert_item import insert_item
-import utils.logger.logger as log
 from src.core import get_average_price as avg
 from src.core import get_latest_price as latest
+from services.insert_item import insert_item
+from services.update_property import update_property
+
+import utils.logger.logger as log
 
 class ProductsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
@@ -372,7 +374,8 @@ class ProductsTab(BaseTab):
         line1_layout.addWidget(QLabel("ProductID:"))
         product_id = QLineEdit()
         product_id.setText(str(prod_data['product_id']))
-        product_id.setObjectName("READ_ONLY")
+        product_id.setProperty('pk', 'product_id')
+        product_id.setObjectName("LOCKED")
         product_id.setReadOnly(True)
         product_id.setMaxLength(30)
         product_id.setFixedWidth(120)
@@ -382,6 +385,7 @@ class ProductsTab(BaseTab):
         line1_layout.addWidget(QLabel("Product Name:"))
         product_name = QLineEdit()
         product_name.setText(str(prod_data['product_name']))
+        product_name.setProperty('edit_field', 'product_name')
         product_name.setObjectName("READ_ONLY")
         product_name.setReadOnly(True)
         product_name.setMaxLength(30)
@@ -391,7 +395,7 @@ class ProductsTab(BaseTab):
         line1_layout.addWidget(QLabel("Last Consignment:"))
         last_consignment_input = QLineEdit()
         last_consignment_input.setText(prod_data.get('last_consignment') or '')
-        last_consignment_input.setObjectName("READ_ONLY")
+        last_consignment_input.setObjectName("LOCKED")
         last_consignment_input.setReadOnly(True)
         last_consignment_input.setMaxLength(30)
         last_consignment_input.setFixedWidth(265)
@@ -404,6 +408,7 @@ class ProductsTab(BaseTab):
         product_type_input = QComboBox()
         product_type_input.addItems(self.list_prod_types)
         product_type_input.setPlaceholderText("Produce Type")
+        product_type_input.setProperty('edit_field', 'product_type')
         index = product_type_input.findText(prod_data['product_type'])
         product_type_input.setCurrentIndex(index)
         product_type_input.setObjectName("READ_ONLY")
@@ -412,15 +417,15 @@ class ProductsTab(BaseTab):
 
         line2_layout.addStretch()
 
-        line2_layout.addWidget(QLabel("Average Price:"))
-        avg_price = QLineEdit()
-        avg_price_value = avg.get_average_price(prod_data['product_id'])
-        avg_price.setText(f"${avg_price_value:,.2f}")
-        avg_price.setObjectName("READ_ONLY")
-        avg_price.setReadOnly(True)
-        avg_price.setMaxLength(30)
-        avg_price.setFixedWidth(100)
-        line2_layout.addWidget(avg_price)
+        line2_layout.addWidget(QLabel("Rate:"))
+        rate_input = QLineEdit()
+        rate_input.setText(str(prod_data['rate']))
+        rate_input.setProperty('edit_field', 'rate')
+        rate_input.setObjectName("READ_ONLY")
+        rate_input.setReadOnly(True)
+        rate_input.setMaxLength(30)
+        rate_input.setFixedWidth(100)
+        line2_layout.addWidget(rate_input)
 
         line2_layout.addStretch()
 
@@ -428,7 +433,7 @@ class ProductsTab(BaseTab):
         last_price = QLineEdit()
         latest_price_val = latest.get_latest_price(prod_data['product_id'])
         last_price.setText(f"${latest_price_val:,.2f}")
-        last_price.setObjectName("READ_ONLY")
+        last_price.setObjectName("LOCKED")
         last_price.setReadOnly(True)
         last_price.setMaxLength(30)
         last_price.setFixedWidth(100)
@@ -436,24 +441,24 @@ class ProductsTab(BaseTab):
 
         line2_layout.addStretch()
 
-        line2_layout.addWidget(QLabel("Rate:"))
-        rate_input = QLineEdit()
-        rate_input.setText(str(prod_data['rate']))
-        rate_input.setObjectName("READ_ONLY")
-        rate_input.setReadOnly(True)
-        rate_input.setMaxLength(30)
-        rate_input.setFixedWidth(100)
-        line2_layout.addWidget(rate_input)
+        line2_layout.addWidget(QLabel("Average Price:"))
+        avg_price = QLineEdit()
+        avg_price_value = avg.get_average_price(prod_data['product_id'])
+        avg_price.setText(f"${avg_price_value:,.2f}")
+        avg_price.setObjectName("LOCKED")
+        avg_price.setReadOnly(True)
+        avg_price.setMaxLength(30)
+        avg_price.setFixedWidth(100)
+        line2_layout.addWidget(avg_price)
 
         section_layout.addLayout(line2_layout)
 
         line3_layout = QHBoxLayout()
         # btns
-        view_btn = QPushButton("View")
-        line3_layout.addWidget(view_btn)
         edit_btn = QPushButton("Edit")
         edit_btn.setObjectName("red_btn")
         line3_layout.addWidget(edit_btn)
+        edit_btn.clicked.connect(self.on_edit_clicked)
 
         section_layout.addLayout(line3_layout)
 
@@ -598,3 +603,62 @@ class ProductsTab(BaseTab):
 
     def validate_product_data(self, dialog):
         return True
+
+    def on_edit_clicked(self):
+        btn = self.sender()
+        section_widget = btn.parent()
+
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.objectName() == "READ_ONLY":
+                widget.setReadOnly(False)
+                widget.setObjectName("DEFAULT")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+
+        for widget in section_widget.findChildren(QComboBox):
+            if widget.objectName() == "READ_ONLY":
+                widget.setEnabled(True)
+                widget.setObjectName("DEFAULT")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+
+        btn.setObjectName("DEFAULT")
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+        btn.setText("Save")
+        btn.clicked.disconnect(self.on_edit_clicked)
+        btn.clicked.connect(self.on_save_clicked)
+
+    def on_save_clicked(self):
+        btn = self.sender()
+        section_widget = btn.parent()
+
+        product_id = None
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.property("pk") == "product_id":
+                product_id = widget.text()
+                break
+
+        btn.setText("Edit")
+        btn.setObjectName("red_btn")
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+        btn.clicked.disconnect(self.on_save_clicked)
+        btn.clicked.connect(self.on_edit_clicked)
+
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.objectName() == "DEFAULT":
+                update_property("Entities", "product", product_id, widget.property("edit_field"), widget.text().strip())
+                widget.setReadOnly(True)
+                widget.setObjectName("READ_ONLY")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+
+        for widget in section_widget.findChildren(QComboBox):
+            if widget.objectName() == "DEFAULT":
+                value = widget.currentText()
+                update_property("Entities", "product", product_id, widget.property("edit_field"), value)
+                widget.setEnabled(False)
+                widget.setObjectName("READ_ONLY")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)

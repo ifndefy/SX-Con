@@ -18,6 +18,8 @@ from datetime import datetime
 from ui.core import format_phone
 from ui.core import format_state
 from services.insert_item import insert_item
+from services.update_property import update_property
+
 import utils.logger.logger as log
 from services.message_bus import status_bar_instance
 
@@ -405,8 +407,9 @@ class VendorsTab(BaseTab):
         vendor_section_row_1.addWidget(QLabel("Vendor ID:"))
         vendor_id_input = QLineEdit()
         vendor_id_input.setText(str(vendor['vendor_id']))
-        vendor_id_input.setObjectName("READ_ONLY")
-        vendor_id_input.setPlaceholderText("4 INTS")
+        vendor_id_input.setProperty("pk", "vendor_id")
+        vendor_id_input.setObjectName("LOCKED")
+        vendor_id_input.setPlaceholderText("V ID")
         vendor_id_input.setReadOnly(True)
         vendor_id_input.setMaxLength(4)
         vendor_id_input.setFixedWidth(80)
@@ -416,6 +419,7 @@ class VendorsTab(BaseTab):
         vendor_section_row_1.addWidget(QLabel("Phone Number:"))
         phone_input = format_phone.PhoneNumField()
         phone_input.setText(vendor['phone'])
+        phone_input.setProperty('edit_field', 'phone')
         phone_input.setObjectName("READ_ONLY")
         phone_input.setReadOnly(True)
         phone_input.setMaxLength(12)
@@ -427,7 +431,7 @@ class VendorsTab(BaseTab):
         vendor_section_row_1.addWidget(QLabel("Last Consignment:"))
         last_consignment_input = QLineEdit()
         last_consignment_input.setText(vendor.get('last_consignment') or '')
-        last_consignment_input.setObjectName("READ_ONLY")
+        last_consignment_input.setObjectName("LOCKED")
         last_consignment_input.setFixedWidth(263)
         vendor_section_row_1.addWidget(last_consignment_input)
 
@@ -441,6 +445,7 @@ class VendorsTab(BaseTab):
         vendor_section_row_2.addWidget(QLabel("First Name:"))
         first_name_input = QLineEdit()
         first_name_input.setText(vendor['first_name'])
+        first_name_input.setProperty('edit_field', 'first_name')
         first_name_input.setObjectName("READ_ONLY")
         first_name_input.setReadOnly(True)
         first_name_input.setMaxLength(30)
@@ -451,6 +456,7 @@ class VendorsTab(BaseTab):
         vendor_section_row_2.addWidget(QLabel("Middle Name:"))
         middle_name_input = QLineEdit()
         middle_name_input.setText(vendor['middle_name'])
+        middle_name_input.setProperty('edit_field', 'middle_name')
         middle_name_input.setObjectName("READ_ONLY")
         middle_name_input.setReadOnly(True)
         middle_name_input.setMaxLength(10)
@@ -461,6 +467,7 @@ class VendorsTab(BaseTab):
         vendor_section_row_2.addWidget(QLabel("Last Name:"))
         last_name_input = QLineEdit()
         last_name_input.setText(vendor['last_name'])
+        last_name_input.setProperty('edit_field', 'last_name')
         last_name_input.setObjectName("READ_ONLY")
         last_name_input.setReadOnly(True)
         last_name_input.setMaxLength(30)
@@ -477,6 +484,7 @@ class VendorsTab(BaseTab):
         vendor_section_row_3.addWidget(QLabel("Address:"))
         address_input = QLineEdit()
         address_input.setText(vendor['address'])
+        address_input.setProperty( 'edit_field', 'address')
         address_input.setObjectName("READ_ONLY")
         address_input.setReadOnly(True)
         address_input.setMaxLength(255)
@@ -486,6 +494,7 @@ class VendorsTab(BaseTab):
         vendor_section_row_3.addWidget(QLabel("City:"))
         city_input = QLineEdit()
         city_input.setText(vendor['city'])
+        city_input.setProperty('edit_field', 'city')
         city_input.setObjectName("READ_ONLY")
         city_input.setReadOnly(True)
         city_input.setMaxLength(30)
@@ -495,6 +504,7 @@ class VendorsTab(BaseTab):
         vendor_section_row_3.addWidget(QLabel("State:"))
         state_input = format_state.FormatState()
         state_input.setText(vendor['state'])
+        state_input.setProperty( 'edit_field', 'state')
         state_input.setObjectName("READ_ONLY")
         state_input.setReadOnly(True)
         state_input.setMaxLength(2)
@@ -505,6 +515,7 @@ class VendorsTab(BaseTab):
         vendor_section_row_3.addWidget(QLabel("Zip Code:"))
         zip_input = QLineEdit()
         zip_input.setText(str(vendor['zip']))
+        zip_input.setProperty( 'edit_field', 'zip')
         zip_input.setObjectName("READ_ONLY")
         zip_input.setReadOnly(True)
         zip_input.setMaxLength(5)
@@ -516,11 +527,11 @@ class VendorsTab(BaseTab):
 
         line3_layout = QHBoxLayout()
         # btns
-        self.view_btn = QPushButton("View")
-        line3_layout.addWidget(self.view_btn)
-        self.edit_btn = QPushButton("Edit")
-        self.edit_btn.setObjectName("red_btn")
-        line3_layout.addWidget(self.edit_btn)
+        edit_btn = QPushButton("Edit")
+        edit_btn.setObjectName("red_btn")
+        line3_layout.addWidget(edit_btn, 1)
+
+        edit_btn.clicked.connect(self.on_edit_clicked)
 
         section_layout.addLayout(line3_layout)
         # HR Line between Vendor and Product sections
@@ -681,6 +692,10 @@ class VendorsTab(BaseTab):
                 dialog.accept()
         return handler
 
+    def validate_vendor_data(self, dialog):
+        # todo:
+        return True
+
     def handle_dialog_accepted(self, dialog):
         """
         :Purpose: executes a sequence of events
@@ -709,6 +724,45 @@ class VendorsTab(BaseTab):
         }
         return vendor_doc
 
-    def validate_vendor_data(self, dialog):
-        # todo:
-        return True
+    def on_edit_clicked(self):
+        btn = self.sender()
+        section_widget = btn.parent()
+
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.objectName() == "READ_ONLY":
+                widget.setReadOnly(False)
+                widget.setObjectName("DEFAULT")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
+
+        btn.setObjectName("DEFAULT")
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+        btn.setText("Save")
+        btn.clicked.disconnect(self.on_edit_clicked)
+        btn.clicked.connect(self.on_save_clicked)
+
+    def on_save_clicked(self):
+        btn = self.sender()
+        section_widget = btn.parent()
+
+        vendor_id = None
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.property("pk") == "vendor_id":
+                vendor_id = widget.text()
+                break
+
+        btn.setText("Edit")
+        btn.setObjectName("red_btn")
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+        btn.clicked.disconnect(self.on_save_clicked)
+        btn.clicked.connect(self.on_edit_clicked)
+
+        for widget in section_widget.findChildren(QLineEdit):
+            if widget.objectName() == "DEFAULT":
+                update_property("Entities", "vendor", vendor_id, widget.property("edit_field"), widget.text().strip())
+                widget.setReadOnly(True)
+                widget.setObjectName("READ_ONLY")
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
