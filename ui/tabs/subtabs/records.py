@@ -371,7 +371,7 @@ class RecordsTab(BaseTab):
         product_id_input = QLineEdit()
         product_id_input.setObjectName("READ_ONLY")
         product_id_input.setReadOnly(True)
-        product_id_input.setFixedWidth(210)
+        product_id_input.setFixedWidth(180)
         line1_layout.addWidget(product_id_input)
         rec_section['product_id'] = product_id_input
 
@@ -395,10 +395,6 @@ class RecordsTab(BaseTab):
         print_btn = QPushButton("Print")
         line2_layout.addWidget(print_btn)
         rec_section['print_btn'] = print_btn
-
-        edit_btn = QPushButton("Edit")
-        line2_layout.addWidget(edit_btn)
-        rec_section['edit_btn'] = edit_btn
 
         close_btn = QPushButton("Close")
         close_btn.setObjectName('red_btn')
