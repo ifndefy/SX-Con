@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
+import os
 from PyQt6.QtWidgets import QWidget
 from ui.main_window import MainWindow
 
@@ -11,7 +12,7 @@ def fake_deps():
          patch("ui.main_window.ThemeManager"), \
          patch("ui.main_window.db_connection", MagicMock()), \
          patch("ui.main_window.current_user") as fake_user, \
-         patch("ui.main_window.img_helpers.get_window_logo_path", return_value=""), \
+         patch("ui.main_window.img_helpers.get_window_logo_path", return_value=os.path.abspath("src/imgs/logo.jpg")), \
          patch("ui.main_window.CreateNewTab", return_value=QWidget()), \
          patch("ui.main_window.VendorTicketsTab", return_value=QWidget()), \
          patch("ui.main_window.OpenTicketsTab", return_value=QWidget()), \

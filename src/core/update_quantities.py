@@ -15,7 +15,7 @@ def _fetch_consignment(consignment_id: str):
         return None
     return consignment
 
-def _find_product_index(products: list, product_id: str):
+def _find_product_id(products: list, product_id: str):
     """
     :Purpose: finds the index of the product in the displayed GUI
     :Param: products section list
@@ -24,7 +24,7 @@ def _find_product_index(products: list, product_id: str):
     :Author(s): Joe Lee
     """
     for i, prod in enumerate(products):
-        if prod.get('product_id') == product_id:
+        if prod.get('product_id') == int(product_id):
             return i
     log.error(f"Product {product_id} not found in consignment")
     return None
@@ -91,7 +91,7 @@ def update_quantities(consignment_id: str, product_id: str, new_sold: int):
         return False, None, "Consignment not found"
 
     products = consignment.get('products', [])
-    idx = _find_product_index(products, product_id)
+    idx = _find_product_id(products, product_id)
     if idx is None:
         return False, None, f"Product {product_id} not found"
 
