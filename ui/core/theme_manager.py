@@ -7,7 +7,7 @@ import utils.logger.logger as log
 class ThemeManager:
     def __init__(self):
         self.themes_dir = "ui/themes"
-        self.current_theme = "super"
+        self.current_theme = "Super"
 
     def get_available_themes(self):
         """
@@ -22,10 +22,10 @@ class ThemeManager:
                     theme_name = file.replace('.qss', '')
                     themes.append(theme_name)
 
-        if "super" in themes:
-            themes.remove("super")
+        if "Super" in themes:
+            themes.remove("Super")
             themes.sort()
-            themes.insert(0, "super")
+            themes.insert(0, "Super")
         else:
             themes.sort()
 

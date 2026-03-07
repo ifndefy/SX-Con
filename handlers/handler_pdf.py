@@ -30,8 +30,10 @@ def handler_live_pdf(vendor_data, product_data, revenue_data):
         "last_name": vendor_data.get('last_name')
     }
     pdf.create_supermarket_ticket()
+    return pdf
 
 
 def handler_db_pdf(ticket_num):
     pdf = PDF(ticket_num)
     pdf.create_supermarket_ticket()
+    return pdf

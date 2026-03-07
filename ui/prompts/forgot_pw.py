@@ -49,9 +49,9 @@ class ForgotPasswordScreen(QDialog):
         layout.addWidget(self.username_input)
         layout.addStretch()
 
-        req_btn = QPushButton("Request for Username")
-        req_btn.clicked.connect(self.on_request_clicked)
-        layout.addWidget(req_btn)
+        self.req_btn = QPushButton("Request for Username")
+        self.req_btn.clicked.connect(self.on_request_clicked)
+        layout.addWidget(self.req_btn)
 
         self.setLayout(layout)
 

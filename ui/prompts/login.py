@@ -71,15 +71,15 @@ class LoginScreen(QDialog):
         layout.addWidget(self.password_input)
 
         # Login button
-        login_btn = QPushButton("Login")
-        login_btn.clicked.connect(self.attempt_login)
-        layout.addWidget(login_btn)
+        self.login_btn = QPushButton("Login")
+        self.login_btn.clicked.connect(self.attempt_login)
+        layout.addWidget(self.login_btn)
 
         # Forgot Password button
-        forgot_pw_btn = QPushButton("Forgot Password")
-        forgot_pw_btn.setObjectName("red_btn")
-        forgot_pw_btn.clicked.connect(self.show_forgot_password_screen)
-        layout.addWidget(forgot_pw_btn)
+        self.forgot_pw_btn = QPushButton("Forgot Password")
+        self.forgot_pw_btn.setObjectName("red_btn")
+        self.forgot_pw_btn.clicked.connect(self.show_forgot_password_screen)
+        layout.addWidget(self.forgot_pw_btn)
 
         self.setLayout(layout)
 
