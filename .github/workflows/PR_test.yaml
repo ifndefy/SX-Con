@@ -31,10 +31,9 @@ jobs:
     - name: Install Poetry
       shell: powershell
       run: |
-        (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-        $env:PATH += ";$env:APPDATA\Python\Scripts"
+        (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python - --version 2.2.1
         echo "$env:APPDATA\Python\Scripts" | Out-File -Append -FilePath $env:GITHUB_PATH
-
+    
     - name: Install dependencies
       shell: powershell
       env:
