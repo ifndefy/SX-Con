@@ -60,8 +60,6 @@ class PDF:
             raise Exception("PDF name could not be set")
         self.cursor = canvas.Canvas(self.pdf_filename, pagesize=letter)
 
-    # todo: def get_current_user()
-
     def create_supermarket_ticket(self):
         if self.num_prods <= 8:
             self.draw_header(self.cursor, self.y)
@@ -135,24 +133,40 @@ class PDF:
             if self._is_valid_product(prod):
                 valid_products.append(prod)
 
+        payout_products = []
+        if "revenue" in self.ticket_data and "payout" in self.ticket_data["revenue"]:
+            payout_list = self.ticket_data["revenue"]["payout"]
+            if payout_list and len(payout_list) > 0:
+                payout_products = payout_list[0].get("products", [])
+
         count = 0
         for prod in valid_products:
+            # Find the matching product in payout_products by product_id
+            vendor_amount = 0
+            for p in payout_products:
+                if p.get("product_id") == prod.get("product_id"):
+                    vendor_amount = p.get("vendor", 0)
+                    break
+
             c.setFont("Helvetica-Bold", 10)
-            c.drawString(30, y_prod, "Product ID:")
-            c.rect(85, y_prod - 3, 34, 15)
-            c.drawString(85 + 3, y_prod + 1, str(prod.get("product_id", "")))
-            c.drawString(124, y_prod, "Product Name:")
-            c.rect(196, y_prod - 3, 173, 15)
-            c.drawString(196 + 3, y_prod + 1, prod.get("product_name", ""))
-            c.drawString(376, y_prod, "Price:")
-            c.rect(405, y_prod - 3, 43, 15)
-            c.drawString(405 + 3, y_prod + 1, f"${prod.get('price', 0):.2f}")
-            c.drawString(452, y_prod, "Qty:")
-            c.rect(473, y_prod - 3, 29, 15)
-            c.drawString(473 + 3, y_prod + 1, str(prod.get("quantity", "")))
+            c.drawString(30, y_prod, "ID:")
+            c.rect(45, y_prod - 3, 34, 15)
+            c.drawString(45 + 3, y_prod + 1, str(prod.get("product_id", "")))
+            c.drawString(84, y_prod, "Name:")
+            c.rect(116, y_prod - 3, 173, 15)
+            c.drawString(116 + 3, y_prod + 1, prod.get("product_name", ""))
+            c.drawString(293, y_prod, "Price:")
+            c.rect(322, y_prod - 3, 43, 15)
+            c.drawString(322 + 3, y_prod + 1, f"${prod.get('price', 0):.2f}")
+            c.drawString(369, y_prod, "Signed:")
+            c.rect(410, y_prod - 3, 29, 15)
+            c.drawString(410 + 3, y_prod + 1, str(prod.get("quantity", "")))
+            c.drawString(444, y_prod, "Sold:")
+            c.rect(471, y_prod - 3, 29, 15)
+            c.drawString(471 + 3, y_prod + 1, str(prod.get("sold", "")))
             c.drawString(505, y_prod, "Total:")
             c.rect(533, y_prod - 3, 48, 15)
-            c.drawString(533 + 3, y_prod + 1, f"${prod.get('total', 0):.2f}")
+            c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}")
             y_prod -= 20
             count += 1
             if count == 27 and self.num_prods < 33: # can fit 27 items per page with tables and footing
@@ -198,17 +212,13 @@ class PDF:
         c.setFont("Helvetica-Bold", 10)
         c.drawCentredString(118, y_pot, "Payout")
         y_pot -= 18
-        # payout = self.ticket_data['revenue']['payout']
-        # if payout:
-        if True:
-        #     cashed_out = payout[-1]
+        payout = self.ticket_data['revenue']['payout']
+        if payout:
+            cashed_out = payout[-1]
             c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, "TODO")
-            # c.drawString(34, y_pot, str(cashed_out.get("vendor")))
+            c.drawString(34, y_pot, f"${cashed_out.get('vendor', 0):.2f}")
             c.rect(34 - 3, y_pot - 3, 60, 15)
-        #     c.drawCentredString(118, y_pot, str(cashed_out.get("percentage")))
-        #     c.drawString(148, y_pot, str(cashed_out.get("super_x")))
-            c.drawString(148, y_pot, "TODO")
+            c.drawString(148, y_pot, f"${cashed_out.get('super_x', 0):.2f}")
             c.rect(148 - 3, y_pot - 3, 60, 15)
             y_pot -= 18
 
@@ -220,10 +230,16 @@ class PDF:
         c.drawCentredString(315, y_type, "Total")
         y_type -= 18
 
-        rev_groups = self.ticket_data.get('revenue', {}).get('grouped', [])
+        payout_list = self.ticket_data.get('revenue', {}).get('payout', [])
         prod_type_total = {}
-        for group in rev_groups:
-            prod_type_total[group['product_type']] = group['total']
+        if payout_list and payout_list[-1].get('by_type'):
+            for item in payout_list[-1]['by_type']:
+                prod_type_total[item['product_type']] = item['vendor']
+            prod_type_total['Total'] = payout_list[-1].get('vendor', 0)
+        else:
+            rev_groups = self.ticket_data.get('revenue', {}).get('grouped', [])
+            for group in rev_groups:
+                prod_type_total[group['product_type']] = group['total']
 
         c.setFont("Helvetica-Bold", 10)
         for type in ["Hot Food", "General", "Produce", "Total"]:

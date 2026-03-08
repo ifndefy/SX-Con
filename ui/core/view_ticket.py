@@ -25,6 +25,7 @@ class ViewTicket(QObject):
         self.revenue_widget = None
         self.rev_by_type = None
         self.payout_widget = None
+        self.ticket_status = None
 
     def setup_ui(self, ticket_section, ticket_details):
         details_container = ticket_section['details_container']
@@ -38,6 +39,7 @@ class ViewTicket(QObject):
                 child.widget().deleteLater()
 
         ticket_data = ticket_details['ticket_data']
+        self.ticket_status = ticket_data.get('status', '')
         products = ticket_data.get('products', [])
         revenue_sharing = ticket_data.get('revenue', []).get('shared', [])
         revenue_grouped = ticket_data.get('revenue', []).get('grouped', [])
@@ -93,9 +95,15 @@ class ViewTicket(QObject):
             sold_edit = QLineEdit(str(product.get('sold', 0)))
             sold_edit.setFixedWidth(100)
             line1_layout.addWidget(sold_edit)
+            if self.ticket_status == "CLOSED":
+                sold_edit.setReadOnly(True)
+                sold_edit.setObjectName("LOCKED")
 
             update_btn = QPushButton("Update")
             update_btn.product_id = product_id
+            if self.ticket_status == "CLOSED":
+                update_btn.setEnabled(True)
+                update_btn.setObjectName("LOCKED")
             update_btn.clicked.connect(self.handle_update_clicked)
             line1_layout.addWidget(update_btn)
 
@@ -203,10 +211,7 @@ class ViewTicket(QObject):
             grouped_layout.addWidget(hr1)
             self.rev_by_type = RevenueByProdType()
             self.rev_by_type.setObjectName("view_bg")
-            totals = {}
-            for item in revenue_grouped:
-                totals[item['product_type']] = float(item['total'])
-            self.rev_by_type.update_display_values(totals)
+            self.rev_by_type.load_from_db_document(ticket_data)
             grouped_layout.addWidget(self.rev_by_type)
             revenue_container_layout.addLayout(grouped_layout)
 
@@ -227,6 +232,7 @@ class ViewTicket(QObject):
             payout_layout.addWidget(hr3)
             self.payout_widget = RevenuePayout()
             self.payout_widget.setObjectName("view_bg")
+            self.payout_widget.on_calculated = self.rev_by_type.update_display_values
             self.payout_widget.set_products(valid_products, self.ticket_id)
             payout_layout.addWidget(self.payout_widget)
             revenue_container_layout.addLayout(payout_layout)
