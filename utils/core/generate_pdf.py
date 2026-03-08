@@ -232,8 +232,8 @@ class PDF:
 
         payout_list = self.ticket_data.get('revenue', {}).get('payout', [])
         prod_type_total = {}
-        if payout_list and payout_list[-1].get('by_type'):
-            for item in payout_list[-1]['by_type']:
+        if payout_list and payout_list[-1].get('grouped'):
+            for item in payout_list[-1]['grouped']:
                 prod_type_total[item['product_type']] = item['vendor']
             prod_type_total['Total'] = payout_list[-1].get('vendor', 0)
         else:
