@@ -35,7 +35,7 @@ Sequence:
 """
 
 
-def test_e2e_create_view_close(app):
+def test_e2e_create_payout_close(app):
     ### 1 - opens program (login screen)
     theme_manager = ThemeManager()
     login_screen = LoginScreen(theme_manager)
