@@ -22,6 +22,9 @@ class ViewTicket(QObject):
         super().__init__()
         self.ticket_id = ticket_id
         self.product_widgets = {}
+        self.revenue_widget = None
+        self.rev_by_type = None
+        self.payout_widget = None
 
     def setup_ui(self, ticket_section, ticket_details):
         details_container = ticket_section['details_container']
@@ -159,7 +162,8 @@ class ViewTicket(QObject):
                 'sold_edit': sold_edit,
                 'remaining_display': remaining_display,
                 'quantity_display': quantity_input,
-                'sold_display': sold_display
+                'sold_display': sold_display,
+                'update_btn' : update_btn,
             }
 
         # Revenue section
@@ -176,10 +180,10 @@ class ViewTicket(QObject):
             hr2.setFrameShadow(QFrame.Shadow.Sunken)
             hr2.setObjectName("hr")
             shared_layout.addWidget(hr2)
-            revenue_widget = RevenueGeneration()
-            revenue_widget.setObjectName("view_bg")
-            revenue_widget.set_revenue_data(revenue_sharing)
-            shared_layout.addWidget(revenue_widget)
+            self.revenue_widget = RevenueGeneration()
+            self.revenue_widget.setObjectName("view_bg")
+            self.revenue_widget.set_revenue_data(revenue_sharing)
+            shared_layout.addWidget(self.revenue_widget)
             revenue_container_layout.addLayout(shared_layout)
 
             vr1 = QFrame()
@@ -197,13 +201,13 @@ class ViewTicket(QObject):
             hr1.setFrameShadow(QFrame.Shadow.Sunken)
             hr1.setObjectName("hr")
             grouped_layout.addWidget(hr1)
-            rev_by_type = RevenueByProdType()
-            rev_by_type.setObjectName("view_bg")
+            self.rev_by_type = RevenueByProdType()
+            self.rev_by_type.setObjectName("view_bg")
             totals = {}
             for item in revenue_grouped:
                 totals[item['product_type']] = float(item['total'])
-            rev_by_type.update_display_values(totals)
-            grouped_layout.addWidget(rev_by_type)
+            self.rev_by_type.update_display_values(totals)
+            grouped_layout.addWidget(self.rev_by_type)
             revenue_container_layout.addLayout(grouped_layout)
 
             vr2 = QFrame()
@@ -221,10 +225,10 @@ class ViewTicket(QObject):
             hr3.setFrameShadow(QFrame.Shadow.Sunken)
             hr3.setObjectName("hr")
             payout_layout.addWidget(hr3)
-            payout_widget = RevenuePayout()
-            payout_widget.setObjectName("view_bg")
-            payout_widget.set_products(valid_products, self.ticket_id)
-            payout_layout.addWidget(payout_widget)
+            self.payout_widget = RevenuePayout()
+            self.payout_widget.setObjectName("view_bg")
+            self.payout_widget.set_products(valid_products, self.ticket_id)
+            payout_layout.addWidget(self.payout_widget)
             revenue_container_layout.addLayout(payout_layout)
 
             product_layout.addLayout(revenue_container_layout)
