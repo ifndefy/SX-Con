@@ -30,10 +30,12 @@ jobs:
 
     - name: Install dependencies
       shell: powershell
+      env:
+        POETRY_VIRTUALENVS_CREATE: "false"
       run: |
-        pip install poetry
+        python -m pip install --upgrade pip
+        pip install flake8 pytest PyQt6 pytest-qt
         poetry install
-        pip install flake8 pytest-qt
 
     - name: Lint with flake8
       run: |
