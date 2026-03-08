@@ -5,7 +5,7 @@ on:
     branches:
       - integration
 
-  workflow_dispatch: # manual execution
+  workflow_dispatch:
     inputs:
       environment:
         description: 'Test environment'
@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest # the program is only designed to be run on Windows
+    runs-on: windows-latest
     timeout-minutes: 30
 
     steps:
@@ -27,6 +27,13 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: "3.11"
+
+    - name: Install Poetry
+      shell: powershell
+      run: |
+        (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+        $env:PATH += ";$env:APPDATA\Python\Scripts"
+        echo "$env:APPDATA\Python\Scripts" | Out-File -Append -FilePath $env:GITHUB_PATH
 
     - name: Install dependencies
       shell: powershell
