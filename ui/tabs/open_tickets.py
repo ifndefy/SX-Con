@@ -26,6 +26,7 @@ class OpenTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
         self.ticket_counter = None
         self.tickets_layout = None
+        self.ticket_status = None
         self.tickets_section = []
         self.db_connection = db_connection
 
@@ -216,18 +217,52 @@ class OpenTicketsTab(BaseTab):
                     self.tickets_section[ticket_index]['status'].setText("OPEN")
                     self.tickets_section[ticket_index]['open_btn'].hide()
                     self.tickets_section[ticket_index]['close_btn'].show()
+                    view_ticket = self.tickets_section[ticket_index].get('view_ticket')
+                    if view_ticket:
+                        view_ticket.payout_widget.calc_btn.setEnabled(True)
+                        view_ticket.payout_widget.calc_btn.setObjectName('DEFAULT')
+                        view_ticket.payout_widget.calc_btn.setText("Calculate Payout")
+                        view_ticket.payout_widget.calc_btn.style().unpolish(view_ticket.payout_widget.calc_btn)
+                        view_ticket.payout_widget.calc_btn.style().polish(view_ticket.payout_widget.calc_btn)
+                        for widgets in view_ticket.product_widgets.values():
+                            widgets['sold_edit'].setReadOnly(False)
+                            widgets['sold_edit'].setObjectName("DEFAULT")
+                            widgets['sold_edit'].style().unpolish(widgets['sold_edit'])
+                            widgets['sold_edit'].style().polish(widgets['sold_edit'])
+                            widgets['update_btn'].setEnabled(False)
+                            widgets['update_btn'].setObjectName("DEFAULT")
+                            widgets['update_btn'].style().unpolish(widgets['update_btn'])
+                            widgets['update_btn'].style().polish(widgets['update_btn'])
                 elif action == "closed":
                     handler_open_close_btns(ticket_number, action.upper())
                     log.info(f"CLOSED ticket {ticket_number}")
                     self.tickets_section[ticket_index]['status'].setText("CLOSED")
                     self.tickets_section[ticket_index]['close_btn'].hide()
                     self.tickets_section[ticket_index]['open_btn'].show()
+                    view_ticket = self.tickets_section[ticket_index].get('view_ticket')
+                    if view_ticket:
+                        view_ticket.payout_widget.calc_btn.setEnabled(False)
+                        view_ticket.payout_widget.calc_btn.setObjectName('LOCKED')
+                        view_ticket.payout_widget.calc_btn.setText("TICKET CLOSED")
+                        view_ticket.payout_widget.calc_btn.style().unpolish(view_ticket.payout_widget.calc_btn)
+                        view_ticket.payout_widget.calc_btn.style().polish(view_ticket.payout_widget.calc_btn)
+                        for widgets in view_ticket.product_widgets.values():
+                            widgets['sold_edit'].setReadOnly(True)
+                            widgets['sold_edit'].setObjectName("LOCKED")
+                            widgets['sold_edit'].style().unpolish(widgets['sold_edit'])
+                            widgets['sold_edit'].style().polish(widgets['sold_edit'])
+                            widgets['update_btn'].setEnabled(False)
+                            widgets['update_btn'].setObjectName("LOCKED")
+                            widgets['update_btn'].style().unpolish(widgets['update_btn'])
+                            widgets['update_btn'].style().polish(widgets['update_btn'])
+
                 self.tickets_section[ticket_index]['status'].setText(
                     get_property("Consignments", "status", "consignment", ticket_number)
                 )
                 self.parent().setFocus()
             except Exception as e:
                 log.error(f"Could not {action} ticket {ticket_number}: {e}")
+
         return handler
 
     def make_print_handler(self, ticket_number_input):
@@ -333,8 +368,10 @@ class OpenTicketsTab(BaseTab):
                 last_section['datetime'].setText(str(ticket['datetime']))
                 last_section['status'].setText(ticket['status'])
                 if last_section['status'].text().strip() == "CLOSED":
+                    self.ticket_status = "CLOSED"
                     last_section['close_btn'].hide()
                 if last_section['status'].text().strip() == "OPEN":
+                    self.ticket_status = "OPEN"
                     last_section['open_btn'].hide()
 
     def fetch(self, status):

@@ -8,8 +8,10 @@ from PyQt6.QtCore import Qt
 from decimal import Decimal
 from decimal import ROUND_HALF_UP
 
+from services.get_item import get_item
 from services.update_property import update_property
 from src.user import current_user
+from ui.core.revenue_generation import RevenueGeneration
 
 import utils.logger.logger as log
 
@@ -21,6 +23,7 @@ class RevenuePayout(QWidget):
         self.super_x_input = None
         self.sold_input = None
         self.products = []
+        self.on_calculated = None
         self.setup_ui()
 
     def setup_ui(self):
@@ -76,14 +79,25 @@ class RevenuePayout(QWidget):
     def set_products(self, products: list, consignment_id: str):
         self.products = products
         self.consignment_id = consignment_id
+        consignment = get_item("Consignments", "consignment", self.consignment_id)
+        if consignment:
+            payout_list = consignment.get('revenue', {}).get('payout', [])
+            if payout_list:
+                last = payout_list[-1]
+                self.vendor_input.setText(f"${last.get('vendor', 0):.2f}")
+                self.super_x_input.setText(f"${last.get('super_x', 0):.2f}")
+            if consignment.get('status') == "CLOSED":
+                self.calc_btn.setEnabled(False)
+                self.calc_btn.setObjectName('LOCKED')
+                self.calc_btn.setText('TICKET CLOSED')
 
     def handle_calculate(self):
-        from services.get_item import get_item
-        from ui.core.revenue_generation import RevenueGeneration
-
         q2 = Decimal("0.01")
         total_vendor = Decimal("0.00")
         total_super_x = Decimal("0.00")
+
+        vendor_by_type = {}
+        super_x_by_type = {}
 
         consignment = get_item("Consignments", "consignment", self.consignment_id)
         if not consignment:
@@ -92,26 +106,59 @@ class RevenuePayout(QWidget):
 
         fresh_products = consignment.get('products', [])
 
+        product_payouts = []
+
         for fresh in fresh_products:
             price = float(fresh.get('price', 0))
             sold = int(fresh.get('sold', 0))
             rate = fresh.get('rate', 45)
+            product_type = fresh.get('product_type', 'Unknown')
 
             result = RevenueGeneration.calculate_revenues(price, sold, "100%", rate)
             if result == -1:
                 log.error(f"Failed to calculate payout for product {fresh.get('product_id')}")
                 continue
 
-            total_vendor += result['vendor']
-            total_super_x += result['super_x']
+            vendor_amount = result['vendor']
+            super_x_amount = result['super_x']
 
-        self.vendor_input.setText(f"${float(total_vendor.quantize(q2, rounding=ROUND_HALF_UP)):.2f}")
-        self.super_x_input.setText(f"${float(total_super_x.quantize(q2, rounding=ROUND_HALF_UP)):.2f}")
+            total_vendor += vendor_amount
+            total_super_x += super_x_amount
+
+            if product_type not in vendor_by_type:
+                vendor_by_type[product_type] = Decimal("0.00")
+                super_x_by_type[product_type] = Decimal("0.00")
+            vendor_by_type[product_type] += vendor_amount
+            super_x_by_type[product_type] += super_x_amount
+
+            product_payouts.append({
+                'product_id': fresh.get('product_id'),
+                'sold': sold,
+                'vendor': float(vendor_amount.quantize(q2, rounding=ROUND_HALF_UP)),
+                'super_x': float(super_x_amount.quantize(q2, rounding=ROUND_HALF_UP))
+            })
+
+        grouped = []
+        type_totals = {}
+        for product_type in vendor_by_type:
+            vendor_val = float(vendor_by_type[product_type].quantize(q2, rounding=ROUND_HALF_UP))
+            super_val = float(super_x_by_type[product_type].quantize(q2, rounding=ROUND_HALF_UP))
+            grouped.append({
+                'product_type': product_type,
+                'vendor': vendor_val,
+                'super_x': super_val
+            })
+            type_totals[product_type] = vendor_val  # only vendor part
+
+        grand_total = float(total_vendor.quantize(q2, rounding=ROUND_HALF_UP))
+        type_totals['Total'] = grand_total
 
         payout_data = {
-            'vendor': float(total_vendor.quantize(q2, rounding=ROUND_HALF_UP)),
+            'vendor': grand_total,
             'super_x': float(total_super_x.quantize(q2, rounding=ROUND_HALF_UP)),
-            'user': ', '.join([current_user.get_username(), current_user.get_user_full_name()])
+            'user': ', '.join([current_user.get_username(), current_user.get_user_full_name()]),
+            'products': product_payouts,
+            'grouped': grouped
         }
 
         result = update_property("Consignments", "consignment", self.consignment_id, "revenue.payout", [payout_data])
@@ -120,16 +167,13 @@ class RevenuePayout(QWidget):
         else:
             log.info(f"Payout saved for consignment {self.consignment_id}")
 
-    def get_payout_data(self) -> dict:
-        """
-        :purpose: retrieves current payout display values
-        :return: dict with sold, vendor, super_x
-        :author(s): Joe Lee
-        """
-        return {
-            'vendor': float(self.vendor_input.text().replace('$', '') or 0),
-            'super_x': float(self.super_x_input.text().replace('$', '') or 0)
-        }
+        self.vendor_input.setText(f"${grand_total:.2f}")
+        self.super_x_input.setText(f"${float(total_super_x.quantize(q2, rounding=ROUND_HALF_UP)):.2f}")
+
+        if self.on_calculated:
+            self.on_calculated(type_totals)
+
+        return type_totals
 
     def clear(self):
         """
@@ -140,3 +184,5 @@ class RevenuePayout(QWidget):
         self.sold_input.setText("0")
         self.vendor_input.setText("$0.00")
         self.super_x_input.setText("$0.00")
+
+
