@@ -61,25 +61,42 @@ class PDF:
         self.cursor = canvas.Canvas(self.pdf_filename, pagesize=letter)
 
     def create_supermarket_ticket(self):
-        if self.num_prods <= 8:
-            self.draw_header(self.cursor, self.y)
-            self.draw_ticket_content(self.cursor, self.y)
-            self.draw_footer(self.cursor, self.y)
-            self.cursor.line(30, self.height / 2, self.width - 30, self.height / 2)
-            self.y = self.height / 2 - 30
-            self.draw_header(self.cursor, self.y)
-            self.draw_ticket_content(self.cursor, self.y)
-            self.draw_footer(self.cursor, self.y)
+        if self.num_prods <= 9:
+            self.draw_2_in_one()
         else:
-            self.draw_header(self.cursor, self.y)
-            self.draw_ticket_content(self.cursor, self.y)
-            self.draw_footer(self.cursor, self.y)
-            self.cursor.showPage()
-            self.y = self.height - 30
-            self.draw_header(self.cursor, self.y)
-            self.draw_ticket_content(self.cursor, self.y)
-            self.draw_footer(self.cursor, self.y)
+            valid_products = []
+            for p in self.ticket_data["products"]:
+                if self._is_valid_product(p):
+                    valid_products.append(p)
+
+            rows_per_page = 30
+            total_pages = (len(valid_products) + rows_per_page - 1) // rows_per_page
+            i = 0
+            page_num = 1
+            while i < len(valid_products):
+                chunk = valid_products[i:i + rows_per_page]
+                is_last = (i + rows_per_page) >= len(valid_products)
+                self.y = self.height - 30
+                self.draw_header(self.cursor, self.y)
+                # Pass page number and total pages to draw_ticket_content
+                self.draw_ticket_content(self.cursor, self.y, products=chunk,
+                                         page_num=page_num, total_pages=total_pages)
+                if is_last:
+                    self.draw_footer(self.cursor, self.y)
+                self.cursor.showPage()
+                i += rows_per_page
+                page_num += 1
         self.cursor.save()
+
+    def draw_2_in_one(self):
+        self.draw_header(self.cursor, self.y)
+        self.draw_ticket_content(self.cursor, self.y)
+        self.draw_footer(self.cursor, self.y)
+        self.cursor.line(30, self.height / 2, self.width - 30, self.height / 2)
+        self.y = self.height / 2 - 30
+        self.draw_header(self.cursor, self.y)
+        self.draw_ticket_content(self.cursor, self.y)
+        self.draw_footer(self.cursor, self.y)
 
     def draw_header(self, cursor, y_axis):
         y = y_axis
@@ -124,14 +141,18 @@ class PDF:
                 return True
         return False
 
-    def draw_ticket_content(self, cursor, y_axis):
+    def draw_ticket_content(self, cursor, y_axis, products=None,
+                            page_num=None, total_pages=None):
         y_prod = y_axis
         c = cursor
 
-        valid_products = []
-        for prod in self.ticket_data["products"]:
-            if self._is_valid_product(prod):
-                valid_products.append(prod)
+        if products is None:
+            valid_products = []
+            for prod in self.ticket_data["products"]:
+                if self._is_valid_product(prod):
+                    valid_products.append(prod)
+        else:
+            valid_products = products
 
         payout_products = []
         if "revenue" in self.ticket_data and "payout" in self.ticket_data["revenue"]:
@@ -139,9 +160,7 @@ class PDF:
             if payout_list and len(payout_list) > 0:
                 payout_products = payout_list[0].get("products", [])
 
-        count = 0
         for prod in valid_products:
-            # Find the matching product in payout_products by product_id
             vendor_amount = 0
             for p in payout_products:
                 if p.get("product_id") == prod.get("product_id"):
@@ -168,25 +187,27 @@ class PDF:
             c.rect(533, y_prod - 3, 48, 15)
             c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}")
             y_prod -= 20
-            count += 1
-            if count == 27 and self.num_prods < 33: # can fit 27 items per page with tables and footing
-                self.cursor.line(30, y_prod, self.width - 30, y_prod)
-                self.cursor.showPage()
-                self.y = self.height - 30
-                self.draw_header(self.cursor, self.y)
-                y_prod = self.y
-            if count == 33 and self.num_prods >= 38: # fits 33 max per page with no tables nor footing
-                self.cursor.line(30, y_prod, self.width - 30, y_prod)
-                self.cursor.showPage()
-                self.y = self.height - 30
-                self.draw_header(self.cursor, self.y)
-                y_prod = self.y
-        y = y_prod
-        c.line(30, y + 5, self.width - 30, y + 5)
-        y -= 15
-        y_type = y
-        self.save_y(y)
 
+        # Replace line with page number if both arguments are provided
+        if page_num is not None and total_pages is not None:
+            c.setFont("Helvetica", 10)
+            page_text = f"Page {page_num} of {total_pages}"
+            c.drawCentredString(self.width / 2, y_prod - 5, page_text)
+        else:
+            # Original line when no page numbering is requested
+            c.line(30, y_prod, self.width - 30, y_prod)
+
+        y_prod -= 20
+        self.y = y_prod
+
+    def draw_footer(self, cursor, y_axis):
+        c = cursor
+        y = y_axis
+        c.line(30, y, self.width - 30, y)
+
+        y -= 15
+
+        y_type = y - 15
         c.setFont("Helvetica-Bold", 10)
         c.drawCentredString(118, y, "Potential at Signing")
         y_pot = y - 15
@@ -221,10 +242,17 @@ class PDF:
             c.drawString(148, y_pot, f"${cashed_out.get('super_x', 0):.2f}")
             c.rect(148 - 3, y_pot - 3, 60, 15)
             y_pot -= 18
+        else:
+            c.setFont("Helvetica", 10)
+            c.drawString(34, y_pot, f"TBD")
+            c.rect(34 - 3, y_pot - 3, 60, 15)
+            c.drawString(148, y_pot, f"TBD")
+            c.rect(148 - 3, y_pot - 3, 60, 15)
+            y_pot -= 18
+
 
         c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(285, y_type, "Revenue by Type")
-        y_type -= 15
+        c.drawCentredString(285, y, "Revenue by Type")
         c.setFont("Helvetica-Bold", 10)
         c.drawCentredString(241, y_type, "Type")
         c.drawCentredString(315, y_type, "Total")
@@ -251,26 +279,27 @@ class PDF:
             c.rect(290 - 3, y_type - 3, 60, 15)
             y_type -= 18
 
-    def draw_footer(self, cursor, y_axis):
-        c = cursor
         y = y_axis - 15
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(360, y, "Vendor Name:")
-        c.rect(429, y - 3, 153, 15)
-        c.drawString(432, y + 1, (" ".join([self.vendor_data["first_name"], self.vendor_data["last_name"]])))
-        y -= 18
-        c.drawString(360, y, "Vendor Signature:")
-        c.line(447, y, 582, y)
-        y -= 20
+        c.drawString(445, y, "Signatures")
+        y_sign = y - 15
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(360, y_sign, "Vendor Name:")
+        c.rect(429, y_sign - 3, 153, 15)
+        c.drawString(432, y_sign + 1, (" ".join([self.vendor_data["first_name"], self.vendor_data["last_name"]])))
+        y_sign -= 18
+        c.drawString(360, y_sign, "Vendor Signature:")
+        c.line(447, y_sign, 582, y_sign)
+        y_sign -= 18
 
-        c.drawString(360, y, "Employee Name:")
-        c.rect(442, y - 3, 140, 15)
-        c.drawString(445, y + 1, f"{current_user.get_user_full_name()}")
-        y -= 18
-        c.drawString(360, y, "Employee Signature: ")
-        c.line(460, y, 582, y)
-        y -= 18
-        c.drawString(395, y, "** Not Official unless signed **")
+        c.drawString(360, y_sign, "Employee Name:")
+        c.rect(442, y_sign - 3, 140, 15)
+        c.drawString(445, y_sign + 1, f"{current_user.get_user_full_name()}")
+        y_sign -= 18
+        c.drawString(360, y_sign, "Employee Signature: ")
+        c.line(460, y_sign, 582, y_sign)
+        y_sign -= 18
+        c.drawString(395, y_sign, "** Not Official unless signed **")
 
     def save_y(self, y_axis):
         self.y = y_axis
