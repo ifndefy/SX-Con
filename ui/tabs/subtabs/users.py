@@ -15,17 +15,19 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QMessageBox
 
 from ui.tabs.base import BaseTab
+from ui.prompts.password_dialog import PasswordChangeDialog
 from src import SPOT
 
 from datetime import datetime
 
-from ui.prompts.password_dialog import PasswordChangeDialog
+from src.core.hash_qa import hash_security_question_answer
+from src.core.hash_password import hash_password
 from services.get_item import get_item
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
 from services.update_property import update_property
-from src.core.hash_qa import hash_security_question_answer
-from src.core.hash_password import hash_password
+from validate.val_check_does_not_exist import val_check_does_not_exists
+
 import utils.logger.logger as log
 from utils.message_bus import status_bar_instance
 
@@ -650,6 +652,9 @@ class UsersTab(BaseTab):
         :Author(s): Joe Lee
         """
         self.new_user_data = self.gather_new_user_data(dialog)
+        if self.new_user_data == -1:
+            log.error(f"Failed to create new user")
+            return
         self.hash_security_q_and_a()
         insert_item("Entities", "user", self.new_user_data)
 
@@ -659,9 +664,21 @@ class UsersTab(BaseTab):
         :Method: passes in dialog then parses dialog for data
         :Author(s): Colin Heinselman, Joe Lee
         """
+
+        user_id = self.generate_new_user_id()
+        if not val_check_does_not_exists("Entities", "user", "user_id", int(user_id)):
+            # this should never proc unless running 2 programs in parallel
+            QMessageBox.warning(dialog, "Warning", f"User ID {user_id} already exists")
+            return -1
+
+        username = dialog.findChild(QLineEdit, "username_input").text().strip()
+        if not val_check_does_not_exists("Entities", "user", "username", username):
+            QMessageBox.warning(dialog, "Warning", f"Username {username} already exists")
+            return -1
+
         raw_user_data = {
-            "user_id": self.generate_new_user_id(),
-            "username": dialog.findChild(QLineEdit, "username_input").text().strip(),
+            "user_id": user_id,
+            "username": username,
             "first_name": dialog.findChild(QLineEdit, "first_name_input").text().strip(),
             "last_name": dialog.findChild(QLineEdit, "last_name_input").text().strip(),
             "password": hash_password(dialog.findChild(QLineEdit, "password_input").text().strip()),
@@ -672,6 +689,7 @@ class UsersTab(BaseTab):
             "admin": True if dialog.findChild(QComboBox, "admin_question").currentText().strip() == "True" else False,
             "type": "user"
         }
+
         return raw_user_data
 
     def generate_new_user_id(self):
