@@ -12,8 +12,8 @@ def val_check_does_not_exists(
     Validates that a property value doesn't already exist
 
     Returns:
-        0  -> value does not exist
-        -1 -> value already exists
+        True -> value does not exist
+        False -> value already exists
     Author(s): Colin Henderson
     """
 
@@ -25,6 +25,6 @@ def val_check_does_not_exists(
     )
 
     if result is None:
-        return 0
+        return True
     else:
-        return -1
+        return False
