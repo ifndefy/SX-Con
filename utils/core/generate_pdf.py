@@ -264,10 +264,6 @@ class PDF:
             for item in payout_list[-1]['grouped']:
                 prod_type_total[item['product_type']] = item['vendor']
             prod_type_total['Total'] = payout_list[-1].get('vendor', 0)
-        else:
-            rev_groups = self.ticket_data.get('revenue', {}).get('grouped', [])
-            for group in rev_groups:
-                prod_type_total[group['product_type']] = group['total']
 
         c.setFont("Helvetica-Bold", 10)
         for type in ["Hot Food", "General", "Produce", "Total"]:
