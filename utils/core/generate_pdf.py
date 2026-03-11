@@ -305,6 +305,3 @@ class PDF:
 
     def save_y(self, y_axis):
         self.y = y_axis
-
-test = PDF(84)
-test.create_supermarket_ticket()
