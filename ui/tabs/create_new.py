@@ -633,12 +633,13 @@ class CreateNewTab(BaseTab):
         self.update_revenue_fields()
         self.rev_by_prod.handle_updating(self.product_sections)
         revenue_data = self._gather_revenue_data()
+        datetime = self.datetime_input.text().strip()
 
         try:
             if not self._validate_required_fields(vendor_data, products_data):
                 log.warning(f"PDF generation skipped: Validation failed")
                 return False
-            handler_live_pdf(vendor_data, products_data, revenue_data)
+            handler_live_pdf(vendor_data, products_data, revenue_data, datetime)
             log.info(f"PDF generated for Ticket {vendor_data['ticket_number']}")
             return True
         except Exception as e:
