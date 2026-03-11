@@ -190,7 +190,7 @@ class PDF:
             c.drawString(471 + 3, y_prod + 1, str(prod.get("sold", "")))
             c.drawString(505, y_prod, "Total:")
             c.rect(533, y_prod - 3, 48, 15)
-            c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}")
+            c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}" if vendor_amount else "TBD")
             y_prod -= 20
 
         # Replace line with page number if both arguments are provided
@@ -306,5 +306,5 @@ class PDF:
     def save_y(self, y_axis):
         self.y = y_axis
 
-test = PDF(90)
+test = PDF(84)
 test.create_supermarket_ticket()
