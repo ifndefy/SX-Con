@@ -22,8 +22,9 @@ from services.connect_database import db_connection
 import utils.logger.logger as log
 
 class MainWindow(QWidget):
-    def __init__(self):
+    def __init__(self, offline_mode = False):
         super().__init__()
+        self.offline_mode = offline_mode
         self.current_user = current_user
         self.status_label = None
         self.revision_label = None
@@ -95,19 +96,21 @@ class MainWindow(QWidget):
         self.tabs.setObjectName("main_tabs")
 
         self.create_new_tab = CreateNewTab(self.api_handler, self.db_connection)
-        self.vendor_tickets_tab = VendorTicketsTab(self.api_handler, self.db_connection)
-        self.open_tickets_tab = OpenTicketsTab(self.api_handler, self.db_connection)
-        self.settings_tab = SettingsTab(self.api_handler)
-
         self.tabs.addTab(self.create_new_tab, "Create New")
-        self.tabs.addTab(self.vendor_tickets_tab, "Vendor Tickets")
-        self.tabs.addTab(self.open_tickets_tab, "Open Tickets")
-        self.tabs.addTab(self.settings_tab, "Settings")
 
-        if current_user.is_admin():
-            self.admin_settings_tab = AdminSettingsTab(self.api_handler, self.db_connection)
-            self.tabs.addTab(self.admin_settings_tab, "Admin Settings")
-            self.tabs.tabBar().setStyleSheet("QTabBar::tab:last { background-color: #691601; }")
+        if not self.offline_mode:
+            self.vendor_tickets_tab = VendorTicketsTab(self.api_handler, self.db_connection)
+            self.open_tickets_tab = OpenTicketsTab(self.api_handler, self.db_connection)
+            self.settings_tab = SettingsTab(self.api_handler)
+
+            self.tabs.addTab(self.vendor_tickets_tab, "Vendor Tickets")
+            self.tabs.addTab(self.open_tickets_tab, "Open Tickets")
+            self.tabs.addTab(self.settings_tab, "Settings")
+
+            if current_user.is_admin():
+                self.admin_settings_tab = AdminSettingsTab(self.api_handler, self.db_connection)
+                self.tabs.addTab(self.admin_settings_tab, "Admin Settings")
+                self.tabs.tabBar().setStyleSheet("QTabBar::tab:last { background-color: #691601; }")
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
     def on_tab_changed(self, index):
