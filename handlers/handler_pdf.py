@@ -2,11 +2,13 @@ import os
 
 from utils.core.generate_pdf import PDF
 
-def handler_live_pdf(vendor_data, product_data, revenue_data):
+def handler_live_pdf(vendor_data, product_data, revenue_data, datetime):
     """
     :param live: live indicates usage will not be able to pull from db
     :param vendor_data:
     :param product_data:
+    :param revenue_data:
+    :param datetime:
     :Purpose: Live PDF generation needs to pass data into the handler
     :Method: passes live data into generate_pdf method
     :Author(s): Joe Lee
@@ -20,6 +22,7 @@ def handler_live_pdf(vendor_data, product_data, revenue_data):
 
     pdf.ticket_data = {
         "ticket_number": vendor_data.get('ticket_number'),
+        "datetime": datetime,
         "vendor_id": vendor_data.get('vendor_id'),
         "products": product_data,
         "revenue": revenue_data
