@@ -18,10 +18,10 @@ from handlers.handler_pdf import handler_live_pdf
 from handlers import handler_print
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
-from utils.message_bus import status_bar_instance
-from utils.parse_consignment_table import fetch_consignment_data
+from services.insert_item import insert_item
 from src.core import generate_agg_data
 from src.user import current_user
+from validate.val_check_does_not_exist import val_check_does_not_exists
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
 from ui.core.autogen_ticket_num import autogen_ticket_num
@@ -31,6 +31,9 @@ from ui.core import format_phone
 from ui.core import format_price
 from ui.core import format_state
 from utils.core import generate_excel as xls_gen
+from utils.parse_consignment_table import fetch_consignment_data
+
+from utils.message_bus import status_bar_instance
 import utils.logger.logger as log
 
 import decimal as d
@@ -443,7 +446,6 @@ class CreateNewTab(BaseTab):
         rate_input.setPlaceholderText("Rate")
         rate_input.setFixedWidth(80)
         rate_input.setValidator(QIntValidator(0, 100, self))
-        # Default to BASE_RATE until type indicates otherwise
         rate_input.textChanged.connect(self.handle_total)
         line2_layout.addWidget(rate_input)
         product_section['rate'] = rate_input
@@ -576,7 +578,6 @@ class CreateNewTab(BaseTab):
         msg_box.setWindowTitle("Warning - Product Line Removal")
         msg_box.setText(f"Are you sure you want to remove this product line?\n{product_id} - {product_name}")
         confirm_btn = msg_box.addButton("Confirm", QMessageBox.ButtonRole.AcceptRole)
-        cancel_btn = msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
 
         msg_box.setDefaultButton(confirm_btn)
 
@@ -791,39 +792,35 @@ class CreateNewTab(BaseTab):
         :return: document ID on success, -1 on error
         """
         try:
-            entities_container = self.db_connection.connect('Entities')
-            consignments_container = self.db_connection.connect('Consignments')
-
             # Validate vendor_id exists
             vendor_id = record_data['vendor']['vendor_id']
             if not vendor_id or vendor_id == "NULL":
                 log.error("Error: No vendor ID provided")
                 return -1
 
-            # Create vendor document
-            vendor_document = {
-                'id': f"vendor_{vendor_id}",
-                'partitionKey': f"vendor_{vendor_id}",
-                'type': 'vendor',
-                'vendor_id': int(vendor_id),
-                'phone': record_data['vendor']['phone'],
-                'first_name': record_data['vendor']['first_name'],
-                'middle_name': record_data['vendor']['middle_name'],
-                'last_name': record_data['vendor']['last_name'],
-                'address': record_data['vendor']['address'],
-                'city': record_data['vendor']['city'],
-                'state': record_data['vendor']['state'],
-                'zip': record_data['vendor']['zip']
-            }
-
-            log.info(f"Creating vendor document with ID: vendor_{vendor_id}")
-
-            try:
-                vendor_response = entities_container.upsert_item(body=vendor_document)
-                log.info("Vendor document created successfully")
-            except Exception as e:
-                log.error(f"Error creating vendor document: {e}")
-                return -1
+            # Validate vendor_id does not already exist in DB
+            if  val_check_does_not_exists("Entities", "vendor", "vendor_id", int(vendor_id)):
+                vendor_document = {
+                    'id': f"vendor_{vendor_id}",
+                    'partitionKey': f"vendor_{vendor_id}",
+                    'type': 'vendor',
+                    'vendor_id': int(vendor_id),
+                    'phone': record_data['vendor']['phone'],
+                    'first_name': record_data['vendor']['first_name'],
+                    'middle_name': record_data['vendor']['middle_name'],
+                    'last_name': record_data['vendor']['last_name'],
+                    'address': record_data['vendor']['address'],
+                    'city': record_data['vendor']['city'],
+                    'state': record_data['vendor']['state'],
+                    'zip': record_data['vendor']['zip']
+                }
+                log.info(f"Creating vendor document with ID: vendor_{vendor_id}")
+                result = insert_item("Entities", "vendor", vendor_document)
+                if result == -1:
+                    log.error(f"Failed to insert vendor document with ID: vendor_{vendor_id}")
+                    return -1
+            else:
+                log.info(f"Vendor document with ID: vendor_{vendor_id} already exists, skipping creation")
 
             product_ids = []
             for i, product in enumerate(record_data['products']):
@@ -837,6 +834,7 @@ class CreateNewTab(BaseTab):
                         log.error("Error: Product Name is required for all products")
                         return -1
 
+                if val_check_does_not_exists("Entities", "product", "product_id", int(product_id)):
                     rate_value = self._convert_rate(product.get('rate'))
                     if rate_value is None:
                         rate_value = self.rates_container[product.get('product_type')]
@@ -851,13 +849,13 @@ class CreateNewTab(BaseTab):
                         'rate': rate_value,
                         'total': product['total'],
                     }
-                    log.info(f"Creating product document: product_{product_id}")
-                    try:
-                        product_response = entities_container.upsert_item(body=product_doc)
-                        product_ids.append(product_id)
-                        log.info(f"Product document created: {product_id}")
-                    except Exception as e:
-                        log.error(f"Error creating product document {product_id}: {e}")
+                    result = insert_item("Entities", "product", product_doc)
+                    if result == -1:
+                        log.error(f"Failed to insert product document with ID: product_{product_id}")
+                        continue
+                else:
+                    log.info(f"Product document with ID: product_{product_id} already exists, skipping creation")
+                product_ids.append(product_id)
 
             ticket_number = record_data['vendor']['ticket_number']
             if not ticket_number or ticket_number == "NULL":
@@ -868,6 +866,7 @@ class CreateNewTab(BaseTab):
                 'id': f"consignment_{str(ticket_number)}",
                 'partitionKey': f"consignment_{str(ticket_number)}",
                 'type': 'consignment',
+                'consignment_id': int(ticket_number),
                 'ticket_number': int(ticket_number),
                 'vendor_id': int(vendor_id),
                 'user_id': int(current_user.get_user_id()),
@@ -899,15 +898,10 @@ class CreateNewTab(BaseTab):
                     'payout': record_data['revenue']['payout'],
                 }
             }
-
-            log.info(f"Creating consignment document with ID: {ticket_number}")
-            try:
-                consignment_response = consignments_container.create_item(body=consignment_document)
-                log.info("Consignment document created successfully")
-            except Exception as e:
-                log.error(f"Error creating consignment document: {e}")
+            result = insert_item("Consignments", "consignment", consignment_document)
+            if result == -1:
+                log.error(f"Failed to insert consignment document {ticket_number}")
                 return -1
-
             success_msg = f"Record created successfully! Ticket: {ticket_number}"
             log.info(success_msg)
             return ticket_number
@@ -915,9 +909,6 @@ class CreateNewTab(BaseTab):
         except Exception as e:
             error_msg = f"Cosmos DB insertion error: {e}"
             log.error(error_msg)
-            import traceback
-            traceback.print_exc()
-            # self.status_label.setText(f"Error creating record: {str(e)}")
             return -1
 
     def _convert_product_id(self, product_id_str):

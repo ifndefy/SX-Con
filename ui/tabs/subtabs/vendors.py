@@ -3,6 +3,7 @@ from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QHBoxLayout
@@ -12,14 +13,16 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from ui.tabs.base import BaseTab
-
 from datetime import datetime
+
+from ui.tabs.base import BaseTab
 from ui.core import format_phone
 from ui.core import format_state
+
 from services.get_item import get_item
 from services.insert_item import insert_item
 from services.update_property import update_property
+from validate.val_check_does_not_exist import val_check_does_not_exists
 
 import utils.logger.logger as log
 from utils.message_bus import status_bar_instance
@@ -703,6 +706,9 @@ class VendorsTab(BaseTab):
         :Author(s): Joe Lee
         """
         self.new_vendor_data = self.gather_vendor_data(dialog)
+        if self.new_vendor_data == -1:
+            log.error(f"Failed to create new vendor")
+            return
         insert_item("Entities", "vendor", self.new_vendor_data)
 
     def gather_vendor_data(self, dialog):
@@ -711,8 +717,14 @@ class VendorsTab(BaseTab):
         :Method: passes in dialog then parses dialog for data
         :Author(s): Colin Heinselman, Joe Lee
         """
+        vendor_id = dialog.findChild(QLineEdit, "vendor_id_input").text()
+        if not val_check_does_not_exists("Entities", "vendor", "vendor_id", int(vendor_id)):
+            # this should never proc unless running 2 programs in parallel
+            QMessageBox.warning(dialog, "Warning", f"Vendor ID {vendor_id} already exists")
+            return -1
+
         vendor_doc = {
-            "vendor_id": dialog.findChild(QLineEdit, "vendor_id_input").text(),
+            "vendor_id": vendor_id,
             "phone": dialog.findChild(QLineEdit, "phone_number_input").text(),
             "first_name": dialog.findChild(QLineEdit, "first_name_input").text(),
             "middle_name": dialog.findChild(QLineEdit, "middle_name_input").text(),

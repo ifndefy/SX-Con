@@ -5,11 +5,8 @@ import uuid
 from validate.val_check_does_not_exist import val_check_does_not_exists
 
 
-def test_val_check_does_not_exist() -> int:
+def test_val_check_does_not_exist() -> bool:
     """
-    Returns:
-        0  -> All tests passed
-        -1 -> At least one test failed
     Author(s): Colin Henderson
     """
 
@@ -22,7 +19,7 @@ def test_val_check_does_not_exist() -> int:
         existing_name
     )
 
-    if fail_result != -1:
+    if fail_result:
         assert False, f"Expected failure for {existing_name} as it already exists in DB"
 
     unique_value = f"UNIQUE_{uuid.uuid4()}"
@@ -34,5 +31,5 @@ def test_val_check_does_not_exist() -> int:
         unique_value
     )
 
-    if pass_result != 0:
+    if not pass_result:
         assert False, f"Expected pass for {unique_value} as it is unlikely to exists in DB"
