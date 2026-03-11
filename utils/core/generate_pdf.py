@@ -69,7 +69,7 @@ class PDF:
                 if self._is_valid_product(p):
                     valid_products.append(p)
 
-            rows_per_page = 30
+            rows_per_page = 29
             total_pages = (len(valid_products) + rows_per_page - 1) // rows_per_page
             i = 0
             page_num = 1
@@ -122,6 +122,11 @@ class PDF:
         c.drawString(400, y, "Vendor ID:")
         c.rect(500, y - 3, 80, 15)
         c.drawString(500 + 4, y, str(self.vendor_id))
+        y -= 20
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(400, y, "Date Time:")
+        c.rect(475, y - 3, 105, 15)
+        c.drawString(475 + 6, y, self.ticket_data['datetime'])
         y -= 20
 
         c.line(30, y, self.width - 30, y)
@@ -194,8 +199,9 @@ class PDF:
             page_text = f"Page {page_num} of {total_pages}"
             c.drawCentredString(self.width / 2, y_prod - 5, page_text)
         else:
-            # Original line when no page numbering is requested
-            c.line(30, y_prod, self.width - 30, y_prod)
+            c.setFont("Helvetica", 10)
+            page_text = f"Page 1 of 1"
+            c.drawCentredString(self.width / 2, y_prod - 5, page_text)
 
         y_prod -= 20
         self.y = y_prod
@@ -299,3 +305,6 @@ class PDF:
 
     def save_y(self, y_axis):
         self.y = y_axis
+
+test = PDF(90)
+test.create_supermarket_ticket()
