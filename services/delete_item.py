@@ -5,6 +5,7 @@ How to use:
 
 from services.connect_database import db_connection
 from src import SPOT
+
 import utils.logger.logger as log
 
 def delete_item(container_name: str, type: str, id: str) -> int:
@@ -27,7 +28,8 @@ def delete_item(container_name: str, type: str, id: str) -> int:
         arg = f"{type}_{id}"
 
         container.delete_item(arg, arg)
+        log.info(f"Successfully deleted {arg} from {container_name}")
         return 0
     except Exception as e:
-        log.error("ERROR: failed to delete " + str(e))
+        log.error(f"ERROR: failed to delete: {e}")
         return -1

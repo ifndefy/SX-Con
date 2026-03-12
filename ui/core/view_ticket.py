@@ -241,11 +241,19 @@ class ViewTicket(QObject):
 
     def handle_update_clicked(self):
         product_id, widgets = self.get_product_and_widgets()
-        if not product_id or not widgets:
+        if not product_id:
+            log.error(f"Failed to find product id")
             return
 
+        if not widgets:
+            log.error(f"Failed to find product widgets")
+
         new_sold, quantity = self.val_quantities(widgets)
-        if new_sold is None or quantity is None:
+        if new_sold is None:
+            log.error(f"Failed to find new sold quantity")
+            return
+        if quantity is None:
+            log.error(f"Failed to find quantity")
             return
         if new_sold > quantity:
             QMessageBox.warning(self.sender(), "Invalid Input", f"Sold quantity ({new_sold}) exceeds Signed quantity ({quantity})")
@@ -273,6 +281,7 @@ class ViewTicket(QObject):
         """
         button = self.sender()
         if button is None:
+            log.error("Failed to get button sender")
             return None, None
 
         product_id = getattr(button, 'product_id', None)

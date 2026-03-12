@@ -159,7 +159,17 @@ class RevenueGeneration(QWidget):
         try:
             d_price = Decimal(str(price))
             d_qty = Decimal(str(quantity))
-            if d_price.is_nan() or d_qty.is_nan() or d_price < 0 or d_qty < 0:
+            if d_price.is_nan():
+                log.error(f"Error: {d_price} is not a number")
+                return -1
+            if d_qty.is_nan():
+                log.error(f"Error: {d_qty} is not a number")
+                return -1
+            if d_price < 0:
+                log.error(f"Error: {d_price} is not a number")
+                return -1
+            if d_qty < 0:
+                log.error(f"Error: {d_qty} is not a number")
                 return -1
 
             # percentile parsing (your existing logic)
@@ -175,6 +185,7 @@ class RevenueGeneration(QWidget):
             if p > 1:
                 p = p / Decimal(100)
             if p < 0 or p > 1:
+                log.error(f"Percentage cut is not between 0 and 1: {p}")
                 return -1
 
             # rate parsing (NEW)
@@ -182,6 +193,7 @@ class RevenueGeneration(QWidget):
             if r > 1:
                 r = r / Decimal(100)
             if r < 0 or r > 1:
+                log.error(f"Rate cut is not between 0 and 1: {r}")
                 return -1
 
             gross = d_price * d_qty * p
@@ -200,7 +212,8 @@ class RevenueGeneration(QWidget):
                     "vendor": vendor, 
                     "super_x": super_x}
 
-        except (InvalidOperation, ValueError, TypeError):
+        except (InvalidOperation, ValueError, TypeError) as e:
+            log.error(e)
             return -1
 
     @staticmethod
@@ -214,10 +227,14 @@ class RevenueGeneration(QWidget):
             d_return_rate = 1 - d_rate
             d_price = Decimal(str(price))
             d_qty = int(quantity)
-            if d_price < 0 or d_qty < 0:
-                log.error("Invalid price or quantity")
+            if d_price < 0:
+                log.error(f"Invalid price: {d_price}")
+                return -1
+            if d_qty < 0:
+                log.error(f"Invalid quantity: {d_qty}")
                 return -1
             total = (d_price * d_qty * d_return_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             return total
-        except (InvalidOperation, ValueError, TypeError):
+        except (InvalidOperation, ValueError, TypeError) as e:
+            log.error(e)
             return -1

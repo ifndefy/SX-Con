@@ -1,6 +1,8 @@
 from typing import Union
 from services.get_item_by_property import get_item_by_property
 
+import utils.logger.logger as log
+
 
 def val_check_does_not_exists(
     container: str,
@@ -25,6 +27,8 @@ def val_check_does_not_exists(
     )
 
     if result is None:
+        log.info(f"Did not find existing items for {result}")
         return True
     else:
+        log.info(f"Found existing items for {result} in {container}")
         return False

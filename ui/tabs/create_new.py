@@ -666,6 +666,7 @@ class CreateNewTab(BaseTab):
 
             # Validate required fields
             if not self._validate_required_fields(vendor_data):
+                log.error(f"Error: Vendor data validation failed")
                 return -1
             
             # Get products data
@@ -1130,7 +1131,7 @@ class CreateNewTab(BaseTab):
 
             calc = getattr(self.revenue_generation, "calculate_revenues", None)
             if not callable(calc):
-                log.error("Error: Revenue calculation method (SXC-22) not found")
+                log.error("Error: Revenue calculation method not found")
                 return -1
 
             #over every percentage sold bracket
@@ -1150,10 +1151,12 @@ class CreateNewTab(BaseTab):
                         log.warning(f"Product type {rate_key} has no matching rate")
                         continue
 
-                    if price < 0 or qty < 0:
-                        log.error("Error: Negative price or quantity")
+                    if price < 0:
+                        log.error(f"Error: Negative price: {price}")
                         return -1
-                    
+
+                    if qty < 0:
+                        log.error(f"Error: Negative quantity: {qty}")
                     pct_label = rec['percentage'].text()
                     #calculate that products revanue contribution at its consignment rate for amount sold
                     result = calc(price, qty, pct_label, rate)

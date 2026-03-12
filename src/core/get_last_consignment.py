@@ -12,7 +12,7 @@ def get_last_consignment(entity_type: str, entity_id: str) -> datetime | None:
     """
 
     if SPOT.OFFLINE:
-        print("OFFLINE - Invalid Action - Requires network access")
+        log.warning("OFFLINE - Invalid Action - Requires network access")
         return None
 
     try:
