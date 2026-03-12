@@ -728,13 +728,14 @@ class CreateNewTab(BaseTab):
                 continue
 
             product_data = {
-                'product_id': int(product_section['product_id'].text().strip()) or "NULL",
+                'product_id': int(product_section['product_id'].text().strip()) if product_section[
+                    'product_id'].text().strip() else "NULL",
                 'product_type': product_section['product_type'].currentText().strip() or "NULL",
                 'product_name': product_section['product_name'].text().strip() or "NULL",
                 'notes': product_section['notes'].text().strip() or "",
                 'rate': product_section.get('rate').text().strip() if product_section.get('rate') else "NULL",
                 'price': self._parse_money(product_section['price'].text()) or 0.0,
-                'quantity': int(product_section['quantity'].text().strip()) or "NULL",
+                'quantity': self._parse_int(product_section['quantity'].text()) or "NULL",
                 'total': self._parse_money(product_section['total'].text()) or 0.0,
             }
             products_data.append(product_data)
