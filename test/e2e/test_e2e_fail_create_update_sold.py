@@ -109,14 +109,16 @@ def test_e2e_fail_create_update_sold(app):
     def set_pdf_filename(self):
         self.pdf_filename = pdf_output
 
-    with patch.object(PDF, "set_pdf_filename", set_pdf_filename):
+    with patch.object(PDF, "set_pdf_filename", set_pdf_filename), \
+            patch('ui.tabs.create_new.QMessageBox.information') :
         current_tab.pdf_btn.click()
 
     assert os.path.exists(pdf_output), "Expected PDF to be generated"
     os.remove(pdf_output)
 
     # not testing print functionality, it will print every time the test runs
-    # current_tab.print_btn.click() # uncomment this line if you want to see if print actually works
+    # with patch('ui.tabs.create_new.QMessageBox.information') :
+    #   current_tab.print_btn.click() # uncomment this line if you want to see if print actually works
 
     ### 6 - click on create record -> successful
     current_tab.create_btn.click()

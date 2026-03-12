@@ -110,7 +110,8 @@ def test_e2e_create_payout_close(app):
     def set_pdf_filename(self):
         self.pdf_filename = pdf_output
 
-    with patch.object(PDF, "set_pdf_filename", set_pdf_filename):
+    with patch.object(PDF, "set_pdf_filename", set_pdf_filename), \
+            patch('ui.tabs.create_new.QMessageBox.information') :
         current_tab.pdf_btn.click()
 
     assert os.path.exists(pdf_output), "Expected PDF to be generated"
@@ -169,7 +170,8 @@ def test_e2e_create_payout_close(app):
     # current_tab.tickets_section[0]['print_btn'].click()
 
     ### 12 - clicks close ticket -> succeeds
-    current_tab.tickets_section[0]['close_btn'].click()
+    with patch('ui.tabs.vendor_tickets.QMessageBox.information') :
+        current_tab.tickets_section[0]['close_btn'].click()
     assert current_tab.tickets_section[0]['status'].text() == "CLOSED", "Expected ticket to be closed"
 
     ### 13 - Delete the ticket
