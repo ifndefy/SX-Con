@@ -2,7 +2,7 @@ import bcrypt
 from typing import Optional
 
 from services.get_item_by_property import get_item_by_property
-
+import utils.logger.logger as log
 
 class User:
     """
@@ -30,12 +30,14 @@ class User:
         """
         try:
             if not isinstance(value, str) or not value:
+                log.error(f"Invalid hash value {value}")
                 return "-1"
             
             salt = bcrypt.gensalt(rounds=12)
             hashed = bcrypt.hashpw(value.encode("utf-8"), salt)
             return hashed.decode("utf-8")
-        except Exception:
+        except Exception as e:
+            log.error(f"Failed to hash value {value}: {e}")
             return "-1"
     
     def set_user(self, username: str, admin_status: bool) -> bool:
@@ -52,7 +54,8 @@ class User:
             
             return (self._hashed_username != "-1" and 
                     self._hashed_admin != "-1")
-        except Exception:
+        except Exception as e:
+            log.error(f"Failed to set user {username}: {e}")
             return False
     
     def get_username(self) -> Optional[str]:
@@ -93,13 +96,16 @@ class User:
         author(s): Joe Lee
         """
         if not self._raw_username:
+            log.warning(f"Failed to get username: {self._raw_username}")
             return ""
         try:
             user_data = self.fetch_user_data()
             if not user_data:
+                log.warning(f"Failed to get user_data")
                 return ""
             return user_data["user_id"]
-        except Exception:
+        except Exception as e:
+            log.error(f"Failed to get user_id: {e}")
             return ""
 
     def get_user_full_name(self):
@@ -108,13 +114,16 @@ class User:
         author(s): Joe Lee
         """
         if not self._raw_username:
+            log.warning(f"Failed to get username: {self._raw_username}")
             return ""
         try:
             user_data = self.fetch_user_data()
             if not user_data:
+                log.warning(f"Failed to get user_data")
                 return ""
             return " ".join([user_data["first_name"], user_data["last_name"]])
-        except Exception:
+        except Exception as e:
+            log.error(f"Failed to get user_full_name: {e}")
             return ""
 
     def is_admin(self) -> bool:

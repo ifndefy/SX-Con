@@ -473,6 +473,7 @@ class SettingsTab(BaseTab):
         """
         user_id = self._get_current_user_id()
         if user_id is None:
+            log.error(f"Failed to find user id")
             return
 
         user_prefs = self._get_user_preferences(user_id)
@@ -569,6 +570,7 @@ class SettingsTab(BaseTab):
         """
         user_id = self._get_current_user_id()
         if user_id is None:
+            log.error(f"Failed to find user id")
             return
 
         preferences_json = self._build_preferences_json()

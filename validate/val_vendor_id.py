@@ -3,6 +3,8 @@ Vendor ID validation module
 author(s): Alexander Bubienko
 """
 
+import utils.logger.logger as log
+
 def val_vendor_id(v_id) -> bool:
     """
     purpose: Validate that a vendor ID is an integer
@@ -22,6 +24,7 @@ def val_vendor_id(v_id) -> bool:
         # If it's neither an int nor a digit string, it's invalid
         return False
         
-    except Exception:
+    except Exception as e:
         # Any unexpected error means validation fails
+        log.error(f"Invalid vendor ID: {v_id}: {e}")
         return False

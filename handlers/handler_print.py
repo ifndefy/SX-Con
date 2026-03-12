@@ -15,6 +15,7 @@ def handler_print(tic_num):
 def validate_pdf_exists(tic_num):
     check_path = get_pdf_path(tic_num)
     if not os.path.exists(check_path):
+        log.error(f"PDF {tic_num} path does not exist: {check_path}")
         return False
     return True
 

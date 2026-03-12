@@ -364,7 +364,7 @@ class OpenTicketsTab(BaseTab):
         self.remove_ticket_section()
         tickets = self.fetch("OPEN")
         if not tickets:
-            log.warning(f"No tickets found for Status: OPEN")
+            log.warning(f"No tickets found with Status: OPEN")
         else:
             for ticket in tickets:
                 self.add_ticket_section()  # Pass ticket data to populate fields
