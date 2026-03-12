@@ -7,7 +7,7 @@ author(s): Alexander Bubienko
 import sys
 import os
 
-from validations.val_fl_name import val_fl_name
+from validate.val_fl_name import val_fl_name
 
 
 def test_val_fl_name():
