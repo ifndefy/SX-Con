@@ -532,6 +532,7 @@ class VendorTicketsTab(BaseTab):
                             widgets['update_btn'].setObjectName("DEFAULT")
                             widgets['update_btn'].style().unpolish(widgets['update_btn'])
                             widgets['update_btn'].style().polish(widgets['update_btn'])
+                    QMessageBox.information(self, "Ticket Opened", f"Ticket {ticket_number} has been opened")
                 elif action == "closed":
                     handler_open_close_btns(ticket_number, action.upper())
                     log.info(f"CLOSED ticket {ticket_number}")
@@ -554,7 +555,7 @@ class VendorTicketsTab(BaseTab):
                             widgets['update_btn'].setObjectName("LOCKED")
                             widgets['update_btn'].style().unpolish(widgets['update_btn'])
                             widgets['update_btn'].style().polish(widgets['update_btn'])
-
+                    QMessageBox.information(self, "Ticket Opened", f"Ticket {ticket_number} has been opened")
                 self.tickets_section[ticket_index]['status'].setText(
                     get_property("Consignments", "status", "consignment", ticket_number)
                 )
@@ -577,6 +578,8 @@ class VendorTicketsTab(BaseTab):
             try:
                 handler_print(ticket_number)
                 log.info(f"Print requested for ticket {ticket_number}")
+                QMessageBox.information(self, "PDF Generation Succeeded",
+                                        f"Ticket {ticket_number} successfully requested to print")
             except Exception as e:
                 QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket_number}:\n\n{e}")
         return handler
@@ -605,8 +608,10 @@ class VendorTicketsTab(BaseTab):
         try:
             handler_db_pdf(int(ticket_number))
             log.info(f"PDF generated for ticket {ticket_number}")
+            QMessageBox.information(self, "PDF Generation Succeeded", f"Ticket {ticket_number} successfully generated a PDF")
         except Exception as e:
             log.error(f"ERROR generating PDF for ticket {ticket_number}: {e}")
+            QMessageBox.information(self, "PDF Generation Failed", f"Ticket {ticket_number} failed to generate a PDF")
 
     def make_form_handler(self, ticket_index):
         def gather_ticket():
