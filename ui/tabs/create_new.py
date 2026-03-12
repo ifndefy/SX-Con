@@ -624,6 +624,7 @@ class CreateNewTab(BaseTab):
         try:
             handler_print.handler_print(ticket)
             log.info(f"Print requested for ticket {ticket}")
+            QMessageBox.information(self, "PDF Generation Succeeded", f"Ticket {ticket} successfully requested to print")
         except Exception as e:
             QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket}:\n\n{e}")
 
@@ -641,9 +642,11 @@ class CreateNewTab(BaseTab):
                 return False
             handler_live_pdf(vendor_data, products_data, revenue_data, datetime)
             log.info(f"PDF generated for Ticket {vendor_data['ticket_number']}")
+            QMessageBox.information(self, "PDF Generation Succeeded", f"Ticket {vendor_data.get('ticket_number')} successfully generated a PDF")
             return True
         except Exception as e:
             log.error(f"PDF generation failed for Ticket {vendor_data.get('ticket_number')}: {e}")
+            QMessageBox.information(self, "PDF Generation Failed", f"Ticket {vendor_data.get('ticket_number')} failed to generate a PDF")
             return False
 
     def create_record(self):
