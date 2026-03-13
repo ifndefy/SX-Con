@@ -528,7 +528,7 @@ class VendorTicketsTab(BaseTab):
                             widgets['sold_edit'].setObjectName("DEFAULT")
                             widgets['sold_edit'].style().unpolish(widgets['sold_edit'])
                             widgets['sold_edit'].style().polish(widgets['sold_edit'])
-                            widgets['update_btn'].setEnabled(False)
+                            widgets['update_btn'].setEnabled(True)
                             widgets['update_btn'].setObjectName("DEFAULT")
                             widgets['update_btn'].style().unpolish(widgets['update_btn'])
                             widgets['update_btn'].style().polish(widgets['update_btn'])

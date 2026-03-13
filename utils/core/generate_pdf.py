@@ -165,12 +165,12 @@ class PDF:
             if payout_list and len(payout_list) > 0:
                 payout_products = payout_list[0].get("products", [])
 
+        payout_index = 0
         for prod in valid_products:
             vendor_amount = 0
-            for p in payout_products:
-                if p.get("product_id") == prod.get("product_id"):
-                    vendor_amount = p.get("vendor", 0)
-                    break
+            if payout_index < len(payout_products): # need this for when multiples of the same product_id are in a consignment
+                vendor_amount = payout_products[payout_index].get("vendor", 0)
+                payout_index += 1
 
             c.setFont("Helvetica-Bold", 10)
             c.drawString(30, y_prod, "ID:")

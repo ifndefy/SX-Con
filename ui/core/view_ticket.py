@@ -50,7 +50,7 @@ class ViewTicket(QObject):
             if prod.get('product_id') and prod.get('product_id') != 'NULL':
                 valid_products.append(prod)
 
-        for product in valid_products:
+        for idx, product in enumerate(valid_products):
             product_id = product.get('product_id')
 
             line1_layout = QHBoxLayout()
@@ -101,6 +101,7 @@ class ViewTicket(QObject):
 
             update_btn = QPushButton("Update")
             update_btn.product_id = product_id
+            update_btn.product_idx = idx
             if self.ticket_status == "CLOSED":
                 update_btn.setEnabled(True)
                 update_btn.setObjectName("LOCKED")
@@ -166,7 +167,7 @@ class ViewTicket(QObject):
 
             product_layout.addLayout(line3_layout)
 
-            self.product_widgets[product_id] = {
+            self.product_widgets[idx] = {
                 'sold_edit': sold_edit,
                 'remaining_display': remaining_display,
                 'quantity_display': quantity_input,
@@ -240,13 +241,13 @@ class ViewTicket(QObject):
             product_layout.addLayout(revenue_container_layout)
 
     def handle_update_clicked(self):
-        product_id, widgets = self.get_product_and_widgets()
+        product_id, product_index, widgets = self.get_product_and_widgets()
         if not product_id:
             log.error(f"Failed to find product id")
             return
-
         if not widgets:
             log.error(f"Failed to find product widgets")
+            return
 
         new_sold, quantity = self.val_quantities(widgets)
         if new_sold is None:
@@ -256,7 +257,8 @@ class ViewTicket(QObject):
             log.error(f"Failed to find quantity")
             return
         if new_sold > quantity:
-            QMessageBox.warning(self.sender(), "Invalid Input", f"Sold quantity ({new_sold}) exceeds Signed quantity ({quantity})")
+            QMessageBox.warning(self.sender(), "Invalid Input",
+                                f"Sold quantity ({new_sold}) exceeds Signed quantity ({quantity})")
             log.error(f"Update failed: Sold quantity exceeds signed quantity")
             return
         if new_sold < 0:
@@ -265,7 +267,7 @@ class ViewTicket(QObject):
             return
 
         success, new_remaining, error = update_quantities(
-            self.ticket_id, product_id, new_sold
+            self.ticket_id, product_id, new_sold, product_index
         )
         if success:
             widgets['sold_edit'].setText(str(new_sold))
@@ -282,19 +284,23 @@ class ViewTicket(QObject):
         button = self.sender()
         if button is None:
             log.error("Failed to get button sender")
-            return None, None
+            return None, None, None
 
         product_id = getattr(button, 'product_id', None)
+        product_index = getattr(button, 'product_idx', None)
         if product_id is None:
-            log.error("Update button missing product data.")
-            return None, None
+            log.error("Update button missing product id.")
+            return None, None, None
+        if product_index is None:
+            log.error("Update button missing product index.")
+            return None, None, None
 
-        widgets = self.product_widgets.get(product_id)
+        widgets = self.product_widgets.get(product_index)
         if not widgets:
-            log.error(f"No widgets found for product {product_id}")
-            return None, None
+            log.error(f"No widgets found for product {product_id} index {product_index}")
+            return None, None, None
 
-        return product_id, widgets
+        return product_id, product_index, widgets
 
     def val_quantities(self, widgets):
         """
