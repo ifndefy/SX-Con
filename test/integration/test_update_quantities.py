@@ -11,7 +11,7 @@ def test_integration_update_quantities():
     product_id = str(1)
     new_sold = 1
 
-    success, new_remaining, error = update_quantities(consignment_id, product_id, new_sold)
+    success, new_remaining, error = update_quantities(consignment_id, product_id, new_sold, 0)
 
     assert success == True
     assert new_remaining is not None
@@ -19,7 +19,7 @@ def test_integration_update_quantities():
 
 # integration: should pass, invalid consignment returns false
 def test_integration_invalid_consignment():
-    success, new_remaining, error = update_quantities("901283", "Oakland Raiders", 1)
+    success, new_remaining, error = update_quantities("901283", "Oakland Raiders", 1, 0)
     assert success == False
     assert new_remaining is None
 
@@ -34,7 +34,7 @@ def test_find_product_id_found():
 # should pass, returns None if not found
 def test_find_product_id_not_found():
     products = [{"product_id": 1, "product_name": "apple"}]
-    assert _find_product_id(products, 999) is None
+    assert _find_product_id(products, str(999)) is None
 
 # should pass, valid sold quantity
 def test_validate_sold_valid():
