@@ -18,13 +18,13 @@ from handlers.handler_pdf import handler_live_pdf
 from handlers import handler_print
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
+from services.get_max_value import get_max_value
 from services.insert_item import insert_item
 from src.core import generate_agg_data
 from src.user import current_user
 from validate.val_check_does_not_exist import val_check_does_not_exists
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
-from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone
@@ -1012,7 +1012,7 @@ class CreateNewTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        ticket_num = str(autogen_ticket_num())
+        ticket_num = str(get_max_value("Consignments", "ticket_number") + 1)
         self.ticket_input.setText(ticket_num)
 
     def update_datetime(self):
