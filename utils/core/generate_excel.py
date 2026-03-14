@@ -20,17 +20,26 @@ def generate_excel(data):
     log.info(f"User selected path: {file_path[0]} -> Extension: {file_path[1]}")
 
     try:
-        #Create Empty List to store dataframes
         dataframes = []
-        #df_titles = [] --Currently ununsed, might come back to add table titles 
 
-        #loop through list of dicts, treat every element as seperate table in excel sheet, collect in dataframe list
         for subsection, contents in data.items():
-            #If nested list of elements get index number      
-            table_index = range(len(contents)) if isinstance(contents,list) else [0]
+            if isinstance(contents, list):
+                cleaned = []
+                for item in contents:
+                    if isinstance(item, dict):
+                        flat = {}
+                        for key, value in item.items():
+                            if not isinstance(value, (list, dict)):
+                                flat[key] = value
+                        cleaned.append(flat)
+                    else:
+                        cleaned.append(item)
+                contents = cleaned
+                table_index = range(len(contents))
+            else:
+                table_index = [0]
             dataframes.append(pd.DataFrame(contents, index=table_index))
-            #df_titles.append(f"{subsection}")
-        
+
         sheet = Path(file_path[0]).name
         vpadding = 2
 

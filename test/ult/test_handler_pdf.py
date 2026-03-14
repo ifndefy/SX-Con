@@ -12,7 +12,6 @@ def cleanup_pdf():
 
 def test_handler_live_pdf_creates_file(app, cleanup_pdf):
     vendor_data = {
-        "ticket_number": 9999,
         "vendor_id": 1,
         "first_name": "Test",
         "last_name": "User"
@@ -38,7 +37,7 @@ def test_handler_live_pdf_creates_file(app, cleanup_pdf):
         'ticket_number': 9999,
         'datetime' : '03/14/2026 -- 03:44',
     }
-    handler_live_pdf(vendor_data, product_data, revenue_data, ticket_data['datetime'])
-    pdf = handler_live_pdf(vendor_data, product_data, revenue_data, ticket_data['datetime'])
+    handler_live_pdf(ticket_data['ticket_number'], vendor_data, product_data, revenue_data, ticket_data['datetime'])
+    pdf = handler_live_pdf(ticket_data['ticket_number'], vendor_data, product_data, revenue_data, ticket_data['datetime'])
     cleanup_pdf.append(pdf.pdf_filename)
     assert os.path.exists(pdf.pdf_filename)
