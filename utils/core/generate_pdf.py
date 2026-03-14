@@ -277,7 +277,7 @@ class PDF:
             c.setFont("Helvetica", 10)
             c.drawString(216, y_type, str(type))
             c.rect(216 - 3, y_type - 3, 60, 15)
-            c.drawString(290, y_type, f"${total:.2f}")
+            c.drawString(290, y_type, f"${total:.2f}" if total else "TBD")
             c.rect(290 - 3, y_type - 3, 60, 15)
             y_type -= 18
 
@@ -288,7 +288,10 @@ class PDF:
         c.setFont("Helvetica-Bold", 10)
         c.drawString(360, y_sign, "Vendor Name:")
         c.rect(429, y_sign - 3, 153, 15)
-        c.drawString(432, y_sign + 1, (" ".join([self.vendor_data["first_name"], self.vendor_data["last_name"]])))
+        c.drawString(432, y_sign + 1, " ".join([
+            self.vendor_data.get("first_name") or "",
+            self.vendor_data.get("last_name") or ""
+        ]).strip())
         y_sign -= 18
         c.drawString(360, y_sign, "Vendor Signature:")
         c.line(447, y_sign, 582, y_sign)
