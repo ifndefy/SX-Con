@@ -14,6 +14,8 @@ from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 
+from pathlib import Path
+
 from src import SPOT
 
 from handlers.handler_pdf import handler_live_pdf
@@ -964,11 +966,21 @@ class CreateNewTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        max = get_max_value("Consignments", "ticket_number")
         if SPOT.OFFLINE:
-            num = int(str(max).split('_')[1]) + 1
-            self.ticket_input.setText(f"OFFLINE_{num}")
+            offline_dir = Path(__file__).parent.parent.parent / "utils" / "OFFLINE_tickets"
+            max_num = 0
+            if offline_dir.exists():
+                for file in offline_dir.iterdir():
+                    if file.stem.startswith("OFFLINE_"):
+                        try:
+                            num = int(file.stem.split('_')[1])
+                            if num > max_num:
+                                max_num = num
+                        except ValueError:
+                            continue
+            self.ticket_input.setText(f"OFFLINE_{max_num + 1}")
         else:
+            max = get_max_value("Consignments", "ticket_number")
             self.ticket_input.setText(str(int(max) + 1))
 
     def update_datetime(self):
