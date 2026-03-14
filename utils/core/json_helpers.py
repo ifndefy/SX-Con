@@ -14,3 +14,16 @@ def json_to_dict(json_string):
     except (json.JSONDecodeError, TypeError):
         log.error(f"Invalid JSON string: {json_string}. Resetting to empty.")
         return {}
+
+def dict_to_json(dict):
+    """
+    :Purpose: converts a dictionary into a json string
+    :param: dictionary: dictionary to convert
+    :Return: json string of input dictionary
+    :Author(s): Joe Lee
+    """
+    try:
+        return json.dumps(dict)
+    except (TypeError, ValueError):
+        log.error(f"Invalid dictionary: {dict}. Resetting to empty.")
+        return {}
