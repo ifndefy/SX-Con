@@ -714,10 +714,10 @@ class CreateNewTab(BaseTab):
 
     def _gather_consignment_data(self, vendor_data, products_data, revenue_data):
         raw_ticket = self.ticket_input.text().strip()
-        ticket_number = int(raw_ticket) if raw_ticket else None
-        if not ticket_number:
+        if not raw_ticket:
             log.error("Ticket number is required")
             return None
+        ticket_number = raw_ticket if SPOT.OFFLINE else int(raw_ticket)
         return {
             'id': f"consignment_{ticket_number}",
             'partitionKey': f"consignment_{ticket_number}",
@@ -846,6 +846,38 @@ class CreateNewTab(BaseTab):
             log.error(f"Database error: {e}")
             return -1
 
+    def export_record(self):
+        """
+        :purpose: Exports all record docs into a json file (only if SPOT.OFFLINE)
+        :author(s): Joe Lee
+        """
+        try:
+            self.update_revenue_fields()
+            self.rev_by_prod.handle_updating(self.product_sections)
+
+            vendor_data = self._gather_vendor_data()
+            if vendor_data is None:
+                return
+
+            products_data = self._gather_products_data()
+            if products_data is None:
+                return
+
+            revenue_data = self._gather_revenue_data()
+            consignment_data = self._gather_consignment_data(vendor_data, products_data, revenue_data)
+            if consignment_data is None:
+                return
+
+            ticket_number = consignment_data['ticket_number']
+            export_offline_record(ticket_number, vendor_data, products_data, consignment_data)
+            self.clear_form()
+            status_bar_instance.send_message(f"Offline record exported: {ticket_number}")
+            QMessageBox.information(self, "Export Succeeded", f"Ticket {ticket_number} exported successfully")
+
+        except Exception as e:
+            log.error(f"Export failed: {e}")
+            QMessageBox.critical(self, "Export Failed", f"Failed to export record:\n\n{e}")
+
     def _convert_product_id(self, product_id_str):
         """
         :author(s): Alexander Bubienko
@@ -941,8 +973,12 @@ class CreateNewTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        ticket_num = str(int(get_max_value("Consignments", "ticket_number")) + 1)
-        self.ticket_input.setText(ticket_num)
+        max = get_max_value("Consignments", "ticket_number")
+        if SPOT.OFFLINE:
+            num = int(str(max).split('_')[1]) + 1
+            self.ticket_input.setText(f"OFFLINE_{num}")
+        else:
+            self.ticket_input.setText(str(int(max) + 1))
 
     def update_datetime(self):
         """

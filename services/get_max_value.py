@@ -38,7 +38,6 @@ def get_max_value(container_name, property_name):
         log.warning("OFFLINE - Unable to connect to Database. OFFLINE semantics used to generate ticket number")
         offline_tickets_dir = Path(__file__).parent.parent / 'utils' / 'OFFLINE_tickets'
         if not offline_tickets_dir.exists():
-            log.error("Error: Could not locate offline tickets directory")
             return 0
         max_value = 0
         for file in offline_tickets_dir.iterdir():
@@ -46,7 +45,10 @@ def get_max_value(container_name, property_name):
                 try:
                     ticket_num = int(file.stem.split('_')[1])
                     if ticket_num > max_value:
-                        ret_val = "_".join(["OFFLINE", str(ticket_num)])
+                        max_value = ticket_num
                 except ValueError:
                     log.error(f"Error: Could not parse ticket number from {file}")
-        return ret_val
+        if max_value > 0:
+            return f"OFFLINE_{max_value}"
+        else:
+            return "OFFLINE_0"

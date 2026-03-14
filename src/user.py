@@ -1,6 +1,8 @@
 import bcrypt
 from typing import Optional
 
+from src import SPOT
+
 from services.get_item_by_property import get_item_by_property
 import utils.logger.logger as log
 
@@ -92,9 +94,11 @@ class User:
 
     def get_user_id(self):
         """
-        purpose: Return user id or None if offline
+        purpose: Return user id, 0 if offline
         author(s): Joe Lee
         """
+        if SPOT.OFFLINE:
+            return 0
         if not self._raw_username:
             log.warning(f"Failed to get username: {self._raw_username}")
             return ""
