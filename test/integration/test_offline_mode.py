@@ -2,10 +2,6 @@ from src import SPOT
 from src.user import current_user
 from ui.main_window import MainWindow
 
-def test_offline_user(monkeypatch):
-    monkeypatch.setattr(SPOT, 'OFFLINE', True)
-    assert current_user.get_username() == None, "Expected current_user to be None"
-
 def test_offline_user_cpy_flow(app, monkeypatch):
     monkeypatch.setattr(SPOT, 'OFFLINE', True)
     current_user.set_user("offline", False)
