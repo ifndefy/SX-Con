@@ -1,6 +1,8 @@
 def val_price(price: float | int) -> bool:
     """
-    Validate a price value before inserting into a NoSQL database.
+    Author: Kyle Valdez
+    Return: Boolean True or False values given either a float or int value
+    Purpose: Validate a price value before inserting into a NoSQL database.
 
     Returns False if:
     - price is None
