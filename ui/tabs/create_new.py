@@ -690,9 +690,6 @@ class CreateNewTab(BaseTab):
             return None
 
         return {
-            'id': f"vendor_{vendor_id}",
-            'partitionKey': f"vendor_{vendor_id}",
-            'type': 'vendor',
             'vendor_id': vendor_id,
             'phone': self.phone_input.text().strip() or None,
             'datetime': self.datetime_input.text().strip() or None,
@@ -712,26 +709,6 @@ class CreateNewTab(BaseTab):
             'payout': []
         }
 
-    def _gather_consignment_data(self, vendor_data, products_data, revenue_data):
-        raw_ticket = self.ticket_input.text().strip()
-        if not raw_ticket:
-            log.error("Ticket number is required")
-            return None
-        ticket_number = raw_ticket if SPOT.OFFLINE else int(raw_ticket)
-        return {
-            'id': f"consignment_{ticket_number}",
-            'partitionKey': f"consignment_{ticket_number}",
-            'type': 'consignment',
-            'consignment_id': ticket_number,
-            'ticket_number': ticket_number,
-            'vendor_id': vendor_data['vendor_id'],
-            'user_id': int(current_user.get_user_id()),
-            'datetime': vendor_data['datetime'],
-            'status': "OPEN",
-            'products': products_data,
-            'revenue': revenue_data
-        }
-
     def _gather_products_data(self):
         products = []
         has_valid_product = False
@@ -741,7 +718,7 @@ class CreateNewTab(BaseTab):
                 continue
 
             product_type = section['product_type'].currentText().strip() or None
-            product_name = section['product_name'].text().strip() or None
+            product_name = section['product_name'].text().strip().lower() or None
             rate = self._convert_rate(section['rate'].text().strip())
             if rate is None:
                 rate = self.rates_container.get(product_type)
@@ -775,6 +752,24 @@ class CreateNewTab(BaseTab):
 
         return products
 
+    def _gather_consignment_data(self, vendor_data, products_data, revenue_data):
+        raw_ticket = self.ticket_input.text().strip()
+        if not raw_ticket:
+            log.error("Ticket number is required")
+            return None
+        ticket_number = raw_ticket if SPOT.OFFLINE else int(raw_ticket)
+        return {
+            'type':'consignment',
+            'consignment_id': ticket_number,
+            'ticket_number': ticket_number,
+            'vendor_id': vendor_data['vendor_id'],
+            'user_id': current_user.get_user_id(),
+            'datetime': vendor_data['datetime'],
+            'status': "OPEN",
+            'products': products_data,
+            'revenue': revenue_data
+        }
+
     def _post_to_database(self, vendor_data, products_data, revenue_data):
         try:
             if val_check_does_not_exists("Entities", "vendor", "vendor_id", vendor_data['vendor_id']):
@@ -785,18 +780,14 @@ class CreateNewTab(BaseTab):
                 log.info(f"Vendor {vendor_data['vendor_id']} already exists, skipping")
 
             for product in products_data:
-                product_id = product['product_id']
-                if val_check_does_not_exists("Entities", "product", "product_id", product_id):
-                    if insert_item("Entities", "product", {
-                        'id': f"product_{product_id}",
-                        'partitionKey': f"product_{product_id}",
-                        'type': 'product',
-                        **product
-                    }) == -1:
-                        log.error(f"Failed to insert product {product_id}")
+                if val_check_does_not_exists("Entities", "product", "product_id", product['product_id']):
+                    product_doc = dict(product)
+                    product_doc['type'] = 'product'
+                    if insert_item("Entities", "product", product_doc) == -1:
+                        log.error(f"Failed to insert product {product['product_id']}")
                         continue
                 else:
-                    log.info(f"Product {product_id} already exists, skipping")
+                    log.info(f"Product {product['product_id']} already exists, skipping")
 
             consignment = self._gather_consignment_data(vendor_data, products_data, revenue_data)
             if consignment is None:
@@ -815,9 +806,9 @@ class CreateNewTab(BaseTab):
 
     def create_record(self):
         """
-        :author(s): Joe Lee, Alexander Bubienko
-        :purpose: gathers all text inputs and posts to Azure SQL database as a single record
+        :purpose: gathers all text inputs and posts to Cosmos database as a single record
         :return: record ID on success, -1 on error
+        :author(s): Joe Lee, Alexander Bubienko
         """
         try:
             self.update_revenue_fields()

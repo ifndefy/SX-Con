@@ -2,12 +2,12 @@ import os
 import utils.logger.logger as log
 from utils.core.json_helpers import dict_to_json
 
-def export_offline_record(ticket_number, vendor_doc, product_doc, consignment_doc):
+def export_offline_record(ticket_number, vendor_doc, products_doc, consignment_doc):
     """
     :Purpose: Exports offline records to a local JSON file
     :param ticket_number: The offline ticket number (e.g. 'OFFLINE_1')
     :param vendor_doc: Vendor doc dict
-    :param product_doc: Product doc list
+    :param products_doc: Product doc list
     :param consignment_doc: Consignment doc dict
     :Author(s): Joe Lee
     """
@@ -16,7 +16,7 @@ def export_offline_record(ticket_number, vendor_doc, product_doc, consignment_do
 
     docs = {
         'vendor': vendor_doc,
-        'product': product_doc,
+        'product': products_doc,
         'consignment': consignment_doc,
     }
 

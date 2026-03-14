@@ -1,7 +1,7 @@
 from services.get_item import get_item  # Adjust if module path differs
 
 
-def test_get_item() -> int:
+def test_get_item():
     """
     Module test for get_item.
     Purpose: "Test if get_item.py retrieves data from the db. Return 0 if success and -1 if not"

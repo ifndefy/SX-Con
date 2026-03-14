@@ -1,9 +1,7 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QTabWidget
-from PyQt6.QtWidgets import QHBoxLayout
-from PyQt6.QtWidgets import QLabel
-from PyQt6.QtWidgets import QScrollArea
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QTabWidget
+
+from src import SPOT
 
 from ui.tabs.base import BaseTab
 from ui.tabs.subtabs.records import RecordsTab
@@ -35,17 +33,16 @@ class AdminSettingsTab(BaseTab):
         self.tabs = QTabWidget()
         self.tabs.setObjectName("subtabs")
 
-        # Pass the database connection to all subtabs
-        self.users_tab = UsersTab(self.api_handler, self.db_connection)
-        self.vendors_tab = VendorsTab(self.api_handler, self.db_connection)
-        self.products_tab = ProductsTab(self.api_handler, self.db_connection)
-        self.records_tab = RecordsTab(self.api_handler, self.db_connection)
+        if not SPOT.OFFLINE:
+            self.users_tab = UsersTab(self.api_handler, self.db_connection)
+            self.tabs.addTab(self.users_tab, "Users")
+            self.vendors_tab = VendorsTab(self.api_handler, self.db_connection)
+            self.tabs.addTab(self.vendors_tab, "Vendors")
+            self.products_tab = ProductsTab(self.api_handler, self.db_connection)
+            self.tabs.addTab(self.products_tab, "Products")
+            self.records_tab = RecordsTab(self.api_handler, self.db_connection)
+            self.tabs.addTab(self.records_tab, "Records")
         self.cr_tab = CRTab(self.api_handler)
-
-        self.tabs.addTab(self.users_tab, "Users")
-        self.tabs.addTab(self.vendors_tab, "Vendors")
-        self.tabs.addTab(self.products_tab, "Products")
-        self.tabs.addTab(self.records_tab, "Records")
         self.tabs.addTab(self.cr_tab, "Rates")
 
         self.tabs.currentChanged.connect(self.on_tab_changed)
