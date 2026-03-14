@@ -185,4 +185,7 @@ class RevenuePayout(QWidget):
         self.vendor_input.setText("$0.00")
         self.super_x_input.setText("$0.00")
 
-
+    def get_payout_data(self):
+        vendor = float(self.vendor_input.text().replace("$", ""))
+        super_x = float(self.super_x_input.text().replace("$", ""))
+        return {"vendor": vendor, "super_x": super_x}
