@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from services.connect_database import db_connection
 from ui.core.autogen_date import generate_host_datetime
 
 def test_autogen_date():

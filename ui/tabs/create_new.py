@@ -1012,7 +1012,7 @@ class CreateNewTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        ticket_num = str(get_max_value("Consignments", "ticket_number") + 1)
+        ticket_num = str(int(get_max_value("Consignments", "ticket_number")) + 1)
         self.ticket_input.setText(ticket_num)
 
     def update_datetime(self):
