@@ -47,7 +47,6 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
 
     ### 2 - main window opens -> lands on create new
     window = MainWindow(offline_mode=True)
-    window.show()
 
     assert isinstance(window.create_new_tab, CreateNewTab)
     assert window.tabs.count() == 1, "Expected only CreateNewTab in offline mode"
