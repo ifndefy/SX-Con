@@ -605,6 +605,7 @@ class VendorsTab(BaseTab):
         vendor_id_input.setPlaceholderText("V ID")
         vendor_id_input.setMaxLength(4)
         vendor_id_input.setValidator(QIntValidator(0, 9999))
+        vendor_id_input.editingFinished.connect(self.check_vendor_id_input(dialog))
         layout.addWidget(vendor_id_input)
 
         layout.addWidget(QLabel("Phone Number:"))
@@ -695,6 +696,22 @@ class VendorsTab(BaseTab):
         self.clear_btn.clicked.connect(self.clear)
         self.search_btn.clicked.connect(self.build_and_search)
         self.create_btn.clicked.connect(self.create_new_vendor_prompt)
+
+    def check_vendor_id_input(self, dialog):
+        def handler():
+            vendor_id_input = dialog.findChild(QLineEdit, "vendor_id_input")
+            vendor_id = vendor_id_input.text().strip()
+
+            if not vendor_id:
+                return
+
+            if not val_check_does_not_exists("Entities", "vendor", "vendor_id", int(vendor_id)):
+                log.info(f"Vendor ID: {vendor_id} already in use")
+                QMessageBox.critical(dialog, "Error", "Vendor ID already in use")
+                vendor_id_input.setFocus()
+                vendor_id_input.selectAll()
+                return
+        return handler
 
     def on_create_clicked(self, dialog):
         """

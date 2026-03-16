@@ -526,6 +526,7 @@ class ProductsTab(BaseTab):
         product_id_input.setObjectName("product_id_input")
         product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
         product_id_input.setValidator(product_id_validator)
+        product_id_input.editingFinished.connect(self.check_product_id_input(dialog))
         layout.addWidget(product_id_input)
 
         layout.addWidget(QLabel("Product Name:"))
@@ -533,6 +534,7 @@ class ProductsTab(BaseTab):
         product_name_input.setObjectName("product_name_input")
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
         product_name_input.setValidator(alpha_validator)
+        product_name_input.editingFinished.connect(self.check_product_name_input(dialog))
         layout.addWidget(product_name_input)
 
         prompt_label = QLabel("Product Type:")
@@ -578,6 +580,38 @@ class ProductsTab(BaseTab):
         self.clear_btn.clicked.connect(self.clear)
         self.search_btn.clicked.connect(self.build_and_search)
         self.create_btn.clicked.connect(self.create_new_product_prompt)
+
+    def check_product_id_input(self, dialog):
+        def handler():
+            product_id_input = dialog.findChild(QLineEdit, "product_id_input")
+            product_id = product_id_input.text().strip()
+
+            if not product_id:
+                return
+
+            if not val_check_does_not_exists("Entities", "product", "product_id", int(product_id)):
+                log.info(f"Product ID: {product_id} already in use")
+                QMessageBox.critical(dialog, "Error", "Product ID already in use")
+                product_id_input.setFocus()
+                product_id_input.selectAll()
+                return
+        return handler
+
+    def check_product_name_input(self, dialog):
+        def handler():
+            product_name_input = dialog.findChild(QLineEdit, "product_name_input")
+            product_name = product_name_input.text().strip()
+
+            if not product_name:
+                return
+
+            if not val_check_does_not_exists("Entities", "product", "product_name", product_name):
+                log.info(f"Product Name: {product_name} already in use")
+                QMessageBox.critical(dialog, "Error", "Product Name already in use")
+                product_name_input.setFocus()
+                product_name_input.selectAll()
+                return
+        return handler
 
     def on_create_clicked(self, dialog):
         """

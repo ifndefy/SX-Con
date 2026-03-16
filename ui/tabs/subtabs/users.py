@@ -237,7 +237,7 @@ class UsersTab(BaseTab):
                 user_id_int = int(user_id)
                 add_property("user_id", user_id_int, "=")
             except ValueError:
-                pass
+                log.error(f"Invalid user_id entered: {user_id}")
 
         username = self.username_input.text().strip()
         if username:
@@ -532,6 +532,7 @@ class UsersTab(BaseTab):
         username_input.setObjectName("username_input")
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
         username_input.setValidator(alpha_validator)
+        username_input.editingFinished.connect(self.check_username(dialog))
         layout.addWidget(username_input)
 
         layout.addWidget(QLabel("First Name:"))
@@ -635,6 +636,28 @@ class UsersTab(BaseTab):
         self.clear_btn.clicked.connect(self.clear)
         self.search_btn.clicked.connect(self.build_and_search)
         self.create_btn.clicked.connect(self.create_new_user_prompt)
+
+    def check_username(self, dialog):
+        def handler():
+            username_input = dialog.findChild(QLineEdit, "username_input")
+            username = username_input.text().strip()
+
+            if not username:
+                return
+
+            if not self.username_is_clean(username):
+                QMessageBox.critical(dialog, "Error", "Username not clean")
+                username_input.setFocus()
+                username_input.selectAll()
+                return
+
+            if not val_check_does_not_exists("Entities", "user", "username", username):
+                log.info(f"Username: {username} already in use")
+                QMessageBox.critical(dialog, "Error", "Username already in use")
+                username_input.setFocus()
+                username_input.selectAll()
+                return
+        return handler
 
     def on_create_clicked(self, dialog):
         """
