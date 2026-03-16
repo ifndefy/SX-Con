@@ -1,12 +1,19 @@
+from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QFrame
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QHBoxLayout
+from PyQt6.QtWidgets import QSizePolicy
+from PyQt6.QtWidgets import QScrollArea
+from PyQt6.QtWidgets import QSpacerItem
+from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtGui import QIntValidator
+
 import pandas as pd
 
 from ui.tabs.base import BaseTab
 import utils.logger.logger as log
-
-from PyQt6.QtWidgets import QWidget, QFrame
-from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea, QSpacerItem
-from PyQt6.QtWidgets import QLabel, QLineEdit, QPushButton
-from PyQt6.QtGui import QIntValidator
 
 from utils import parse_consignment_table as c_table
 
@@ -15,18 +22,13 @@ class CRTab(BaseTab):
     def __init__(self, api_handler):
         super().__init__(api_handler, "consignment_rates")
         self.entry_list = None
-
         self.scroll_zone = None
-
         self.consignments_section_layout = None
         self.consignments_section = None
-
         self.tab_header = None
         self.tab_title = None
-
         self.tab_content_layout = None
         self.tab_content = None
-
         self.main_layout = None
     
     def setup_ui(self):
@@ -69,7 +71,6 @@ class CRTab(BaseTab):
         
         #Add Canvas to tab
         self.main_layout.addWidget(self.tab_content)
-        #todo: move to on_active_tab to avoid fetching until we need the data
         self.populate_rate_settings()
 
     #Retrieve tha table from SPOT_CR.csv and turn it into entries in our widget's section
@@ -80,14 +81,6 @@ class CRTab(BaseTab):
             self.consignments_section_layout.addWidget(_CREntry(key, value))
         self.consignments_section_layout.addStretch()
 
-    #todo: add check in admin_settings to trigger on_active_tab when the tab being switched to has this function, use to populate tickets when needed
-    def on_active_tab(self):
-        pass
-
-    def setup_button_connections(self):
-        pass
-
-#private entry object, should only be used by this subtab
 class _CREntry(QWidget):
     def __init__(self, product_type = None, rate = None):
         super().__init__()
