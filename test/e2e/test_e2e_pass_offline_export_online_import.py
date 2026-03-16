@@ -126,7 +126,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     ### 7 - Verify that input values are the same ones exported
     record = json.loads(exported_file.read_text())
     assert record['vendor']['vendor_id'] == v_data['v_id']
-    assert record['consignment']['ticket_number'] == ticket_number
+    assert record['consignment']['consignment_id'] == ticket_number
 
     ### 8 - Go online, close offline window
     monkeypatch.setattr(SPOT, 'OFFLINE', False)
@@ -157,7 +157,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
         window.settings_tab.sync_btn.click()
 
     ### 12 - Verifies that record now exists in DB
-    new_ticket_number = str(get_max_value("Consignments", "ticket_number"))
+    new_ticket_number = str(get_max_value("Consignments", "consignment_id"))
     result = get_item("Consignments", "consignment", new_ticket_number)
     assert result is not None, f"Expected synced ticket to exist in DB"
     assert result['vendor_id'] == v_data['v_id']

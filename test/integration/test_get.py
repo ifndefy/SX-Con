@@ -10,7 +10,7 @@ def test_get_max_value():
     """
 
     container = db_connection.connect('Consignments')
-    property = 'ticket_number'
+    property = 'consignment_id'
 
     query = f"SELECT VALUE MAX(c.{property}) FROM c"
 

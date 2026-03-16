@@ -763,7 +763,6 @@ class CreateNewTab(BaseTab):
         return {
             'type':'consignment',
             'consignment_id': ticket_number,
-            'ticket_number': ticket_number,
             'vendor_id': vendor_data['vendor_id'],
             'user_id': current_user.get_user_id(),
             'datetime': vendor_data['datetime'],
@@ -796,11 +795,11 @@ class CreateNewTab(BaseTab):
                 return -1
 
             if insert_item("Consignments", "consignment", consignment) == -1:
-                log.error(f"Failed to insert consignment {consignment['ticket_number']}")
+                log.error(f"Failed to insert consignment {consignment['consignment_id']}")
                 return -1
 
-            log.info(f"Record created successfully! Ticket: {consignment['ticket_number']}")
-            return consignment['ticket_number']
+            log.info(f"Record created successfully! Ticket: {consignment['consignment_id']}")
+            return consignment['consignment_id']
 
         except Exception as e:
             log.error(f"Cosmos DB insertion error: {e}")
@@ -861,7 +860,7 @@ class CreateNewTab(BaseTab):
             if consignment_data is None:
                 return
 
-            ticket_number = consignment_data['ticket_number']
+            ticket_number = consignment_data['consignment_id']
             export_offline_record(ticket_number, vendor_data, products_data, consignment_data)
             self.clear_form()
             status_bar_instance.send_message(f"Offline record exported: {ticket_number}")
@@ -980,7 +979,7 @@ class CreateNewTab(BaseTab):
                             continue
             self.ticket_input.setText(f"OFFLINE_{max_num + 1}")
         else:
-            max = get_max_value("Consignments", "ticket_number")
+            max = get_max_value("Consignments", "consignment_id")
             self.ticket_input.setText(str(int(max) + 1))
 
     def update_datetime(self):

@@ -68,8 +68,7 @@ def import_offline_records():
                 log.error(f"Failed to insert product {product['product_id']} from {file.name}")
                 success = False
 
-        ticket_number = int(get_max_value("Consignments", "ticket_number")) + 1
-        consignment['ticket_number'] = ticket_number
+        ticket_number = int(get_max_value("Consignments", "consignment_id")) + 1
         consignment['consignment_id'] = ticket_number
 
         if insert_item("Consignments", "consignment", consignment) == -1:

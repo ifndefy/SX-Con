@@ -206,7 +206,7 @@ class RecordsTab(BaseTab):
         if ticket_number:
             try:
                 ticket_number_int = int(ticket_number)
-                add_property("ticket_number", ticket_number_int, "=")
+                add_property("consignment_id", ticket_number_int, "=")
             except ValueError:
                 pass
 
@@ -268,7 +268,7 @@ class RecordsTab(BaseTab):
             tickets = []
             for item in results:
                 tickets.append({
-                    'ticket_number': item.get('ticket_number'),
+                    'ticket_number': item.get('consignment_id'),
                     'vendor_id': item.get('vendor_id', ''),
                     'products': item.get('products', []),
                     'datetime': item.get('datetime', ''),
@@ -526,7 +526,7 @@ class RecordsTab(BaseTab):
             unpacked_ticket = ticket_details['ticket_data']
 
             ticket_header = {
-                'ticket_number': unpacked_ticket['ticket_number'],
+                'ticket_number': unpacked_ticket['consignment_id'],
                 'vendor_id': unpacked_ticket['vendor_id'],
                 'created': unpacked_ticket['datetime'],
                 'status': unpacked_ticket['status'],

@@ -332,7 +332,7 @@ class VendorTicketsTab(BaseTab):
                 ))
                 for item in results:
                     tickets.append({
-                        'ticket_number': item.get('ticket_number'),
+                        'ticket_number': item.get('consignment_id'),
                         'vendor_id': item.get('vendor_id', ''),
                         'product_ids': item.get('product_ids', ''),
                         'datetime': item.get('datetime', ''),
@@ -376,7 +376,7 @@ class VendorTicketsTab(BaseTab):
             tickets = []
             for item in results:
                 tickets.append({
-                    'ticket_number': item.get('ticket_number'),
+                    'ticket_number': item.get('consignment_id'),
                     'vendor_id': item.get('vendor_id', ''),
                     'product_ids': item.get('product_ids', ''),
                     'datetime': item.get('datetime', ''),

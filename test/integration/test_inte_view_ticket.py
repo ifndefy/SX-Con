@@ -9,7 +9,7 @@ from ui.core.view_ticket import ViewTicket
 @pytest.fixture
 def ticket_data():
     ticket_id = 1
-    data = get_item_by_property("Consignments", "consignment", "ticket_number", ticket_id)
+    data = get_item_by_property("Consignments", "consignment", "consignment_id", ticket_id)
     return {
         'ticket_id': ticket_id,
         'ticket_data': data,

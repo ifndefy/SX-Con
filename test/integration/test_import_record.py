@@ -27,7 +27,7 @@ def test_export_then_import(app, monkeypatch):
     monkeypatch.setattr(SPOT, 'OFFLINE', False)
     import_offline_records()
 
-    result = get_item_by_property("Consignments", "consignment", "ticket_number", int(get_max_value("Consignments", "ticket_number")))
+    result = get_item_by_property("Consignments", "consignment", "consignment_id", int(get_max_value("Consignments", "consignment_id")))
     assert result is not None
     assert result['vendor_id'] == 1
     assert result['status'] == "OPEN"
@@ -58,7 +58,7 @@ def test_sync_btn_import(app, monkeypatch):
         with patch('ui.tabs.settings.QMessageBox'):
             settings_tab.sync_btn.click()
 
-    result = get_item_by_property("Consignments", "consignment", "ticket_number", int(get_max_value("Consignments", "ticket_number")))
+    result = get_item_by_property("Consignments", "consignment", "consignment_id", int(get_max_value("Consignments", "consignment_id")))
     assert result is not None
     assert result['vendor_id'] == 1
     assert result['status'] == "OPEN"

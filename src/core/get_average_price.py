@@ -37,7 +37,7 @@ def _fetch_price_history(product_id):
         container = db_connection.connect("Consignments")
 
         query = """
-                    SELECT c.ticket_number, c.datetime, p.product_id, p.price
+                    SELECT c.consignment_id, c.datetime, p.product_id, p.price
                     FROM c
                     JOIN p IN c.products
                     WHERE c.type = 'consignment'
@@ -56,7 +56,7 @@ def _fetch_price_history(product_id):
         for item in results:
             price_history.append({
                 'product_id': item['product_id'],
-                'ticket_number': item['ticket_number'],
+                'ticket_number': item['consignment_id'],
                 'datetime': item['datetime'],
                 'price': item['price']
             })

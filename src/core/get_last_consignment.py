@@ -33,7 +33,7 @@ def get_last_consignment(entity_type: str, entity_id: str) -> datetime | None:
                 SELECT VALUE MAX(c.datetime)
                 FROM c
                 WHERE c.type = 'consignment'
-                AND ARRAY_CONTAINS(c.product_ids, {entity_id})
+                AND ARRAY_CONTAINS(c.products, {entity_id})
             """
 
         elif entity_type == "user":

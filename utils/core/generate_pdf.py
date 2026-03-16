@@ -42,7 +42,7 @@ class PDF:
                         break
 
     def set_ticket_data(self):
-        self.ticket_data = get_item_by_property("Consignments", "consignment", "ticket_number", self.ticket_num)
+        self.ticket_data = get_item_by_property("Consignments", "consignment", "consignment_id", self.ticket_num)
 
     def set_vendor_num(self, ):
         self.vendor_id = self.ticket_data["vendor_id"]

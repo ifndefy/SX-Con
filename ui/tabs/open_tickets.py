@@ -292,7 +292,7 @@ class OpenTicketsTab(BaseTab):
             unpacked_ticket = ticket_details['ticket_data']
 
             ticket_header = {
-                'ticket_number': unpacked_ticket['ticket_number'],
+                'ticket_number': unpacked_ticket['consignment_id'],
                 'vendor_id': unpacked_ticket['vendor_id'],
                 'created': unpacked_ticket['datetime'],
                 'status': unpacked_ticket['status'],
@@ -384,11 +384,11 @@ class OpenTicketsTab(BaseTab):
             container = self.db_connection.connect("Consignments")
 
             query = """
-                    SELECT c.ticket_number, c.datetime, c.status
+                    SELECT c.consignment_id, c.datetime, c.status
                     FROM c
                     WHERE c.type = 'consignment'
                       AND c.status = @status
-                    ORDER BY c.ticket_number DESC
+                    ORDER BY c.consignment_id DESC
                     """
 
             parameters = [{"name": "@status", "value": status}]
@@ -402,7 +402,7 @@ class OpenTicketsTab(BaseTab):
             tickets = []
             for item in results:
                 tickets.append({
-                    'ticket_number': item['ticket_number'],
+                    'ticket_number': item['consignment_id'],
                     'datetime': item['datetime'],
                     'status': item.get('status', 'UNKNOWN')
                 })

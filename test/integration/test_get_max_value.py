@@ -11,7 +11,7 @@ def test_get_max_value_db():
     Test: verifies that it can get a value from the database, returns -1 if not able
     """
     SPOT.OFFLINE = False
-    result = get_max_value("Consignments", "ticket_number")
+    result = get_max_value("Consignments", "consignment_id")
     assert result >= 0, "Failed to retrieve a max value through online mode"
 
 def test_get_max_value_offline():
@@ -24,7 +24,7 @@ def test_get_max_value_offline():
             fake_tick_num = random.randint(50, 100)
             fake_file = offline_dir / f"OFFLINE_{fake_tick_num}.json"
             fake_file.touch()
-            result = get_max_value("Consignments", "ticket_number")
+            result = get_max_value("Consignments", "consignment_id")
             wanted_name = '_'.join(['OFFLINE', str(fake_tick_num)])
             assert result == wanted_name, "Failed to retrieve a max value through offline mode"
             fake_file.unlink()
