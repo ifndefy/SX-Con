@@ -39,3 +39,7 @@ def test_val_state():
     assert val_state("New York") == True, "Expected True for valid state input with two words"
     assert val_state("massachusetts") == True, "Expected True for valid state name in all lower case"
     assert val_state ("MASSACHUSETTS") == True, "Expected True for valid state name in all upper case"
+
+    assert val_state("Washington DC") == True, "Expected True for valid state name with a space"
+    assert val_state("Washington D.C.") == True, "Expected True for valid state name with a period (.)"
+    assert val_state("Washington, D.C.") == True, "Expected True for valid state name with a period and comma (. and ,)"
