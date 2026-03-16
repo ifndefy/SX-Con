@@ -15,7 +15,8 @@ def val_city(city: str) -> bool:
     if city == "":
         log.error("Error: city cannot be an empty string")
         return False
-    if type(city) != str:
+
+    if not isinstance(city, str):
         log.error("Error: city must be a string")
         return False
 
