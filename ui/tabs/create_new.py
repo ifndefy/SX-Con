@@ -1151,7 +1151,6 @@ class CreateNewTab(BaseTab):
 
     def auto_pop_prod(self):
         """
-        SXC-136 action:
         - autofill product_id and product_name when product_id exists
         in the Products table
         note - attempting formatting for further use
@@ -1172,6 +1171,7 @@ class CreateNewTab(BaseTab):
                     item = get_item("Entities", "product", prod_id)
 
                     if item:
+                        log.info(f"Autopopulating with found product id {prod_id}")
                         # Product exists - populate and lock
                         if "product_name" in item:
                             product_section['product_name'].setText(item["product_name"])
@@ -1194,6 +1194,7 @@ class CreateNewTab(BaseTab):
                          product_section['rate'].setText(str(self.rates_container[item.get("product_type")]) if item else "")
 
                     else:
+                        log.info(f"Did not find existing product with id {prod_id}")
                         # Product doesn't exist - clear and unlock
                         product_section['product_name'].setText("")
                         product_section['product_name'].setObjectName("")
@@ -1228,6 +1229,7 @@ class CreateNewTab(BaseTab):
                     item = get_item_by_property("Entities", "product", "product_name", prod_name)
 
                     if item:
+                        log.info(f"Autopopulating with found product name {prod_name}")
                         if "product_id" in item:
                             product_section['product_id'].setText(str(item["product_id"]))
                             product_section['product_id'].setObjectName("READ_ONLY")
@@ -1250,6 +1252,7 @@ class CreateNewTab(BaseTab):
                             else:
                                 product_section['rate'].setText(self.rates_container[item.get("product_type")])
                     else:
+                        log.info(f"Did not find existing product with name {prod_name}")
                         product_section['product_id'].setObjectName("DEFAULT")
                         product_section['product_id'].setReadOnly(False)
                         product_section['product_id'].style().unpolish(product_section['product_id'])
@@ -1284,15 +1287,18 @@ class CreateNewTab(BaseTab):
             if vend_id:
                 item = get_item("Entities", "vendor", vend_id)
                 if item is not None:
+                    log.info(f"Autopopulating with found vendor id {vend_id}")
                     for field_name, input_field in field_mapping.items():
                         if field_name in item:
                             input_field.setText(str(item[field_name]))
                             input_field.setObjectName("READ_ONLY")
                             input_field.setReadOnly(True)
                 else:
+                    log.info(f"Did not find existing vendor with id {vend_id}")
                     for input_field in field_mapping.values():
                         input_field.setObjectName("DEFAULT")
                         input_field.setReadOnly(False)
+                        input_field.clear()
             else:
                 for input_field in field_mapping.values():
                     input_field.setObjectName("DEFAULT")
@@ -1322,15 +1328,18 @@ class CreateNewTab(BaseTab):
             if phone:
                 item = get_item_by_property("Entities", "vendor", "phone", phone)
                 if item is not None:
+                    log.info(f"Autopopulating with found phone number {phone}")
                     for field_name, input_field in field_mapping.items():
                         if field_name in item:
                             input_field.setText(str(item[field_name]))
                             input_field.setObjectName("READ_ONLY")
                             input_field.setReadOnly(True)
                 else:
+                    log.info(f"Did not find existing vendor with phone number {phone}")
                     for input_field in field_mapping.values():
                         input_field.setObjectName("DEFAULT")
                         input_field.setReadOnly(False)
+                        input_field.clear()
             else:
                 for input_field in field_mapping.values():
                     input_field.setObjectName("DEFAULT")
