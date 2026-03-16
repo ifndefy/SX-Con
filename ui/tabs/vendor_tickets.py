@@ -631,7 +631,7 @@ class VendorTicketsTab(BaseTab):
             unpacked_ticket = ticket_details['ticket_data']
             
             ticket_header = {
-                'ticket_number': unpacked_ticket['ticket_number'],
+                'ticket_number': unpacked_ticket['consignment_id'],
                 'vendor_id': unpacked_ticket['vendor_id'],
                 'created': unpacked_ticket['datetime'],
                 'status': unpacked_ticket['status'],
