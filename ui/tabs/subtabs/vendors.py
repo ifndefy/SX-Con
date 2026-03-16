@@ -102,6 +102,8 @@ class VendorsTab(BaseTab):
         self.first_name_input.setPlaceholderText("First Name")
         self.first_name_input.setMaxLength(30)
         self.first_name_input.setMinimumWidth(263)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.first_name_input.setValidator(alpha_validator)
         self.first_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.first_name_input)
 
@@ -110,6 +112,7 @@ class VendorsTab(BaseTab):
         self.middle_name_input.setPlaceholderText("M. Name")
         self.middle_name_input.setMaxLength(10)
         self.middle_name_input.setMinimumWidth(103)
+        self.middle_name_input.setValidator(alpha_validator)
         self.middle_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.middle_name_input)
 
@@ -118,6 +121,7 @@ class VendorsTab(BaseTab):
         self.last_name_input.setPlaceholderText("Last Name")
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setMinimumWidth(263)
+        self.last_name_input.setValidator(alpha_validator)
         self.last_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.last_name_input)
 
@@ -129,6 +133,8 @@ class VendorsTab(BaseTab):
         self.address_input = QLineEdit()
         self.address_input.setPlaceholderText("Address")
         self.address_input.setMaxLength(255)
+        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 ]+"))
+        self.address_input.setValidator(address_validator)
         self.address_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.address_input)
 
@@ -136,12 +142,14 @@ class VendorsTab(BaseTab):
         self.city_input = QLineEdit()
         self.city_input.setPlaceholderText("City")
         self.city_input.setMaxLength(30)
+        self.city_input.setValidator(alpha_validator)
         self.city_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.city_input)
 
         search_section_row_3.addWidget(QLabel("State:"))
         self.state_input = format_state.FormatState()
         self.state_input.setFixedWidth(50)
+        self.state_input.setValidator(alpha_validator)
         self.state_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.state_input)
 
@@ -150,6 +158,8 @@ class VendorsTab(BaseTab):
         self.zip_input.setPlaceholderText("Zip")
         self.zip_input.setMaxLength(5)
         self.zip_input.setFixedWidth(70)
+        zip_validator = QIntValidator(0, 99999, self)
+        self.zip_input.setValidator(zip_validator)
         self.zip_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.zip_input)
 
