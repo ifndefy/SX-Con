@@ -490,7 +490,7 @@ class RecordsTab(BaseTab):
                             widgets['update_btn'].setObjectName("LOCKED")
                             widgets['update_btn'].style().unpolish(widgets['update_btn'])
                             widgets['update_btn'].style().polish(widgets['update_btn'])
-                    QMessageBox.information(self, "Ticket Opened", f"Ticket {ticket_number} has been opened")
+                    QMessageBox.information(self, "Ticket Closed", f"Ticket {ticket_number} has been closed")
                 self.tickets_section[ticket_index]['status'].setText(
                     get_property("Consignments", "status", "consignment", ticket_number)
                 )
