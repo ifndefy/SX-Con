@@ -1,11 +1,11 @@
 
 def val_qty_sold(sold: int, qty: int) -> bool:
     """
-        purpose: validate that quantity sold is an integer
+        purpose: validate that quantity sold is appropriate for qty
         author(s): Tim Liu
         parm sold: the sold amount
         param qty: the quantity in stock
-        return: True if valid integer, False otherwise
+        return: True if valid, False otherwise
     """
     if sold is not int:
         return False
