@@ -8,7 +8,7 @@ def val_state(state: str) -> bool:
     :author(s): Colin Heinselman
     """
 
-    allowed_chars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,"
+    allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
     if state is None:
         log.error("Error: State cannot be None")
@@ -22,9 +22,8 @@ def val_state(state: str) -> bool:
         return False
 
 
-
-    if len(state) <= 2:
-        log.error("Error: State must be greater than 2 characters")
+    if len(state) != 2:
+        log.error("Error: State must be exactly 2 characters long")
         return False
 
     if not all(char in allowed_chars for char in state):
