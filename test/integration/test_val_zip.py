@@ -1,8 +1,8 @@
 # test/test_val_zip.py
 
 """
-    Module test for val_zip
-    Author(s): Colin Henderson
+Module test for val_zip
+Author(s): Colin Henderson
 """
 
 from validate.val_zip import val_zip
