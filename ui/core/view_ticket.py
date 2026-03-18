@@ -122,7 +122,7 @@ class ViewTicket(QObject):
 
             # Price
             line2_layout.addWidget(QLabel("Price:"))
-            price = product.get('price', 0) if product.get('price') else 0
+            price = f"{float(product.get('price', 0)):.2f}" if product.get('price') else 0
             price = self.fix_price(price)
             price_input = QLineEdit(price)
             price_input.setFixedWidth(100)
@@ -173,6 +173,7 @@ class ViewTicket(QObject):
                 'quantity_display': quantity_input,
                 'sold_display': sold_display,
                 'update_btn' : update_btn,
+                'product_name' : product_name_input.text().strip(),
             }
 
         # Revenue section
@@ -248,6 +249,8 @@ class ViewTicket(QObject):
         if not widgets:
             log.error(f"Failed to find product widgets")
             return
+        else:
+            product_name = widgets['product_name']
 
         new_sold, quantity = self.val_quantities(widgets)
         if new_sold is None:
@@ -273,6 +276,15 @@ class ViewTicket(QObject):
             widgets['sold_edit'].setText(str(new_sold))
             widgets['remaining_display'].setText(str(new_remaining))
             widgets['sold_display'].setText(str(new_sold))
+            QMessageBox.information(
+                self.sender(), "Success",
+                f"Updated sold quantity for:\n"
+                f"Product ID: {product_id}\n"
+                f"Product Name: {product_name}\n"
+                f"From: {quantity}\n"
+                f"To: {new_sold}"
+            )
+            self.payout_widget.handle_calculate()
         else:
             log.error(f"Update failed: {error}")
 

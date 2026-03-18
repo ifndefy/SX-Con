@@ -1,13 +1,13 @@
 import pytest
 from unittest.mock import MagicMock
 
-from ui.tabs.open_tickets import OpenTicketsTab
+from ui.tabs.search_tickets import SearchTicketsTab
 
 @pytest.fixture
 def open_tickets_tab(app):
     fake_api = MagicMock()
     fake_db = MagicMock()
-    yield OpenTicketsTab(fake_api, fake_db)
+    yield SearchTicketsTab(fake_api, fake_db)
 
 def test_btns_exist(open_tickets_tab):
     tab = open_tickets_tab

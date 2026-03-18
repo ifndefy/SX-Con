@@ -35,5 +35,5 @@ def delete_property(container_name: str, type: str, id: str, attribute_name: str
         log.info(f"Successfully deleted attribute '{attribute_name}' from record {type}_{id} in {container_name}")
         return 0
     except Exception as e:
-        log.error(f"ERROR: failed to delete_property {attribute_name} from {type}_{id} in {container_name}: {e}")
+        log.error(f"ERROR: failed to delete property {attribute_name} from {type}_{id} in {container_name}: {e}")
         return -1

@@ -26,7 +26,7 @@ class LoginScreen(QDialog):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.setWindowTitle("SX-Con - Login")
-        self.setFixedSize(500, 350)
+        self.setFixedWidth(400)
         self.setModal(True)
 
         self.username = None

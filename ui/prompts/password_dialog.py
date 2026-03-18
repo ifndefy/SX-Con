@@ -13,7 +13,7 @@ class PasswordChangeDialog(QDialog):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.setWindowTitle("Change Password")
-        self.setFixedSize(400, 250)
+        self.setFixedWidth(400)
         self.setModal(True)
         
         self.new_password = None

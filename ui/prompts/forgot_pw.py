@@ -1,5 +1,6 @@
 import bcrypt
 from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
@@ -22,7 +23,7 @@ class ForgotPasswordScreen(QDialog):
         self.parent = parent
         self.theme_manager = theme_manager
         self.setWindowTitle("SX-Con - Password Reset")
-        self.setFixedSize(500, 400)
+        self.setFixedWidth(400)
         self.setModal(True)
 
         self.setup_ui()
@@ -60,13 +61,30 @@ class ForgotPasswordScreen(QDialog):
         if un is None or un == "":
             QMessageBox.critical(self, "Error", "Please enter a username")
             return
-        if get_item_by_property("Entities", "user", "username", un):
-            self._on_found_username(un)
-        else:
-            QMessageBox.critical(self, "Error", "Username not found")
-            return
+        self.req_btn.setEnabled(False)
+        self.req_btn.setObjectName("LOCKED")
+        self.req_btn.setText("Looking up username...")
+        self.req_btn.style().unpolish(self.req_btn)
+        self.req_btn.style().polish(self.req_btn)
+        self.setCursor(Qt.CursorShape.WaitCursor)
+        QApplication.processEvents()
+
+        try:
+            if get_item_by_property("Entities", "user", "username", un):
+                self._on_found_username(un)
+            else:
+                QMessageBox.critical(self, "Error", "Username not found")
+                return
+        finally:
+            self.req_btn.setEnabled(True)
+            self.req_btn.setObjectName("DEFAULT")
+            self.req_btn.setText("Request for Username")
+            self.req_btn.style().unpolish(self.req_btn)
+            self.req_btn.style().polish(self.req_btn)
+            self.unsetCursor()
 
     def _on_found_username(self, username):
+        self.req_btn.setText(f"Found username: {username}")
         user_item = get_item_by_property("Entities", "user", "username", username)
         self.user_id = user_item.get("user_id", '')
         user_qs = self.get_sec_questions(self.user_id)

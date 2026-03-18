@@ -87,7 +87,7 @@ class RevenueByProdType(QWidget):
                     continue
                 price_text = section['price'].text().strip()
                 qty_text = section['quantity'].text().strip()
-                rate_text = section['rate'].text().strip()
+                rate_text = section['rate'].text().strip().replace('%', '')
                 if not price_text or not qty_text or not rate_text:
                     continue
                 price = convert_price(price_text)

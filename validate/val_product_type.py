@@ -23,7 +23,7 @@ def val_product_type(ptype: str) -> bool:
         return False
 
     # Reject special characters (only allow alphabetic characters)
-    if not ptype_str.isalpha():
+    if not all(char.isalpha() or char == ' ' for char in ptype_str):
         return False
 
     return True
