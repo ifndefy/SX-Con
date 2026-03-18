@@ -1,10 +1,12 @@
 # test/test_val_zip.py
 
-from validate.val_zip import val_zip
-    """
+"""
     Module test for val_zip
     Author(s): Colin Henderson
-    """
+"""
+
+from validate.val_zip import val_zip
+
 
 def test_val_zip():
     assert val_zip(12345) is True
