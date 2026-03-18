@@ -141,3 +141,38 @@ class RevenueByProdType(QWidget):
         for rec in self.revenue_records:
             self.totals[rec['product_type']] = 0.0
         self.update_display_values(self.totals)
+
+    def load_from_db_document(self, consignment_doc):
+        """
+        :Purpose: loads payout totals by product type from a consignment doc (get_item(consignment))
+        :Param: consignment_doc as a dictionary
+        :Author(s): Joe Lee
+        """
+
+        totals = {
+            "Hot Food": 0.0,
+            "General": 0.0,
+            "Produce": 0.0,
+            "Total": 0.0
+        }
+
+        try:
+            by_group = consignment_doc["revenue"]["payout"][0]["grouped"]
+        except (KeyError, IndexError, TypeError):
+            log.error("Missing payout grouped data in consignment document")
+            self.update_display_values(totals)
+            return
+
+        grand_total = 0.0
+
+        for type in by_group:
+            prod_type = type.get("product_type")
+            vendor_total = float(type.get("vendor", 0.0))
+
+            if prod_type in totals:
+                totals[prod_type] = vendor_total
+                grand_total += vendor_total
+
+        totals["Total"] = grand_total
+
+        self.update_display_values(totals)

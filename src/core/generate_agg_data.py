@@ -25,6 +25,8 @@ def agg_total_product_type(product_doc: list, product_type: str) -> float | None
             continue
         total += float(result['vendor'])
         return round(total, 2)
+    log.error(f"Failed to calculate aggregate data for {wanted_prod_type}")
+    return None
 
 def convert_price(price) -> float | None:
     """

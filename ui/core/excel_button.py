@@ -1,5 +1,7 @@
 from PyQt6.QtWidgets import QPushButton
 
+import utils.logger.logger as log
+
 class ExcelButton(QPushButton):
     def __init__(self, form_gatherer, export_impl, name = None, parent = None):
         super().__init__(name, parent)
@@ -16,12 +18,14 @@ class ExcelButton(QPushButton):
     def exec_function(self):      
         if not self.gather_func:
             #Error out here
+            log.error(f"Failed to execute gather function for excel button")
             return
 
         data = self.gather_func()
         
         if not self.export_func:
             #Error out here
+            log.error(f"Failed to execute export function for excel button")
             return
 
         self.export_func(data)

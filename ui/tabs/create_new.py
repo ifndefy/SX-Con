@@ -14,23 +14,31 @@ from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 
+from pathlib import Path
+
+from src import SPOT
+
 from handlers.handler_pdf import handler_live_pdf
 from handlers import handler_print
 from services.get_item import get_item
 from services.get_item_by_property import get_item_by_property
-from utils.message_bus import status_bar_instance
-from utils.parse_consignment_table import fetch_consignment_data
+from services.get_max_value import get_max_value
+from services.insert_item import insert_item
 from src.core import generate_agg_data
 from src.user import current_user
+from validate.val_check_does_not_exist import val_check_does_not_exists
 from ui.tabs.base import BaseTab
 from ui.core.autogen_date import generate_host_datetime
-from ui.core.autogen_ticket_num import autogen_ticket_num
 from ui.core.revenue_by_product_type import RevenueByProdType
 from ui.core.revenue_generation import RevenueGeneration
 from ui.core import format_phone
 from ui.core import format_price
 from ui.core import format_state
+from utils.core.export_doc import export_offline_record
 from utils.core import generate_excel as xls_gen
+from utils.parse_consignment_table import fetch_consignment_data
+
+from utils.message_bus import status_bar_instance
 import utils.logger.logger as log
 
 import decimal as d
@@ -53,6 +61,7 @@ class CreateNewTab(BaseTab):
         self.clear_btn = None
         self.revenue_generation = None
         self.create_btn = None
+        self.export_btn = None
 
         self.rates_container = fetch_consignment_data()
         self.product_sections = []
@@ -345,10 +354,15 @@ class CreateNewTab(BaseTab):
 
         action_layout.addStretch()
 
-        # Create Record button on right
-        self.create_btn = QPushButton("Create Record")
-        self.create_btn.setObjectName("large_btn")
-        action_layout.addWidget(self.create_btn)
+        if SPOT.OFFLINE:
+            self.export_btn = QPushButton("Export Record")
+            self.export_btn.setObjectName('large_btn')
+            action_layout.addWidget(self.export_btn)
+        else:
+            # Create Record button on right
+            self.create_btn = QPushButton("Create Record")
+            self.create_btn.setObjectName("large_btn")
+            action_layout.addWidget(self.create_btn)
 
         combo_section_row_0.addLayout(action_layout)
         layout.addLayout(combo_section_row_0)
@@ -443,7 +457,6 @@ class CreateNewTab(BaseTab):
         rate_input.setPlaceholderText("Rate")
         rate_input.setFixedWidth(80)
         rate_input.setValidator(QIntValidator(0, 100, self))
-        # Default to BASE_RATE until type indicates otherwise
         rate_input.textChanged.connect(self.handle_total)
         line2_layout.addWidget(rate_input)
         product_section['rate'] = rate_input
@@ -483,7 +496,7 @@ class CreateNewTab(BaseTab):
         section_layout.addLayout(line2_layout)
 
         product_type_input.currentTextChanged.connect(
-            lambda _txt, sec=product_section: self._on_product_type_changed(sec)
+            self._make_type_changed_handler(product_section)
         )
 
         # Add to container
@@ -491,6 +504,11 @@ class CreateNewTab(BaseTab):
         self.product_sections.append(product_section)
         self.product_counter += 1
         status_bar_instance.send_message(f"Added product line. Total: {len(self.product_sections)}")
+
+    def _make_type_changed_handler(self, sec):
+        def handler(_txt):
+            self._on_product_type_changed(sec)
+        return handler
 
     def handle_total(self):
         widget = self.sender()
@@ -576,7 +594,6 @@ class CreateNewTab(BaseTab):
         msg_box.setWindowTitle("Warning - Product Line Removal")
         msg_box.setText(f"Are you sure you want to remove this product line?\n{product_id} - {product_name}")
         confirm_btn = msg_box.addButton("Confirm", QMessageBox.ButtonRole.AcceptRole)
-        cancel_btn = msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
 
         msg_box.setDefaultButton(confirm_btn)
 
@@ -606,7 +623,10 @@ class CreateNewTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        self.create_btn.clicked.connect(self.create_record)
+        if self.create_btn:
+            self.create_btn.clicked.connect(self.create_record)
+        if self.export_btn:
+            self.export_btn.clicked.connect(self.export_record)
         self.clear_btn.clicked.connect(self.clear_form)
         self.add_product_btn.clicked.connect(self.add_product_section)
         self.calc_btn.clicked.connect(self.handle_calc_btn)
@@ -623,32 +643,173 @@ class CreateNewTab(BaseTab):
         try:
             handler_print.handler_print(ticket)
             log.info(f"Print requested for ticket {ticket}")
+            QMessageBox.information(self, "PDF Generation Succeeded", f"Ticket {ticket} successfully requested to print")
         except Exception as e:
             QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket}:\n\n{e}")
 
     def on_pdf_clicked(self):
         vendor_data = self._gather_vendor_data()
+        if vendor_data is None:
+            log.warning("PDF generation skipped: Validation failed")
+            return False
+
         products_data = self._gather_products_data()
+        if products_data is None:
+            log.warning("PDF generation skipped: Validation failed")
+            return False
+
         self.update_revenue_fields()
         self.rev_by_prod.handle_updating(self.product_sections)
         revenue_data = self._gather_revenue_data()
+        ticket_number = self.ticket_input.text().strip()
+        datetime = self.datetime_input.text().strip()
 
         try:
-            if not self._validate_required_fields(vendor_data, products_data):
-                log.warning(f"PDF generation skipped: Validation failed")
-                return False
-            handler_live_pdf(vendor_data, products_data, revenue_data)
-            log.info(f"PDF generated for Ticket {vendor_data['ticket_number']}")
+            handler_live_pdf(ticket_number, vendor_data, products_data, revenue_data, datetime)
+            log.info(f"PDF generated for Ticket {ticket_number}")
+            QMessageBox.information(self, "PDF Generation Succeeded",
+                                    f"Ticket {ticket_number} successfully generated a PDF")
             return True
         except Exception as e:
-            log.error(f"PDF generation failed for Ticket {vendor_data.get('ticket_number')}: {e}")
+            log.error(f"PDF generation failed: {e}")
+            QMessageBox.information(self, "PDF Generation Failed", f"Failed to generate a PDF")
             return False
+
+    def _gather_ticket_number(self):
+        raw_ticket = self.ticket_input.text().strip()
+        ticket_number = int(raw_ticket) if raw_ticket else None
+        if not ticket_number:
+            log.error("Ticket number is required")
+            return None
+        return ticket_number
+
+    def _gather_vendor_data(self):
+        raw_vendor_id = self.vendor_id_input.text().strip()
+        vendor_id = int(raw_vendor_id) if raw_vendor_id else None
+
+        if not vendor_id:
+            log.error("Vendor ID is required")
+            return None
+
+        return {
+            'vendor_id': vendor_id,
+            'phone': self.phone_input.text().strip() or None,
+            'datetime': self.datetime_input.text().strip() or None,
+            'first_name': self.first_name_input.text().strip() or None,
+            'middle_name': self.middle_name_input.text().strip() or None,
+            'last_name': self.last_name_input.text().strip() or None,
+            'address': self.address_input.text().strip() or None,
+            'city': self.city_input.text().strip() or None,
+            'state': self.state_input.text().strip() or None,
+            'zip': int(self.zip_input.text().strip()) if self.zip_input.text().strip() else None
+        }
+
+    def _gather_revenue_data(self):
+        return {
+            'shared': self.revenue_generation.get_revenue_data(),
+            'grouped': self.rev_by_prod.get_revenue_data(),
+            'payout': []
+        }
+
+    def _gather_products_data(self):
+        products = []
+        has_valid_product = False
+        for section in self.product_sections:
+            product_id = self._convert_product_id(section['product_id'].text().strip())
+            if product_id is None:
+                continue
+
+            product_type = section['product_type'].currentText().strip() or None
+            product_name = section['product_name'].text().strip().lower() or None
+            rate = self._convert_rate(section['rate'].text().strip())
+            if rate is None:
+                rate = self.rates_container.get(product_type)
+            quantity = self._convert_quantity(section['quantity'].text().strip())
+            price = self._parse_money(section['price'].text())
+
+            if not product_name:
+                log.error(f"Product {product_id} is missing a name")
+                return None
+            if not product_type or not price or price <= 0 or not quantity:
+                log.warning(f"Product {product_id} skipped, missing type/price/quantity")
+                continue
+
+            has_valid_product = True
+            products.append({
+                'product_id': product_id,
+                'product_type': product_type,
+                'product_name': product_name,
+                'notes': section['notes'].text().strip() or "",
+                'rate': rate,
+                'price': price,
+                'quantity': quantity,
+                'total': self._parse_money(section['total'].text()),
+                'sold': 0,
+                'remaining': quantity
+            })
+
+        if not has_valid_product:
+            log.error("At least one product requires Type, Price, and Quantity")
+            return None
+
+        return products
+
+    def _gather_consignment_data(self, vendor_data, products_data, revenue_data):
+        raw_ticket = self.ticket_input.text().strip()
+        if not raw_ticket:
+            log.error("Ticket number is required")
+            return None
+        ticket_number = raw_ticket if SPOT.OFFLINE else int(raw_ticket)
+        return {
+            'type':'consignment',
+            'consignment_id': ticket_number,
+            'vendor_id': vendor_data['vendor_id'],
+            'user_id': current_user.get_user_id(),
+            'datetime': vendor_data['datetime'],
+            'status': "OPEN",
+            'products': products_data,
+            'revenue': revenue_data
+        }
+
+    def _post_to_database(self, vendor_data, products_data, revenue_data):
+        try:
+            if val_check_does_not_exists("Entities", "vendor", "vendor_id", vendor_data['vendor_id']):
+                if insert_item("Entities", "vendor", vendor_data) == -1:
+                    log.error(f"Failed to insert vendor {vendor_data['vendor_id']}")
+                    return -1
+            else:
+                log.info(f"Vendor {vendor_data['vendor_id']} already exists, skipping")
+
+            for product in products_data:
+                if val_check_does_not_exists("Entities", "product", "product_id", product['product_id']):
+                    product_doc = dict(product)
+                    product_doc['type'] = 'product'
+                    if insert_item("Entities", "product", product_doc) == -1:
+                        log.error(f"Failed to insert product {product['product_id']}")
+                        continue
+                else:
+                    log.info(f"Product {product['product_id']} already exists, skipping")
+
+            consignment = self._gather_consignment_data(vendor_data, products_data, revenue_data)
+            if consignment is None:
+                return -1
+
+            if insert_item("Consignments", "consignment", consignment) == -1:
+                log.error(f"Failed to insert consignment {consignment['consignment_id']}")
+                return -1
+
+            log.info(f"Record created successfully! Ticket: {consignment['consignment_id']}")
+            return consignment['consignment_id']
+
+        except Exception as e:
+            log.error(f"Cosmos DB insertion error: {e}")
+            return -1
 
     def create_record(self):
         """
-        :author(s): Joe Lee, Alexander Bubienko
-        :purpose: gathers all text inputs and posts to Azure SQL database as a single record
+        :purpose: gathers all text inputs and posts to Cosmos database as a single record
         :return: record ID on success, -1 on error
+        :author(s): Joe Lee, Alexander Bubienko
         """
         try:
             self.update_revenue_fields()
@@ -656,28 +817,14 @@ class CreateNewTab(BaseTab):
             self.repaint()
             QApplication.processEvents()
 
-            # Get vendor data
             vendor_data = self._gather_vendor_data()
-
-            # Validate required fields
-            if not self._validate_required_fields(vendor_data):
-                return -1
-            
-            # Get products data
             products_data = self._gather_products_data()
-        
-            # Get revenue data
             revenue_data = self._gather_revenue_data()
-        
-            # Combine into record data for database
-            record_data = {
-                'vendor': vendor_data,
-                'products': products_data,
-                'revenue': revenue_data
-            }
 
-            # Post to database
-            record_id = self._post_to_database(record_data)
+            if products_data is None:
+                return -1
+
+            record_id = self._post_to_database(vendor_data, products_data, revenue_data)
 
             if record_id != -1:
                 self.clear_form()
@@ -691,234 +838,37 @@ class CreateNewTab(BaseTab):
             log.error(f"Database error: {e}")
             return -1
 
-    def _gather_vendor_data(self):
+    def export_record(self):
         """
-        :author(s): Alexander Bubienko
-        :purpose: Gather vendor field data and convert empty strings to NULL
-        :return: Dictionary containing vendor data
-        """
-        # Vendor information
-        vendor_data = {
-            'ticket_number': self.ticket_input.text().strip() or "NULL",
-            'vendor_id': self.vendor_id_input.text().strip() or "NULL",
-            'phone': self.phone_input.text().strip() or "NULL",
-            'datetime': self.datetime_input.text().strip() or "NULL",
-            'first_name': self.first_name_input.text().strip() or "NULL",
-            'middle_name': self.middle_name_input.text().strip() or "NULL",
-            'last_name': self.last_name_input.text().strip() or "NULL",
-            'address': self.address_input.text().strip() or "NULL",
-            'city': self.city_input.text().strip() or "NULL",
-            'state': self.state_input.text().strip() or "NULL",
-            'zip': int(self.zip_input.text().strip()) if self.zip_input.text().strip() else None
-        }
-        return vendor_data
-    
-    def _gather_products_data(self):
-        """
-        :author(s): Alexander Bubienko
-        :purpose: Gather product field data and convert empty strings to NULL
-        :return: List of dictionaries containing product data
-        """
-        # Product information
-        products_data = []
-        for i, product_section in enumerate(self.product_sections):
-            if not product_section['product_id'].text().strip():
-                continue
-
-            product_data = {
-                'product_id': int(product_section['product_id'].text().strip()) or "NULL",
-                'product_type': product_section['product_type'].currentText().strip() or "NULL",
-                'product_name': product_section['product_name'].text().strip() or "NULL",
-                'notes': product_section['notes'].text().strip() or "",
-                'rate': product_section.get('rate').text().strip() if product_section.get('rate') else "NULL",
-                'price': self._parse_money(product_section['price'].text()) or 0.0,
-                'quantity': int(product_section['quantity'].text().strip()) or "NULL",
-                'total': self._parse_money(product_section['total'].text()) or 0.0,
-            }
-            products_data.append(product_data)
-        return products_data
-
-    def _gather_revenue_data(self):
-        """
-        :purpose: Gather revenue data and convert empty strings to NULL
-        :return: Dictionary containing shared revenue and grouped revenue
-        :author(s): Alexander Bubienko, Joe Lee
-        """
-        # Revenue sharing data
-        return {
-            'shared': self.revenue_generation.get_revenue_data(),
-            'grouped': self.rev_by_prod.get_revenue_data(),
-            'payout': []
-        }
-
-    def _validate_required_fields(self, vendor_data, products_data=None):
-        """
-        :author(s): Alexander Bubienko, Colin Henderson, Joe Lee
-        :purpose: Validate that required fields are filled
-        :return: True if all required fields are valid, False otherwise
-        """
-        if not vendor_data['vendor_id'] or vendor_data['vendor_id'] == "NULL":
-            log.error("Error: Vendor ID is required")
-            return False
-
-        if products_data is None:
-            products_data = self._gather_products_data()
-
-        has_valid_product = False
-        for product in products_data:
-            if (
-                    product['product_id'] and product['product_id'] != "NULL"
-                    and
-                    product['product_type'] and product['product_type'] != "SELECT"
-                    and
-                    product['price'] and product['price'] > 0
-                    and
-                    product['quantity'] and product['quantity'] != "NULL"
-            ):
-                has_valid_product = True
-                break
-
-        if not has_valid_product:
-            log.error("Error: At least one product requires Product ID, Product Type, Price, and Quantity")
-            return False
-
-        return True
-
-    def _post_to_database(self, record_data):
-        """
-        :author(s): Alexander Bubienko, Joe Lee
-        :purpose: Create documents in both Entities and Consignments containers
-        :return: document ID on success, -1 on error
+        :purpose: Exports all record docs into a json file (only if SPOT.OFFLINE)
+        :author(s): Joe Lee
         """
         try:
-            entities_container = self.db_connection.connect('Entities')
-            consignments_container = self.db_connection.connect('Consignments')
+            self.update_revenue_fields()
+            self.rev_by_prod.handle_updating(self.product_sections)
 
-            # Validate vendor_id exists
-            vendor_id = record_data['vendor']['vendor_id']
-            if not vendor_id or vendor_id == "NULL":
-                log.error("Error: No vendor ID provided")
-                return -1
+            vendor_data = self._gather_vendor_data()
+            if vendor_data is None:
+                return
 
-            # Create vendor document
-            vendor_document = {
-                'id': f"vendor_{vendor_id}",
-                'partitionKey': f"vendor_{vendor_id}",
-                'type': 'vendor',
-                'vendor_id': int(vendor_id),
-                'phone': record_data['vendor']['phone'],
-                'first_name': record_data['vendor']['first_name'],
-                'middle_name': record_data['vendor']['middle_name'],
-                'last_name': record_data['vendor']['last_name'],
-                'address': record_data['vendor']['address'],
-                'city': record_data['vendor']['city'],
-                'state': record_data['vendor']['state'],
-                'zip': record_data['vendor']['zip']
-            }
+            products_data = self._gather_products_data()
+            if products_data is None:
+                return
 
-            log.info(f"Creating vendor document with ID: vendor_{vendor_id}")
+            revenue_data = self._gather_revenue_data()
+            consignment_data = self._gather_consignment_data(vendor_data, products_data, revenue_data)
+            if consignment_data is None:
+                return
 
-            try:
-                vendor_response = entities_container.upsert_item(body=vendor_document)
-                log.info("Vendor document created successfully")
-            except Exception as e:
-                log.error(f"Error creating vendor document: {e}")
-                return -1
-
-            product_ids = []
-            for i, product in enumerate(record_data['products']):
-                if self._has_product_data(product):
-                    product_id = product['product_id']
-                    product_name = product['product_name']
-                    if not product_id or product_id == "NULL":
-                        log.warning(f"Skipping product {i} - no product ID")
-                        continue
-                    if not product_name or product_name == "NULL":
-                        log.error("Error: Product Name is required for all products")
-                        return -1
-
-                    rate_value = self._convert_rate(product.get('rate'))
-                    if rate_value is None:
-                        rate_value = self.rates_container[product.get('product_type')]
-
-                    product_doc = {
-                        'id': f"product_{product_id}",
-                        'partitionKey': f"product_{product_id}",
-                        'type': 'product',
-                        'product_id': self._convert_product_id(product_id),
-                        'product_name': self._convert_null(product['product_name']),
-                        'product_type': self._convert_null(product['product_type']),
-                        'rate': rate_value,
-                        'total': product['total'],
-                    }
-                    log.info(f"Creating product document: product_{product_id}")
-                    try:
-                        product_response = entities_container.upsert_item(body=product_doc)
-                        product_ids.append(product_id)
-                        log.info(f"Product document created: {product_id}")
-                    except Exception as e:
-                        log.error(f"Error creating product document {product_id}: {e}")
-
-            ticket_number = record_data['vendor']['ticket_number']
-            if not ticket_number or ticket_number == "NULL":
-                log.error("Error: No ticket number provided")
-                return -1
-
-            consignment_document = {
-                'id': f"consignment_{str(ticket_number)}",
-                'partitionKey': f"consignment_{str(ticket_number)}",
-                'type': 'consignment',
-                'ticket_number': int(ticket_number),
-                'vendor_id': int(vendor_id),
-                'user_id': int(current_user.get_user_id()),
-                'datetime': record_data['vendor']['datetime'],
-                'status': "OPEN",
-                'products': [
-                    {
-                        'product_id': product['product_id'],
-                        'product_type': product['product_type'],
-                        'product_name': product['product_name'],
-                        'notes': product['notes'],
-                        'rate': (
-                            self._convert_rate(product.get('rate'))
-                            if self._convert_rate(product.get('rate')) is not None
-                            else self.rates_container[product.get('product_type')]
-                        ),
-                        'price': self._convert_null(product['price']),
-                        'quantity': self._convert_quantity(product['quantity']),
-                        'total': product['total'],
-                        'sold': 0,
-                        'remaining': self._convert_quantity(product['quantity'])
-                    }
-                    for product in record_data['products']
-                    if self._has_product_data(product)
-                    ],
-                'revenue': {
-                    'shared': record_data['revenue']['shared'],
-                    'grouped': record_data['revenue']['grouped'],
-                    'payout': record_data['revenue']['payout'],
-                }
-            }
-
-            log.info(f"Creating consignment document with ID: {ticket_number}")
-            try:
-                consignment_response = consignments_container.create_item(body=consignment_document)
-                log.info("Consignment document created successfully")
-            except Exception as e:
-                log.error(f"Error creating consignment document: {e}")
-                return -1
-
-            success_msg = f"Record created successfully! Ticket: {ticket_number}"
-            log.info(success_msg)
-            return ticket_number
+            ticket_number = consignment_data['consignment_id']
+            export_offline_record(ticket_number, vendor_data, products_data, consignment_data)
+            self.clear_form()
+            status_bar_instance.send_message(f"Offline record exported: {ticket_number}")
+            QMessageBox.information(self, "Export Succeeded", f"Ticket {ticket_number} exported successfully")
 
         except Exception as e:
-            error_msg = f"Cosmos DB insertion error: {e}"
-            log.error(error_msg)
-            import traceback
-            traceback.print_exc()
-            # self.status_label.setText(f"Error creating record: {str(e)}")
-            return -1
+            log.error(f"Export failed: {e}")
+            QMessageBox.critical(self, "Export Failed", f"Failed to export record:\n\n{e}")
 
     def _convert_product_id(self, product_id_str):
         """
@@ -1015,8 +965,22 @@ class CreateNewTab(BaseTab):
         :return: None
         :author(s): Joe Lee
         """
-        ticket_num = str(autogen_ticket_num())
-        self.ticket_input.setText(ticket_num)
+        if SPOT.OFFLINE:
+            offline_dir = Path(__file__).parent.parent.parent / "utils" / "OFFLINE_tickets"
+            max_num = 0
+            if offline_dir.exists():
+                for file in offline_dir.iterdir():
+                    if file.stem.startswith("OFFLINE_"):
+                        try:
+                            num = int(file.stem.split('_')[1])
+                            if num > max_num:
+                                max_num = num
+                        except ValueError:
+                            continue
+            self.ticket_input.setText(f"OFFLINE_{max_num + 1}")
+        else:
+            max = get_max_value("Consignments", "consignment_id")
+            self.ticket_input.setText(str(int(max) + 1))
 
     def update_datetime(self):
         """
@@ -1108,19 +1072,18 @@ class CreateNewTab(BaseTab):
     def val_prod_sections(self):
         for prod in self.product_sections:
             if prod['price'] is None:
-                log.error("Invalid price")
+                log.error(f"Invalid price: {self.product_sections[prod]['price']}")
                 return False
             if prod['quantity'] is None:
-                log.error("Invalid quantity")
+                log.error(f"Invalid quantity: {self.product_sections[prod]['quantity']}")
                 return False
             if prod['rate'] is None:
-                log.error("Invalid rate")
+                log.error(f"Invalid rate: {self.product_sections[prod]['rate']}")
                 return False
         return True
 
     def update_revenue_fields(self) -> int:
         """
-        SXC-22 button action:
         - Compute subtotal = sum(price * quantity) across product lines
         - For each row (25/50/75/100%), call RevenueGeneration.calculate_revenues
         - Validate outputs and populate the revenue widget fields
@@ -1134,7 +1097,7 @@ class CreateNewTab(BaseTab):
 
             calc = getattr(self.revenue_generation, "calculate_revenues", None)
             if not callable(calc):
-                log.error("Error: Revenue calculation method (SXC-22) not found")
+                log.error("Error: Revenue calculation method not found")
                 return -1
 
             #over every percentage sold bracket
@@ -1154,10 +1117,12 @@ class CreateNewTab(BaseTab):
                         log.warning(f"Product type {rate_key} has no matching rate")
                         continue
 
-                    if price < 0 or qty < 0:
-                        log.error("Error: Negative price or quantity")
+                    if price < 0:
+                        log.error(f"Error: Negative price: {price}")
                         return -1
-                    
+
+                    if qty < 0:
+                        log.error(f"Error: Negative quantity: {qty}")
                     pct_label = rec['percentage'].text()
                     #calculate that products revanue contribution at its consignment rate for amount sold
                     result = calc(price, qty, pct_label, rate)
@@ -1186,7 +1151,6 @@ class CreateNewTab(BaseTab):
 
     def auto_pop_prod(self):
         """
-        SXC-136 action:
         - autofill product_id and product_name when product_id exists
         in the Products table
         note - attempting formatting for further use
@@ -1207,6 +1171,7 @@ class CreateNewTab(BaseTab):
                     item = get_item("Entities", "product", prod_id)
 
                     if item:
+                        log.info(f"Autopopulating with found product id {prod_id}")
                         # Product exists - populate and lock
                         if "product_name" in item:
                             product_section['product_name'].setText(item["product_name"])
@@ -1229,6 +1194,7 @@ class CreateNewTab(BaseTab):
                          product_section['rate'].setText(str(self.rates_container[item.get("product_type")]) if item else "")
 
                     else:
+                        log.info(f"Did not find existing product with id {prod_id}")
                         # Product doesn't exist - clear and unlock
                         product_section['product_name'].setText("")
                         product_section['product_name'].setObjectName("")
@@ -1263,6 +1229,7 @@ class CreateNewTab(BaseTab):
                     item = get_item_by_property("Entities", "product", "product_name", prod_name)
 
                     if item:
+                        log.info(f"Autopopulating with found product name {prod_name}")
                         if "product_id" in item:
                             product_section['product_id'].setText(str(item["product_id"]))
                             product_section['product_id'].setObjectName("READ_ONLY")
@@ -1285,6 +1252,7 @@ class CreateNewTab(BaseTab):
                             else:
                                 product_section['rate'].setText(self.rates_container[item.get("product_type")])
                     else:
+                        log.info(f"Did not find existing product with name {prod_name}")
                         product_section['product_id'].setObjectName("DEFAULT")
                         product_section['product_id'].setReadOnly(False)
                         product_section['product_id'].style().unpolish(product_section['product_id'])
@@ -1319,15 +1287,18 @@ class CreateNewTab(BaseTab):
             if vend_id:
                 item = get_item("Entities", "vendor", vend_id)
                 if item is not None:
+                    log.info(f"Autopopulating with found vendor id {vend_id}")
                     for field_name, input_field in field_mapping.items():
                         if field_name in item:
                             input_field.setText(str(item[field_name]))
                             input_field.setObjectName("READ_ONLY")
                             input_field.setReadOnly(True)
                 else:
+                    log.info(f"Did not find existing vendor with id {vend_id}")
                     for input_field in field_mapping.values():
                         input_field.setObjectName("DEFAULT")
                         input_field.setReadOnly(False)
+                        input_field.clear()
             else:
                 for input_field in field_mapping.values():
                     input_field.setObjectName("DEFAULT")
@@ -1357,15 +1328,18 @@ class CreateNewTab(BaseTab):
             if phone:
                 item = get_item_by_property("Entities", "vendor", "phone", phone)
                 if item is not None:
+                    log.info(f"Autopopulating with found phone number {phone}")
                     for field_name, input_field in field_mapping.items():
                         if field_name in item:
                             input_field.setText(str(item[field_name]))
                             input_field.setObjectName("READ_ONLY")
                             input_field.setReadOnly(True)
                 else:
+                    log.info(f"Did not find existing vendor with phone number {phone}")
                     for input_field in field_mapping.values():
                         input_field.setObjectName("DEFAULT")
                         input_field.setReadOnly(False)
+                        input_field.clear()
             else:
                 for input_field in field_mapping.values():
                     input_field.setObjectName("DEFAULT")

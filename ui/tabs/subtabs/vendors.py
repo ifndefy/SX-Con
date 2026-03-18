@@ -3,6 +3,7 @@ from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QHBoxLayout
@@ -12,14 +13,16 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 
-from ui.tabs.base import BaseTab
-
 from datetime import datetime
+
+from ui.tabs.base import BaseTab
 from ui.core import format_phone
 from ui.core import format_state
+
 from services.get_item import get_item
 from services.insert_item import insert_item
 from services.update_property import update_property
+from validate.val_check_does_not_exist import val_check_does_not_exists
 
 import utils.logger.logger as log
 from utils.message_bus import status_bar_instance
@@ -99,6 +102,8 @@ class VendorsTab(BaseTab):
         self.first_name_input.setPlaceholderText("First Name")
         self.first_name_input.setMaxLength(30)
         self.first_name_input.setMinimumWidth(263)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.first_name_input.setValidator(alpha_validator)
         self.first_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.first_name_input)
 
@@ -107,6 +112,7 @@ class VendorsTab(BaseTab):
         self.middle_name_input.setPlaceholderText("M. Name")
         self.middle_name_input.setMaxLength(10)
         self.middle_name_input.setMinimumWidth(103)
+        self.middle_name_input.setValidator(alpha_validator)
         self.middle_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.middle_name_input)
 
@@ -115,6 +121,7 @@ class VendorsTab(BaseTab):
         self.last_name_input.setPlaceholderText("Last Name")
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setMinimumWidth(263)
+        self.last_name_input.setValidator(alpha_validator)
         self.last_name_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.last_name_input)
 
@@ -126,6 +133,8 @@ class VendorsTab(BaseTab):
         self.address_input = QLineEdit()
         self.address_input.setPlaceholderText("Address")
         self.address_input.setMaxLength(255)
+        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 ]+"))
+        self.address_input.setValidator(address_validator)
         self.address_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.address_input)
 
@@ -133,12 +142,14 @@ class VendorsTab(BaseTab):
         self.city_input = QLineEdit()
         self.city_input.setPlaceholderText("City")
         self.city_input.setMaxLength(30)
+        self.city_input.setValidator(alpha_validator)
         self.city_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.city_input)
 
         search_section_row_3.addWidget(QLabel("State:"))
         self.state_input = format_state.FormatState()
         self.state_input.setFixedWidth(50)
+        self.state_input.setValidator(alpha_validator)
         self.state_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.state_input)
 
@@ -147,6 +158,8 @@ class VendorsTab(BaseTab):
         self.zip_input.setPlaceholderText("Zip")
         self.zip_input.setMaxLength(5)
         self.zip_input.setFixedWidth(70)
+        zip_validator = QIntValidator(0, 99999, self)
+        self.zip_input.setValidator(zip_validator)
         self.zip_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_3.addWidget(self.zip_input)
 
@@ -592,6 +605,7 @@ class VendorsTab(BaseTab):
         vendor_id_input.setPlaceholderText("V ID")
         vendor_id_input.setMaxLength(4)
         vendor_id_input.setValidator(QIntValidator(0, 9999))
+        vendor_id_input.editingFinished.connect(self.check_vendor_id_input(dialog))
         layout.addWidget(vendor_id_input)
 
         layout.addWidget(QLabel("Phone Number:"))
@@ -683,6 +697,22 @@ class VendorsTab(BaseTab):
         self.search_btn.clicked.connect(self.build_and_search)
         self.create_btn.clicked.connect(self.create_new_vendor_prompt)
 
+    def check_vendor_id_input(self, dialog):
+        def handler():
+            vendor_id_input = dialog.findChild(QLineEdit, "vendor_id_input")
+            vendor_id = vendor_id_input.text().strip()
+
+            if not vendor_id:
+                return
+
+            if not val_check_does_not_exists("Entities", "vendor", "vendor_id", int(vendor_id)):
+                log.info(f"Vendor ID: {vendor_id} already in use")
+                QMessageBox.critical(dialog, "Error", "Vendor ID already in use")
+                vendor_id_input.setFocus()
+                vendor_id_input.selectAll()
+                return
+        return handler
+
     def on_create_clicked(self, dialog):
         """
         :Purpose: handles button initialization
@@ -703,6 +733,9 @@ class VendorsTab(BaseTab):
         :Author(s): Joe Lee
         """
         self.new_vendor_data = self.gather_vendor_data(dialog)
+        if self.new_vendor_data == -1:
+            log.error(f"Failed to create new vendor")
+            return
         insert_item("Entities", "vendor", self.new_vendor_data)
 
     def gather_vendor_data(self, dialog):
@@ -711,8 +744,14 @@ class VendorsTab(BaseTab):
         :Method: passes in dialog then parses dialog for data
         :Author(s): Colin Heinselman, Joe Lee
         """
+        vendor_id = dialog.findChild(QLineEdit, "vendor_id_input").text()
+        if not val_check_does_not_exists("Entities", "vendor", "vendor_id", int(vendor_id)):
+            # this should never proc unless running 2 programs in parallel
+            QMessageBox.warning(dialog, "Warning", f"Vendor ID {vendor_id} already exists")
+            return -1
+
         vendor_doc = {
-            "vendor_id": dialog.findChild(QLineEdit, "vendor_id_input").text(),
+            "vendor_id": vendor_id,
             "phone": dialog.findChild(QLineEdit, "phone_number_input").text(),
             "first_name": dialog.findChild(QLineEdit, "first_name_input").text(),
             "middle_name": dialog.findChild(QLineEdit, "middle_name_input").text(),

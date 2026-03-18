@@ -1,5 +1,5 @@
-from PyQt6.QtCore import QTimer
-from PyQt6.QtGui import QIntValidator
+from PyQt6.QtCore import QTimer, QRegularExpression
+from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QMessageBox
@@ -88,6 +88,8 @@ class VendorTicketsTab(BaseTab):
         self.first_name_input.setPlaceholderText("First Name")
         self.first_name_input.setMaxLength(30)
         self.first_name_input.setFixedWidth(263)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.first_name_input.setValidator(alpha_validator)
         self.first_name_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_2.addWidget(self.first_name_input)
 
@@ -96,6 +98,7 @@ class VendorTicketsTab(BaseTab):
         self.middle_name_input.setPlaceholderText("M. Name")
         self.middle_name_input.setMaxLength(10)
         self.middle_name_input.setFixedWidth(103)
+        self.middle_name_input.setValidator(alpha_validator)
         self.middle_name_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_2.addWidget(self.middle_name_input)
 
@@ -104,6 +107,7 @@ class VendorTicketsTab(BaseTab):
         self.last_name_input.setPlaceholderText("Last Name")
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setFixedWidth(263)
+        self.last_name_input.setValidator(alpha_validator)
         self.last_name_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_2.addWidget(self.last_name_input)
 
@@ -116,6 +120,8 @@ class VendorTicketsTab(BaseTab):
         self.address_input = QLineEdit()
         self.address_input.setPlaceholderText("Address")
         self.address_input.setMaxLength(255)
+        address_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9 ]+"))
+        self.address_input.setValidator(address_validator)
         self.address_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_3.addWidget(self.address_input)
 
@@ -123,12 +129,14 @@ class VendorTicketsTab(BaseTab):
         self.city_input = QLineEdit()
         self.city_input.setPlaceholderText("City")
         self.city_input.setMaxLength(30)
+        self.city_input.setValidator(alpha_validator)
         self.city_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_3.addWidget(self.city_input)
 
         vendor_section_row_3.addWidget(QLabel("State:"))
         self.state_input = format_state.FormatState()
         self.state_input.setFixedWidth(50)
+        self.state_input.setValidator(alpha_validator)
         self.state_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_3.addWidget(self.state_input)
 
@@ -137,6 +145,8 @@ class VendorTicketsTab(BaseTab):
         self.zip_input.setPlaceholderText("Zip")
         self.zip_input.setMaxLength(5)
         self.zip_input.setFixedWidth(70)
+        zip_validator = QIntValidator(0, 99999, self)
+        self.zip_input.setValidator(zip_validator)
         self.zip_input.textChanged.connect(self.on_search_input_changed)
         vendor_section_row_3.addWidget(self.zip_input)
 
@@ -332,7 +342,7 @@ class VendorTicketsTab(BaseTab):
                 ))
                 for item in results:
                     tickets.append({
-                        'ticket_number': item.get('ticket_number'),
+                        'ticket_number': item.get('consignment_id'),
                         'vendor_id': item.get('vendor_id', ''),
                         'product_ids': item.get('product_ids', ''),
                         'datetime': item.get('datetime', ''),
@@ -376,7 +386,7 @@ class VendorTicketsTab(BaseTab):
             tickets = []
             for item in results:
                 tickets.append({
-                    'ticket_number': item.get('ticket_number'),
+                    'ticket_number': item.get('consignment_id'),
                     'vendor_id': item.get('vendor_id', ''),
                     'product_ids': item.get('product_ids', ''),
                     'datetime': item.get('datetime', ''),
@@ -516,18 +526,53 @@ class VendorTicketsTab(BaseTab):
                     self.tickets_section[ticket_index]['status'].setText("OPEN")
                     self.tickets_section[ticket_index]['open_btn'].hide()
                     self.tickets_section[ticket_index]['close_btn'].show()
+                    view_ticket = self.tickets_section[ticket_index].get('view_ticket')
+                    if view_ticket:
+                        view_ticket.payout_widget.calc_btn.setEnabled(True)
+                        view_ticket.payout_widget.calc_btn.setObjectName('DEFAULT')
+                        view_ticket.payout_widget.calc_btn.setText("Calculate Payout")
+                        view_ticket.payout_widget.calc_btn.style().unpolish(view_ticket.payout_widget.calc_btn)
+                        view_ticket.payout_widget.calc_btn.style().polish(view_ticket.payout_widget.calc_btn)
+                        for widgets in view_ticket.product_widgets.values():
+                            widgets['sold_edit'].setReadOnly(False)
+                            widgets['sold_edit'].setObjectName("DEFAULT")
+                            widgets['sold_edit'].style().unpolish(widgets['sold_edit'])
+                            widgets['sold_edit'].style().polish(widgets['sold_edit'])
+                            widgets['update_btn'].setEnabled(True)
+                            widgets['update_btn'].setObjectName("DEFAULT")
+                            widgets['update_btn'].style().unpolish(widgets['update_btn'])
+                            widgets['update_btn'].style().polish(widgets['update_btn'])
+                    QMessageBox.information(self, "Ticket Opened", f"Ticket {ticket_number} has been opened")
                 elif action == "closed":
                     handler_open_close_btns(ticket_number, action.upper())
                     log.info(f"CLOSED ticket {ticket_number}")
                     self.tickets_section[ticket_index]['status'].setText("CLOSED")
                     self.tickets_section[ticket_index]['close_btn'].hide()
                     self.tickets_section[ticket_index]['open_btn'].show()
+                    view_ticket = self.tickets_section[ticket_index].get('view_ticket')
+                    if view_ticket:
+                        view_ticket.payout_widget.calc_btn.setEnabled(False)
+                        view_ticket.payout_widget.calc_btn.setObjectName('LOCKED')
+                        view_ticket.payout_widget.calc_btn.setText("TICKET CLOSED")
+                        view_ticket.payout_widget.calc_btn.style().unpolish(view_ticket.payout_widget.calc_btn)
+                        view_ticket.payout_widget.calc_btn.style().polish(view_ticket.payout_widget.calc_btn)
+                        for widgets in view_ticket.product_widgets.values():
+                            widgets['sold_edit'].setReadOnly(True)
+                            widgets['sold_edit'].setObjectName("LOCKED")
+                            widgets['sold_edit'].style().unpolish(widgets['sold_edit'])
+                            widgets['sold_edit'].style().polish(widgets['sold_edit'])
+                            widgets['update_btn'].setEnabled(False)
+                            widgets['update_btn'].setObjectName("LOCKED")
+                            widgets['update_btn'].style().unpolish(widgets['update_btn'])
+                            widgets['update_btn'].style().polish(widgets['update_btn'])
+                    QMessageBox.information(self, "Ticket Closed", f"Ticket {ticket_number} has been closed")
                 self.tickets_section[ticket_index]['status'].setText(
                     get_property("Consignments", "status", "consignment", ticket_number)
                 )
                 self.parent().setFocus()
             except Exception as e:
                 log.error(f"Could not {action} ticket {ticket_number}: {e}")
+
         return handler
 
     def make_print_handler(self, ticket_index):
@@ -543,6 +588,8 @@ class VendorTicketsTab(BaseTab):
             try:
                 handler_print(ticket_number)
                 log.info(f"Print requested for ticket {ticket_number}")
+                QMessageBox.information(self, "PDF Generation Succeeded",
+                                        f"Ticket {ticket_number} successfully requested to print")
             except Exception as e:
                 QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket_number}:\n\n{e}")
         return handler
@@ -571,8 +618,10 @@ class VendorTicketsTab(BaseTab):
         try:
             handler_db_pdf(int(ticket_number))
             log.info(f"PDF generated for ticket {ticket_number}")
+            QMessageBox.information(self, "PDF Generation Succeeded", f"Ticket {ticket_number} successfully generated a PDF")
         except Exception as e:
             log.error(f"ERROR generating PDF for ticket {ticket_number}: {e}")
+            QMessageBox.information(self, "PDF Generation Failed", f"Ticket {ticket_number} failed to generate a PDF")
 
     def make_form_handler(self, ticket_index):
         def gather_ticket():
@@ -582,7 +631,7 @@ class VendorTicketsTab(BaseTab):
             unpacked_ticket = ticket_details['ticket_data']
             
             ticket_header = {
-                'ticket_number': unpacked_ticket['ticket_number'],
+                'ticket_number': unpacked_ticket['consignment_id'],
                 'vendor_id': unpacked_ticket['vendor_id'],
                 'created': unpacked_ticket['datetime'],
                 'status': unpacked_ticket['status'],

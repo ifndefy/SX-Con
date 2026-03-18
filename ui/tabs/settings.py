@@ -23,6 +23,7 @@ from services.get_property import get_property
 from services.update_property import update_property
 from src.core.hash_password import hash_password
 from utils.core.json_helpers import json_to_dict
+from utils.core.import_doc import import_offline_records
 
 import utils.logger.logger as log
 
@@ -30,6 +31,7 @@ class SettingsTab(BaseTab):
     def __init__(self, api_handler, main_window=None):
         self.save_btn = None
         self.load_btn = None
+        self.sync_btn = None
         self.theme_dropdown_menu = None
         self.ticket_counter = None
         self.tickets_layout = None
@@ -138,6 +140,9 @@ class SettingsTab(BaseTab):
         hr3.setObjectName("hr")
         layout.addWidget(hr3)
 
+        self.sync_btn = QPushButton("Sync Offline Tickets")
+        layout.addWidget(self.sync_btn, 1)
+
         # Set up the scroll area
         scroll.setWidget(scroll_content)
         main_layout = QVBoxLayout(self)
@@ -168,8 +173,17 @@ class SettingsTab(BaseTab):
         self.change_username_btn.clicked.connect(self.on_change_username_clicked)
         self.change_pw_btn.clicked.connect(self.on_change_password_clicked)
         self.change_qa_btn.clicked.connect(self.on_change_qa_clicked)
+        self.sync_btn.clicked.connect(self.on_sync_clicked)
         self.load_btn.clicked.connect(self.load_user_preferences)
         self.save_btn.clicked.connect(self.save_user_preferences)
+
+    def on_sync_clicked(self):
+        try:
+            import_offline_records()
+            QMessageBox.information(self, "Sync Complete", "Offline records synced successfully.")
+        except Exception as e:
+            log.error(f"Sync failed: {e}")
+            QMessageBox.critical(self, "Sync Failed", f"Failed to sync offline records:\n\n{e}")
 
     def on_change_qa_clicked(self):
         """
@@ -473,6 +487,7 @@ class SettingsTab(BaseTab):
         """
         user_id = self._get_current_user_id()
         if user_id is None:
+            log.error(f"Failed to find user id")
             return
 
         user_prefs = self._get_user_preferences(user_id)
@@ -569,6 +584,7 @@ class SettingsTab(BaseTab):
         """
         user_id = self._get_current_user_id()
         if user_id is None:
+            log.error(f"Failed to find user id")
             return
 
         preferences_json = self._build_preferences_json()

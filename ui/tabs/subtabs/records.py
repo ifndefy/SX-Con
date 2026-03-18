@@ -206,7 +206,7 @@ class RecordsTab(BaseTab):
         if ticket_number:
             try:
                 ticket_number_int = int(ticket_number)
-                add_property("ticket_number", ticket_number_int, "=")
+                add_property("consignment_id", ticket_number_int, "=")
             except ValueError:
                 pass
 
@@ -268,7 +268,7 @@ class RecordsTab(BaseTab):
             tickets = []
             for item in results:
                 tickets.append({
-                    'ticket_number': item.get('ticket_number'),
+                    'ticket_number': item.get('consignment_id'),
                     'vendor_id': item.get('vendor_id', ''),
                     'products': item.get('products', []),
                     'datetime': item.get('datetime', ''),
@@ -444,25 +444,60 @@ class RecordsTab(BaseTab):
     def handle_open_close_btns(self, ticket_index, action):
         def handler():
             try:
-                ticket_number = self.records_section[ticket_index]['ticket_num'].text().strip()
-                self.parent().setFocus()
+                ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
                 if action == "open":
                     handler_open_close_btns(ticket_number, action.upper())
                     log.info(f"OPENED ticket {ticket_number}")
-                    self.records_section[ticket_index]['status'].setText("OPEN")
-                    self.records_section[ticket_index]['open_btn'].hide()
-                    self.records_section[ticket_index]['close_btn'].show()
+                    self.tickets_section[ticket_index]['status'].setText("OPEN")
+                    self.tickets_section[ticket_index]['open_btn'].hide()
+                    self.tickets_section[ticket_index]['close_btn'].show()
+                    view_ticket = self.tickets_section[ticket_index].get('view_ticket')
+                    if view_ticket:
+                        view_ticket.payout_widget.calc_btn.setEnabled(True)
+                        view_ticket.payout_widget.calc_btn.setObjectName('DEFAULT')
+                        view_ticket.payout_widget.calc_btn.setText("Calculate Payout")
+                        view_ticket.payout_widget.calc_btn.style().unpolish(view_ticket.payout_widget.calc_btn)
+                        view_ticket.payout_widget.calc_btn.style().polish(view_ticket.payout_widget.calc_btn)
+                        for widgets in view_ticket.product_widgets.values():
+                            widgets['sold_edit'].setReadOnly(False)
+                            widgets['sold_edit'].setObjectName("DEFAULT")
+                            widgets['sold_edit'].style().unpolish(widgets['sold_edit'])
+                            widgets['sold_edit'].style().polish(widgets['sold_edit'])
+                            widgets['update_btn'].setEnabled(True)
+                            widgets['update_btn'].setObjectName("DEFAULT")
+                            widgets['update_btn'].style().unpolish(widgets['update_btn'])
+                            widgets['update_btn'].style().polish(widgets['update_btn'])
+                    QMessageBox.information(self, "Ticket Opened", f"Ticket {ticket_number} has been opened")
                 elif action == "closed":
                     handler_open_close_btns(ticket_number, action.upper())
                     log.info(f"CLOSED ticket {ticket_number}")
-                    self.records_section[ticket_index]['status'].setText("CLOSED")
-                    self.records_section[ticket_index]['close_btn'].hide()
-                    self.records_section[ticket_index]['open_btn'].show()
-                self.records_section[ticket_index]['status'].setText(
+                    self.tickets_section[ticket_index]['status'].setText("CLOSED")
+                    self.tickets_section[ticket_index]['close_btn'].hide()
+                    self.tickets_section[ticket_index]['open_btn'].show()
+                    view_ticket = self.tickets_section[ticket_index].get('view_ticket')
+                    if view_ticket:
+                        view_ticket.payout_widget.calc_btn.setEnabled(False)
+                        view_ticket.payout_widget.calc_btn.setObjectName('LOCKED')
+                        view_ticket.payout_widget.calc_btn.setText("TICKET CLOSED")
+                        view_ticket.payout_widget.calc_btn.style().unpolish(view_ticket.payout_widget.calc_btn)
+                        view_ticket.payout_widget.calc_btn.style().polish(view_ticket.payout_widget.calc_btn)
+                        for widgets in view_ticket.product_widgets.values():
+                            widgets['sold_edit'].setReadOnly(True)
+                            widgets['sold_edit'].setObjectName("LOCKED")
+                            widgets['sold_edit'].style().unpolish(widgets['sold_edit'])
+                            widgets['sold_edit'].style().polish(widgets['sold_edit'])
+                            widgets['update_btn'].setEnabled(False)
+                            widgets['update_btn'].setObjectName("LOCKED")
+                            widgets['update_btn'].style().unpolish(widgets['update_btn'])
+                            widgets['update_btn'].style().polish(widgets['update_btn'])
+                    QMessageBox.information(self, "Ticket Closed", f"Ticket {ticket_number} has been closed")
+                self.tickets_section[ticket_index]['status'].setText(
                     get_property("Consignments", "status", "consignment", ticket_number)
                 )
+                self.parent().setFocus()
             except Exception as e:
                 log.error(f"Could not {action} ticket {ticket_number}: {e}")
+
         return handler
 
     def make_print_handler(self, ticket_index):
@@ -470,6 +505,8 @@ class RecordsTab(BaseTab):
             ticket_number = self.records_section[ticket_index]['ticket_num'].text().strip()
             try:
                 handler_db_pdf(int(ticket_number))
+                QMessageBox.information(self, "PDF Generation Succeeded",
+                                        f"Ticket {ticket_number} successfully requested to print")
             except Exception as e:
                 log.error(f"Could not generate PDF for ticket {ticket_number}: {e}")
                 return
@@ -489,7 +526,7 @@ class RecordsTab(BaseTab):
             unpacked_ticket = ticket_details['ticket_data']
 
             ticket_header = {
-                'ticket_number': unpacked_ticket['ticket_number'],
+                'ticket_number': unpacked_ticket['consignment_id'],
                 'vendor_id': unpacked_ticket['vendor_id'],
                 'created': unpacked_ticket['datetime'],
                 'status': unpacked_ticket['status'],
@@ -515,8 +552,10 @@ class RecordsTab(BaseTab):
         try:
             handler_db_pdf(int(ticket_number))
             log.info(f"PDF generated for ticket {ticket_number}")
+            QMessageBox.information(self, "PDF Generation Succeeded", f"Ticket {ticket_number} successfully generated a PDF")
         except Exception as e:
             log.error(f"ERROR generating PDF for ticket {ticket_number}: {e}")
+            QMessageBox.information(self, "PDF Generation Failed", f"Ticket {ticket_number} failed to generate a PDF")
 
     def make_view_handler(self, ticket_index):
         def handler():

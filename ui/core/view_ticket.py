@@ -22,6 +22,10 @@ class ViewTicket(QObject):
         super().__init__()
         self.ticket_id = ticket_id
         self.product_widgets = {}
+        self.revenue_widget = None
+        self.rev_by_type = None
+        self.payout_widget = None
+        self.ticket_status = None
 
     def setup_ui(self, ticket_section, ticket_details):
         details_container = ticket_section['details_container']
@@ -35,6 +39,7 @@ class ViewTicket(QObject):
                 child.widget().deleteLater()
 
         ticket_data = ticket_details['ticket_data']
+        self.ticket_status = ticket_data.get('status', '')
         products = ticket_data.get('products', [])
         revenue_sharing = ticket_data.get('revenue', []).get('shared', [])
         revenue_grouped = ticket_data.get('revenue', []).get('grouped', [])
@@ -45,7 +50,7 @@ class ViewTicket(QObject):
             if prod.get('product_id') and prod.get('product_id') != 'NULL':
                 valid_products.append(prod)
 
-        for product in valid_products:
+        for idx, product in enumerate(valid_products):
             product_id = product.get('product_id')
 
             line1_layout = QHBoxLayout()
@@ -90,9 +95,16 @@ class ViewTicket(QObject):
             sold_edit = QLineEdit(str(product.get('sold', 0)))
             sold_edit.setFixedWidth(100)
             line1_layout.addWidget(sold_edit)
+            if self.ticket_status == "CLOSED":
+                sold_edit.setReadOnly(True)
+                sold_edit.setObjectName("LOCKED")
 
             update_btn = QPushButton("Update")
             update_btn.product_id = product_id
+            update_btn.product_idx = idx
+            if self.ticket_status == "CLOSED":
+                update_btn.setEnabled(True)
+                update_btn.setObjectName("LOCKED")
             update_btn.clicked.connect(self.handle_update_clicked)
             line1_layout.addWidget(update_btn)
 
@@ -155,11 +167,12 @@ class ViewTicket(QObject):
 
             product_layout.addLayout(line3_layout)
 
-            self.product_widgets[product_id] = {
+            self.product_widgets[idx] = {
                 'sold_edit': sold_edit,
                 'remaining_display': remaining_display,
                 'quantity_display': quantity_input,
-                'sold_display': sold_display
+                'sold_display': sold_display,
+                'update_btn' : update_btn,
             }
 
         # Revenue section
@@ -176,10 +189,10 @@ class ViewTicket(QObject):
             hr2.setFrameShadow(QFrame.Shadow.Sunken)
             hr2.setObjectName("hr")
             shared_layout.addWidget(hr2)
-            revenue_widget = RevenueGeneration()
-            revenue_widget.setObjectName("view_bg")
-            revenue_widget.set_revenue_data(revenue_sharing)
-            shared_layout.addWidget(revenue_widget)
+            self.revenue_widget = RevenueGeneration()
+            self.revenue_widget.setObjectName("view_bg")
+            self.revenue_widget.set_revenue_data(revenue_sharing)
+            shared_layout.addWidget(self.revenue_widget)
             revenue_container_layout.addLayout(shared_layout)
 
             vr1 = QFrame()
@@ -197,13 +210,10 @@ class ViewTicket(QObject):
             hr1.setFrameShadow(QFrame.Shadow.Sunken)
             hr1.setObjectName("hr")
             grouped_layout.addWidget(hr1)
-            rev_by_type = RevenueByProdType()
-            rev_by_type.setObjectName("view_bg")
-            totals = {}
-            for item in revenue_grouped:
-                totals[item['product_type']] = float(item['total'])
-            rev_by_type.update_display_values(totals)
-            grouped_layout.addWidget(rev_by_type)
+            self.rev_by_type = RevenueByProdType()
+            self.rev_by_type.setObjectName("view_bg")
+            self.rev_by_type.load_from_db_document(ticket_data)
+            grouped_layout.addWidget(self.rev_by_type)
             revenue_container_layout.addLayout(grouped_layout)
 
             vr2 = QFrame()
@@ -221,24 +231,34 @@ class ViewTicket(QObject):
             hr3.setFrameShadow(QFrame.Shadow.Sunken)
             hr3.setObjectName("hr")
             payout_layout.addWidget(hr3)
-            payout_widget = RevenuePayout()
-            payout_widget.setObjectName("view_bg")
-            payout_widget.set_products(valid_products, self.ticket_id)
-            payout_layout.addWidget(payout_widget)
+            self.payout_widget = RevenuePayout()
+            self.payout_widget.setObjectName("view_bg")
+            self.payout_widget.on_calculated = self.rev_by_type.update_display_values
+            self.payout_widget.set_products(valid_products, self.ticket_id)
+            payout_layout.addWidget(self.payout_widget)
             revenue_container_layout.addLayout(payout_layout)
 
             product_layout.addLayout(revenue_container_layout)
 
     def handle_update_clicked(self):
-        product_id, widgets = self.get_product_and_widgets()
-        if not product_id or not widgets:
+        product_id, product_index, widgets = self.get_product_and_widgets()
+        if not product_id:
+            log.error(f"Failed to find product id")
+            return
+        if not widgets:
+            log.error(f"Failed to find product widgets")
             return
 
         new_sold, quantity = self.val_quantities(widgets)
-        if new_sold is None or quantity is None:
+        if new_sold is None:
+            log.error(f"Failed to find new sold quantity")
+            return
+        if quantity is None:
+            log.error(f"Failed to find quantity")
             return
         if new_sold > quantity:
-            QMessageBox.warning(self.sender(), "Invalid Input", f"Sold quantity ({new_sold}) exceeds Signed quantity ({quantity})")
+            QMessageBox.warning(self.sender(), "Invalid Input",
+                                f"Sold quantity ({new_sold}) exceeds Signed quantity ({quantity})")
             log.error(f"Update failed: Sold quantity exceeds signed quantity")
             return
         if new_sold < 0:
@@ -247,7 +267,7 @@ class ViewTicket(QObject):
             return
 
         success, new_remaining, error = update_quantities(
-            self.ticket_id, product_id, new_sold
+            self.ticket_id, product_id, new_sold, product_index
         )
         if success:
             widgets['sold_edit'].setText(str(new_sold))
@@ -263,19 +283,24 @@ class ViewTicket(QObject):
         """
         button = self.sender()
         if button is None:
-            return None, None
+            log.error("Failed to get button sender")
+            return None, None, None
 
         product_id = getattr(button, 'product_id', None)
+        product_index = getattr(button, 'product_idx', None)
         if product_id is None:
-            log.error("Update button missing product data.")
-            return None, None
+            log.error("Update button missing product id.")
+            return None, None, None
+        if product_index is None:
+            log.error("Update button missing product index.")
+            return None, None, None
 
-        widgets = self.product_widgets.get(product_id)
+        widgets = self.product_widgets.get(product_index)
         if not widgets:
-            log.error(f"No widgets found for product {product_id}")
-            return None, None
+            log.error(f"No widgets found for product {product_id} index {product_index}")
+            return None, None, None
 
-        return product_id, widgets
+        return product_id, product_index, widgets
 
     def val_quantities(self, widgets):
         """

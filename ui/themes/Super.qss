@@ -94,6 +94,10 @@ QPushButton#green_btn {
     background-color: #008000;
 }
 
+QPushButton#LOCKED {
+    background-color: #A1A1A1;
+}
+
 QPushButton:hover {
     background-color: #F5D8A7;
 }

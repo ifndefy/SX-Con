@@ -19,6 +19,7 @@ def insert_item(container_name: str, entity_type: str, item_data: dict):
 
         entity_id = item_data.get(f"{entity_type}_id")
         if not entity_id:
+            log.error(f"Error in insert_item: entity id value is empty")
             return -1
 
         item_id = f"{entity_type}_{entity_id}"

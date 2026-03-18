@@ -1,3 +1,5 @@
+import utils.logger.logger as log
+
 def val_username(username: str) -> int:
     # Set conditions
     max_length = 18
@@ -7,9 +9,11 @@ def val_username(username: str) -> int:
     allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     if len(username) > max_length or len(username) < min_length:
+        log.error(f"Error: Username must be within {min_length} and {max_length} characters")
         return -1
 
     if not all(char in allowed_chars for char in username):
+        log.error(f"Error: Username contains invalid characters")
         return -1
 
     return 0

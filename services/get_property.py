@@ -2,7 +2,7 @@ from services.connect_database import db_connection
 from src import SPOT
 import utils.logger.logger as log
 
-def get_property(container_name: str, attribute: str, entity_type: str, id_value: str, silent: bool = False) -> str:
+def get_property(container_name: str, attribute: str, entity_type: str, id_value: str, silent: bool = False) -> str | int:
     """
     :purpose: Gets a specific attribute value from a document by ID
     :param: container_name: the Cosmos DB container to query

@@ -19,7 +19,7 @@ class ForwardHandler(log.Handler):
         except Exception:
             pass
 
-__timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+__timestamp = datetime.now().strftime("%Y-%m-%d")
 __log_location = Path(__file__).parent / "logs" / f"{__timestamp}.log"
 __log_location.parent.mkdir(parents=True, exist_ok=True)
 

@@ -32,8 +32,8 @@ def delete_property(container_name: str, type: str, id: str, attribute_name: str
         item[attribute_name] = None
 
         container.replace_item(item_id, item)
-
+        log.info(f"Successfully deleted attribute '{attribute_name}' from record {type}_{id} in {container_name}")
         return 0
     except Exception as e:
-        log.error("ERROR: failed to delete_property " + str(e))
+        log.error(f"ERROR: failed to delete_property {attribute_name} from {type}_{id} in {container_name}: {e}")
         return -1

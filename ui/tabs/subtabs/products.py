@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtCore import QRegularExpression
-from PyQt6.QtGui import QRegularExpressionValidator
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtGui import QRegularExpressionValidator, QIntValidator
+from PyQt6.QtWidgets import QVBoxLayout, QMessageBox
 from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QHBoxLayout
@@ -22,6 +22,7 @@ from src.core import get_latest_price as latest
 from services.get_item import get_item
 from services.insert_item import insert_item
 from services.update_property import update_property
+from validate.val_check_does_not_exist import val_check_does_not_exists
 
 import utils.logger.logger as log
 
@@ -217,7 +218,6 @@ class ProductsTab(BaseTab):
             add_property("product_name", product_name, "CONTAINS")
 
         last_consignment = self.last_consignment_input.text().strip()
-        last_consignment = self.last_consignment_input.text().strip()
         if last_consignment:
             try:
                 consignment_container = self.db_connection.connect("Consignments")
@@ -380,6 +380,8 @@ class ProductsTab(BaseTab):
         product_id.setReadOnly(True)
         product_id.setMaxLength(30)
         product_id.setFixedWidth(120)
+        product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
+        product_id.setValidator(product_id_validator)
         line1_layout.addWidget(product_id)
 
         # product_name
@@ -391,6 +393,8 @@ class ProductsTab(BaseTab):
         product_name.setReadOnly(True)
         product_name.setMaxLength(30)
         product_name.setMinimumWidth(130)
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        product_name.setValidator(alpha_validator)
         line1_layout.addWidget(product_name)
 
         line1_layout.addWidget(QLabel("Last Consignment:"))
@@ -426,6 +430,7 @@ class ProductsTab(BaseTab):
         rate_input.setReadOnly(True)
         rate_input.setMaxLength(30)
         rate_input.setFixedWidth(100)
+        rate_input.setValidator(QIntValidator(0, 100, self))
         line2_layout.addWidget(rate_input)
 
         line2_layout.addStretch()
@@ -519,11 +524,17 @@ class ProductsTab(BaseTab):
         layout.addWidget(QLabel("Product ID:"))
         product_id_input = QLineEdit()
         product_id_input.setObjectName("product_id_input")
+        product_id_validator = QRegularExpressionValidator(QRegularExpression("[0-9]{0,10}"))
+        product_id_input.setValidator(product_id_validator)
+        product_id_input.editingFinished.connect(self.check_product_id_input(dialog))
         layout.addWidget(product_id_input)
 
         layout.addWidget(QLabel("Product Name:"))
         product_name_input = QLineEdit()
         product_name_input.setObjectName("product_name_input")
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        product_name_input.setValidator(alpha_validator)
+        product_name_input.editingFinished.connect(self.check_product_name_input(dialog))
         layout.addWidget(product_name_input)
 
         prompt_label = QLabel("Product Type:")
@@ -537,6 +548,7 @@ class ProductsTab(BaseTab):
         layout.addWidget(QLabel("rate:"))
         rate_input = QLineEdit()
         rate_input.setObjectName("rate_input")
+        rate_input.setValidator(QIntValidator(0, 100, self))
         layout.addWidget(rate_input)
 
         layout.addStretch()
@@ -569,6 +581,38 @@ class ProductsTab(BaseTab):
         self.search_btn.clicked.connect(self.build_and_search)
         self.create_btn.clicked.connect(self.create_new_product_prompt)
 
+    def check_product_id_input(self, dialog):
+        def handler():
+            product_id_input = dialog.findChild(QLineEdit, "product_id_input")
+            product_id = product_id_input.text().strip()
+
+            if not product_id:
+                return
+
+            if not val_check_does_not_exists("Entities", "product", "product_id", int(product_id)):
+                log.info(f"Product ID: {product_id} already in use")
+                QMessageBox.critical(dialog, "Error", "Product ID already in use")
+                product_id_input.setFocus()
+                product_id_input.selectAll()
+                return
+        return handler
+
+    def check_product_name_input(self, dialog):
+        def handler():
+            product_name_input = dialog.findChild(QLineEdit, "product_name_input")
+            product_name = product_name_input.text().strip()
+
+            if not product_name:
+                return
+
+            if not val_check_does_not_exists("Entities", "product", "product_name", product_name):
+                log.info(f"Product Name: {product_name} already in use")
+                QMessageBox.critical(dialog, "Error", "Product Name already in use")
+                product_name_input.setFocus()
+                product_name_input.selectAll()
+                return
+        return handler
+
     def on_create_clicked(self, dialog):
         """
         :Purpose: handles button initialization
@@ -585,6 +629,9 @@ class ProductsTab(BaseTab):
         :Author(s): Joe Lee
         """
         self.new_product_data = self.gather_new_product_data(dialog)
+        if self.new_product_data == -1:
+            log.error(f"Failed to create new product")
+            return
         insert_item("Entities", "product", self.new_product_data)
 
     def gather_new_product_data(self, dialog):
@@ -593,9 +640,19 @@ class ProductsTab(BaseTab):
         :Method: passes in dialog then parses dialog for data
         :Author(s): Colin Heinselman, Joe Lee
         """
+
+        product_id = dialog.findChild(QLineEdit, "product_id_input").text()
+        if not val_check_does_not_exists("Entities", "product", "product_id", int(product_id)):
+            QMessageBox.warning(dialog, "Warning", f"Product ID {product_id} already exists")
+            return -1
+        product_name = dialog.findChild(QLineEdit, "product_name_input").text()
+        if not val_check_does_not_exists("Entities", "product", "product_name", product_name):
+            QMessageBox.warning(dialog, "Warning", f"Product name {product_name} already exists")
+            return -1
+
         raw_product_data = {
-            "product_id": int(dialog.findChild(QLineEdit, "product_id_input").text()),
-            "product_name": dialog.findChild(QLineEdit, "product_name_input").text(),
+            "product_id": product_id,
+            "product_name": product_name,
             "product_type": dialog.findChild(QComboBox, "product_type_input").currentText(),
             "rate": dialog.findChild(QLineEdit, "rate_input").text(),
             "type": "product"

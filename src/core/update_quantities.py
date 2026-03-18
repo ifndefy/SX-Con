@@ -15,7 +15,7 @@ def _fetch_consignment(consignment_id: str):
         return None
     return consignment
 
-def _find_product_index(products: list, product_id: str):
+def _find_product_id(products: list, product_id: str):
     """
     :Purpose: finds the index of the product in the displayed GUI
     :Param: products section list
@@ -24,7 +24,7 @@ def _find_product_index(products: list, product_id: str):
     :Author(s): Joe Lee
     """
     for i, prod in enumerate(products):
-        if prod.get('product_id') == product_id:
+        if prod.get('product_id') == int(product_id):
             return i
     log.error(f"Product {product_id} not found in consignment")
     return None
@@ -80,9 +80,10 @@ def _update_remaining(consignment_id: str, idx: int, new_remaining: int, product
         return False
     return True
 
-def update_quantities(consignment_id: str, product_id: str, new_sold: int):
+def update_quantities(consignment_id: str, product_id: str, new_sold: int, idx: int):
     """
     :Purpose: Update a product's sold and remaining fields in a consignment
+    :Method: uses the index to enable multiple entries of the same product_id
     :Return: bool, new_remaining, and empty string
     :Author(s): Joe Lee
     """
@@ -91,9 +92,8 @@ def update_quantities(consignment_id: str, product_id: str, new_sold: int):
         return False, None, "Consignment not found"
 
     products = consignment.get('products', [])
-    idx = _find_product_index(products, product_id)
-    if idx is None:
-        return False, None, f"Product {product_id} not found"
+    if idx >= len(products):
+        return False, None, f"Index {idx} out of range"
 
     quantity = products[idx].get('quantity', 0)
     if not _validate_sold(new_sold, quantity):
