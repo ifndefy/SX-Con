@@ -1,3 +1,5 @@
+import re
+
 def val_price(price: float | int) -> bool:
     """
     Author: Kyle Valdez
@@ -16,6 +18,9 @@ def val_price(price: float | int) -> bool:
         return False
 
     price_str = str(price)
+
+    if re.match(r'^\d+.\d{2}$', price_str) is None:
+        return False
 
     # Reject alphabetic characters
     if any(char.isalpha() for char in price_str):
