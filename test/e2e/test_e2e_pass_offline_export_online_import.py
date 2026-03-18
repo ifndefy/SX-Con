@@ -53,7 +53,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     assert window.tabs.tabText(0) == "Create New"
     assert window.tabs.currentIndex() == 0
     assert window.vendor_tickets_tab is None
-    assert window.open_tickets_tab is None
+    assert window.search_tickets_tab is None
     assert window.settings_tab is None
     assert window.admin_settings_tab is None
 
@@ -61,8 +61,8 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     currentTab = window.create_new_tab
     v_data = {
         'v_id': random.randint(1000, 9999),
-        'phone': '000010110',
-        'fname': 'e2e',
+        'phone': '0000101101',
+        'fname': 'adsf',
         'mname': '',
         'lname': 'test',
         'address': '111 e2e test',
@@ -71,6 +71,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
         'zip': 12345,
     }
     currentTab.vendor_id_input.setText(str(v_data['v_id']))
+    currentTab.phone_input.setText(v_data['phone'])
     currentTab.phone_input.textEdited.emit(v_data['phone'])
     currentTab.first_name_input.setText(v_data['fname'])
     currentTab.middle_name_input.setText(v_data['mname'])

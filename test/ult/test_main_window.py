@@ -15,7 +15,7 @@ def fake_deps():
          patch("ui.main_window.img_helpers.get_window_logo_path", return_value=os.path.abspath("src/imgs/logo.jpg")), \
          patch("ui.main_window.CreateNewTab", return_value=QWidget()), \
          patch("ui.main_window.VendorTicketsTab", return_value=QWidget()), \
-         patch("ui.main_window.OpenTicketsTab", return_value=QWidget()), \
+         patch("ui.main_window.SearchTicketsTab", return_value=QWidget()), \
          patch("ui.main_window.SettingsTab", return_value=QWidget()):
         fake_user.is_admin.return_value = False
         yield
