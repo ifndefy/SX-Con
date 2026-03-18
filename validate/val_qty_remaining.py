@@ -6,7 +6,7 @@ def val_qty_sold(rem: int, qty: int) -> bool:
         param qty: the quantity in stock
         return: True if valid, False otherwise
     """
-    if rem is not int:
+    if not isinstance(rem, int):
         return False
 
     if rem > qty:
