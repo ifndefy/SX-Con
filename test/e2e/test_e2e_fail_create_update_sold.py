@@ -148,13 +148,19 @@ def test_e2e_fail_create_update_sold(app):
     prod_4_sold_qty = str(int(prod_4_qty) + 1) # this will cause the fail
 
     open_view_ticket.product_widgets[0]['sold_edit'].setText(prod_1_sold_qty) # the widget index is it's own value
-    open_view_ticket.product_widgets[0]['update_btn'].click()
+    with patch("ui.core.view_ticket.QMessageBox"), \
+            patch("ui.core.revenue_payout.QMessageBox"):
+        open_view_ticket.product_widgets[0]['update_btn'].click()
 
     open_view_ticket.product_widgets[1]['sold_edit'].setText(prod_2_sold_qty)
-    open_view_ticket.product_widgets[1]['update_btn'].click()
+    with patch("ui.core.view_ticket.QMessageBox"), \
+            patch("ui.core.revenue_payout.QMessageBox"):
+        open_view_ticket.product_widgets[1]['update_btn'].click()
 
     open_view_ticket.product_widgets[2]['sold_edit'].setText(prod_3_sold_qty)
-    open_view_ticket.product_widgets[2]['update_btn'].click()
+    with patch("ui.core.view_ticket.QMessageBox"), \
+            patch("ui.core.revenue_payout.QMessageBox"):
+        open_view_ticket.product_widgets[2]['update_btn'].click()
 
     open_view_ticket.product_widgets[3]['sold_edit'].setText(prod_4_sold_qty)
     with patch("ui.core.view_ticket.QMessageBox.warning") as fail_warning:

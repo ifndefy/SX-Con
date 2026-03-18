@@ -1,3 +1,5 @@
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QFrame
@@ -22,15 +24,15 @@ from utils.core import generate_excel as xls_gen
 import utils.logger.logger as log
 from utils.message_bus import status_bar_instance
 
-class OpenTicketsTab(BaseTab):
+class SearchTicketsTab(BaseTab):
     def __init__(self, api_handler, db_connection):
-        self.ticket_counter = None
-        self.tickets_layout = None
-        self.ticket_status = None
         self.tickets_section = []
         self.db_connection = db_connection
+        super().__init__(api_handler, "search_tickets")
 
-        super().__init__(api_handler, "open_tickets")
+        self.search_timer = QTimer()
+        self.search_timer.setSingleShot(True)
+        self.search_timer.timeout.connect(self.build_and_search)
 
     def setup_ui(self):
         """
@@ -41,56 +43,210 @@ class OpenTicketsTab(BaseTab):
         background = QVBoxLayout(self)
 
         main_layout_widget = QWidget()
-        main_layout_widget.setObjectName("main_layout")
         main_layout = QVBoxLayout(main_layout_widget)
+        # main_layout_widget.setObjectName("main_layout")
 
-
-        # Line 0 Creation
         header_section = QHBoxLayout()
-
-        # Ticket Header
         title = QLabel("Open Tickets")
         title.setObjectName("post_title")
         header_section.addWidget(title)
-
-        # Push to the left
         header_section.addStretch()
-
-        # Ends creation and adds header_section to window
         main_layout.addLayout(header_section)
 
-        # HR Line between Vendor and Tickets sections
         hr1 = QFrame()
         hr1.setFrameShape(QFrame.Shape.HLine)
         hr1.setFrameShadow(QFrame.Shadow.Sunken)
         hr1.setObjectName("hr")
         main_layout.addWidget(hr1)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_content = QWidget()
-        scroll_layout = QVBoxLayout(scroll_content)
+        search_section_row_1 = QHBoxLayout()
+        search_section_row_1.addWidget(QLabel("Ticket Number:"))
+        self.ticket_number_input = QLineEdit()
+        self.ticket_number_input.setPlaceholderText("T Num")
+        self.ticket_number_input.setFixedWidth(73)
+        self.ticket_number_input.setValidator(QIntValidator(0, 2147483647, self))
+        self.ticket_number_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.ticket_number_input)
 
-        # Ticket Line 1: Tickets sections container
-        self.tickets_layout = QVBoxLayout()
-        scroll_layout.addLayout(self.tickets_layout)
+        search_section_row_1.addWidget(QLabel("Datetime:"))
+        self.datetime_input = QLineEdit()
+        self.datetime_input.setPlaceholderText("Datetime")
+        self.datetime_input.setMaxLength(30)
+        self.datetime_input.setFixedWidth(160)
+        self.datetime_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.datetime_input)
 
-        scroll_layout.addStretch()
-        scroll.setWidget(scroll_content)
-        main_layout.addWidget(scroll)
+        search_section_row_1.addWidget(QLabel("Status:"))
+        self.status_input = QLineEdit()
+        self.status_input.setPlaceholderText("Status")
+        self.status_input.setMaxLength(10)
+        self.status_input.setFixedWidth(75)
+        self.status_input.textChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.status_input)
 
-        # HR Line to separate buttons at the bottom
+        search_section_row_1.addStretch()
+
+        main_layout.addLayout(search_section_row_1)
+
+        search_section_row_2 = QHBoxLayout()
+        self.clear_btn = QPushButton("Clear")
+        self.clear_btn.setFixedWidth(200)
+        search_section_row_2.addWidget(self.clear_btn)
+
+        search_section_row_2.addStretch()
+        self.search_btn = QPushButton("Search")
+        self.search_btn.setFixedWidth(200)
+        search_section_row_2.addWidget(self.search_btn)
+        main_layout.addLayout(search_section_row_2)
+
         hr2 = QFrame()
         hr2.setFrameShape(QFrame.Shape.HLine)
         hr2.setFrameShadow(QFrame.Shadow.Sunken)
         hr2.setObjectName("hr")
         main_layout.addWidget(hr2)
 
-        # Set up update button separate from the scrollable area
-        self.update_btn = QPushButton("Update")
-        main_layout.addWidget(self.update_btn)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
+
+        self.tickets_layout = QVBoxLayout()
+        scroll_layout.addLayout(self.tickets_layout)
+        scroll_layout.addStretch()
+
+        scroll.setWidget(scroll_content)
+        main_layout.addWidget(scroll)
         background.addWidget(main_layout_widget)
         self.setup_button_connections()
+
+    def clear(self):
+        """
+        :purpose: clears all input fields and fetched items
+        :author(s): Joe Lee
+        """
+        self.search_timer.stop()
+        self.remove_ticket_section()
+        fields = [
+            self.ticket_number_input,
+            self.datetime_input,
+            self.status_input,
+        ]
+        for field in fields:
+            field.blockSignals(True)
+            field.clear()
+            field.setReadOnly(False)
+            field.setObjectName("DEFAULT")
+            field.blockSignals(False)
+            field.style().unpolish(field)
+            field.style().polish(field)
+
+        status_bar_instance.send_message("Query and Results cleared")
+
+    def on_search_input_changed(self):
+        """
+        :Purpose: forces a wait
+        :Author(s): Joe Lee
+        """
+        self.search_timer.start(300)
+
+    def build_and_search(self):
+        """
+        :Purpose: Gathers properties to build a query then calls query_db
+        :Author(s): Joe Lee
+        """
+        self.remove_ticket_section()
+
+        conditions = ["c.entity_type = 'consignment'"]
+        properties = []
+
+        def add_property(props, value, operator="="):
+            """
+            :Purpose: appends query conditions
+            :Author(s): Joe Lee
+            """
+            if value:
+                prop_name = props
+                if operator == "CONTAINS":
+                    conditions.append(f"CONTAINS(LOWER(c.{props}), LOWER(@{prop_name}))")
+                else:
+                    conditions.append(f"c.{props} {operator} @{prop_name}")
+                properties.append({"name": f"@{prop_name}", "value": value})
+
+        ticket_number = self.ticket_number_input.text().strip()
+        if ticket_number:
+            ticket_number_int = int(ticket_number)
+            add_property("consignment_id", ticket_number_int, "=")
+
+        status = self.status_input.text().strip()
+        if status:
+            add_property("status", status, "CONTAINS")
+
+        datetime = self.datetime_input.text().strip()
+        if datetime:
+            add_property("datetime", datetime, "CONTAINS")
+
+        if len(conditions) == 1:
+            self.fetch()
+            return
+
+        where_clause = " AND ".join(conditions)
+        search_query = f"SELECT * FROM c WHERE {where_clause}"
+        self.query_db(search_query, properties)
+
+    def query_db(self, query: str, properties: list = None):
+        """
+        :Purpose: Queries against the database
+        :Author(s): Joe Lee
+        """
+        self.remove_ticket_section()
+        try:
+            container = self.db_connection.connect("Consignments")
+            results = list(container.query_items(
+                query=query,
+                parameters=properties if properties else [],
+                enable_cross_partition_query=True
+            ))
+
+            tickets = []
+            for item in results:
+                tickets.append({
+                    'ticket_number': item.get('consignment_id'),
+                    'vendor_id': item.get('vendor_id', ''),
+                    'products': item.get('products', []),
+                    'datetime': item.get('datetime', ''),
+                    'status': item.get('status', ''),
+                })
+
+            tickets.sort(key=lambda t: int(t['ticket_number']), reverse=True)
+
+            for ticket in tickets:
+                self.add_ticket_section()
+                last_section = self.tickets_section[-1]
+                last_section['ticket_num'].setText(str(ticket['ticket_number']))
+                last_section['datetime'].setText(str(ticket['datetime']))
+                last_section['status'].setText(ticket['status'])
+                if last_section['status'].text().strip() == "CLOSED":
+                    last_section['close_btn'].hide()
+                if last_section['status'].text().strip() == "OPEN":
+                    last_section['open_btn'].hide()
+
+            if not tickets:
+                status_bar_instance.send_message("No tickets found")
+            else:
+                status_bar_instance.send_message(f"Found {len(tickets)} ticket(s)")
+
+        except Exception as e:
+            log.error(f"Error executing query: {e}")
+            status_bar_instance.send_message("Query failed")
+
+    def fetch(self):
+        """
+        :purpose: fetches all tickets from Consignments container
+        :return: list of users
+        :author(s): Joe Lee
+        """
+        get_all_query = "SELECT * FROM c WHERE c.entity_type = 'consignment'"
+        self.query_db(get_all_query)
 
     def add_ticket_section(self, ticket_data=None):
         """
@@ -112,9 +268,8 @@ class OpenTicketsTab(BaseTab):
         line1_layout.addWidget(QLabel("Ticket Number:"))
         ticket_number_input = QLineEdit()
         ticket_number_input.setObjectName("READ_ONLY")
-        ticket_number_input.setPlaceholderText("XXXX")
         ticket_number_input.setReadOnly(True)
-        ticket_number_input.setFixedWidth(80)
+        ticket_number_input.setFixedWidth(73)
         line1_layout.addWidget(ticket_number_input)
         tickets_section['ticket_num'] = ticket_number_input
 
@@ -123,7 +278,7 @@ class OpenTicketsTab(BaseTab):
         datetime_input = QLineEdit()
         datetime_input.setObjectName("READ_ONLY")
         datetime_input.setReadOnly(True)
-        datetime_input.setFixedWidth(175)
+        datetime_input.setFixedWidth(160)
         line1_layout.addWidget(datetime_input)
         tickets_section['datetime'] = datetime_input
 
@@ -131,9 +286,8 @@ class OpenTicketsTab(BaseTab):
         line1_layout.addWidget(QLabel("Status:"))
         status_input = QLineEdit()
         status_input.setObjectName("READ_ONLY")
-        status_input.setPlaceholderText("OPEN")
         status_input.setReadOnly(True)
-        status_input.setFixedWidth(70)
+        status_input.setFixedWidth(75)
         line1_layout.addWidget(status_input)
         tickets_section['status'] = status_input
 
@@ -347,72 +501,6 @@ class OpenTicketsTab(BaseTab):
         # Update status
         status_bar_instance.send_message("All tickets cleared")
 
-    def setup_button_connections(self):
-        """
-        :purpose: links buttons with methods
-        :return: None
-        :author(s): Joe Lee
-        """
-        self.update_btn.clicked.connect(self.on_fetch_clicked)
-
-    def on_fetch_clicked(self):
-        """
-        :purpose: calls fetch method and adds ticket sections
-        :return: None
-        :author(s): Joe Lee
-        """
-        self.remove_ticket_section()
-        tickets = self.fetch("OPEN")
-        if not tickets:
-            log.warning(f"No tickets found with Status: OPEN")
-        else:
-            for ticket in tickets:
-                self.add_ticket_section()  # Pass ticket data to populate fields
-                last_section = self.tickets_section[-1]
-                last_section['ticket_num'].setText(str(ticket['ticket_number']))
-                last_section['datetime'].setText(str(ticket['datetime']))
-                last_section['status'].setText(ticket['status'])
-                if last_section['status'].text().strip() == "CLOSED":
-                    self.ticket_status = "CLOSED"
-                    last_section['close_btn'].hide()
-                if last_section['status'].text().strip() == "OPEN":
-                    self.ticket_status = "OPEN"
-                    last_section['open_btn'].hide()
-
-    def fetch(self, status):
-        try:
-            container = self.db_connection.connect("Consignments")
-
-            query = """
-                    SELECT c.consignment_id, c.datetime, c.status
-                    FROM c
-                    WHERE c.type = 'consignment'
-                      AND c.status = @status
-                    ORDER BY c.consignment_id DESC
-                    """
-
-            parameters = [{"name": "@status", "value": status}]
-
-            results = list(container.query_items(
-                query=query,
-                parameters=parameters,
-                enable_cross_partition_query=True
-            ))
-
-            tickets = []
-            for item in results:
-                tickets.append({
-                    'ticket_number': item['consignment_id'],
-                    'datetime': item['datetime'],
-                    'status': item.get('status', 'UNKNOWN')
-                })
-
-            return tickets
-
-        except Exception as e:
-            log.error(f"Error fetching tickets: {e}")
-            return []
-
     def on_view_clicked(self, ticket_index):
         try:
             ticket_section = self.tickets_section[ticket_index]
@@ -489,3 +577,13 @@ class OpenTicketsTab(BaseTab):
         except Exception as e:
             log.error(f"Error fetching ticket details: {e}")
             return None
+
+
+    def setup_button_connections(self):
+        """
+        :purpose: links buttons with methods
+        :return: None
+        :author(s): Joe Lee
+        """
+        self.clear_btn.clicked.connect(self.clear)
+        self.search_btn.clicked.connect(self.build_and_search)

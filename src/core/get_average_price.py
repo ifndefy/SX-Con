@@ -40,7 +40,7 @@ def _fetch_price_history(product_id):
                     SELECT c.consignment_id, c.datetime, p.product_id, p.price
                     FROM c
                     JOIN p IN c.products
-                    WHERE c.type = 'consignment'
+                    WHERE c.entity_type = 'consignment'
                     AND p.product_id = @prod_id
                     """
 

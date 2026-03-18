@@ -63,7 +63,7 @@ class RecordsTab(BaseTab):
         self.ticket_number_input = QLineEdit()
         self.ticket_number_input.setPlaceholderText("T Num")
         self.ticket_number_input.setFixedWidth(73)
-        self.ticket_number_input.setValidator(QIntValidator(0, 999999, self))
+        self.ticket_number_input.setValidator(QIntValidator(0, 2147483647, self))
         self.ticket_number_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.ticket_number_input)
 
@@ -186,7 +186,7 @@ class RecordsTab(BaseTab):
         """
         self.remove_record_section()
 
-        conditions = ["c.type = 'consignment'"]
+        conditions = ["c.entity_type = 'consignment'"]
         properties = []
 
         def add_property(props, value, operator="="):
@@ -204,11 +204,8 @@ class RecordsTab(BaseTab):
 
         ticket_number = self.ticket_number_input.text().strip()
         if ticket_number:
-            try:
-                ticket_number_int = int(ticket_number)
-                add_property("consignment_id", ticket_number_int, "=")
-            except ValueError:
-                pass
+            ticket_number_int = int(ticket_number)
+            add_property("consignment_id", ticket_number_int, "=")
 
         status = self.status_input.text().strip()
         if status:
@@ -220,28 +217,19 @@ class RecordsTab(BaseTab):
 
         user_id = self.user_id_input.text().strip()
         if user_id:
-            try:
-                user_id_int = int(user_id)
-                add_property("user_id", user_id_int, "=")
-            except ValueError:
-                pass
+            user_id_int = int(user_id)
+            add_property("user_id", user_id_int, "=")
 
         vendor_id = self.vendor_id_input.text().strip()
         if vendor_id:
-            try:
-                vendor_id_int = int(vendor_id)
-                add_property("vendor_id", vendor_id_int, "=")
-            except ValueError:
-                pass
+            vendor_id_int = int(vendor_id)
+            add_property("vendor_id", vendor_id_int, "=")
 
         product_id = self.product_id_input.text().strip()
         if product_id:
-            try:
-                product_id_int = int(product_id)
-                conditions.append("EXISTS(SELECT VALUE p FROM p IN c.products WHERE p.product_id = @product_id_int)")
-                properties.append({"name": "@product_id_int", "value": product_id_int})
-            except ValueError:
-                pass
+            product_id_int = int(product_id)
+            conditions.append("EXISTS(SELECT VALUE p FROM p IN c.products WHERE p.product_id = @product_id_int)")
+            properties.append({"name": "@product_id_int", "value": product_id_int})
 
         if len(conditions) == 1:
             self.fetch()
@@ -308,7 +296,7 @@ class RecordsTab(BaseTab):
         :return: list of users
         :author(s): Joe Lee
         """
-        get_all_query = "SELECT * FROM c WHERE c.type = 'consignment'"
+        get_all_query = "SELECT * FROM c WHERE c.entity_type = 'consignment'"
         self.query_db(get_all_query)
 
     def add_record_section(self):
@@ -443,15 +431,15 @@ class RecordsTab(BaseTab):
 
     def handle_open_close_btns(self, ticket_index, action):
         def handler():
+            ticket_number = self.records_section[ticket_index]['ticket_num'].text().strip()
             try:
-                ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
                 if action == "open":
                     handler_open_close_btns(ticket_number, action.upper())
                     log.info(f"OPENED ticket {ticket_number}")
-                    self.tickets_section[ticket_index]['status'].setText("OPEN")
-                    self.tickets_section[ticket_index]['open_btn'].hide()
-                    self.tickets_section[ticket_index]['close_btn'].show()
-                    view_ticket = self.tickets_section[ticket_index].get('view_ticket')
+                    self.records_section[ticket_index]['status'].setText("OPEN")
+                    self.records_section[ticket_index]['open_btn'].hide()
+                    self.records_section[ticket_index]['close_btn'].show()
+                    view_ticket = self.records_section[ticket_index].get('view_ticket')
                     if view_ticket:
                         view_ticket.payout_widget.calc_btn.setEnabled(True)
                         view_ticket.payout_widget.calc_btn.setObjectName('DEFAULT')
@@ -471,10 +459,10 @@ class RecordsTab(BaseTab):
                 elif action == "closed":
                     handler_open_close_btns(ticket_number, action.upper())
                     log.info(f"CLOSED ticket {ticket_number}")
-                    self.tickets_section[ticket_index]['status'].setText("CLOSED")
-                    self.tickets_section[ticket_index]['close_btn'].hide()
-                    self.tickets_section[ticket_index]['open_btn'].show()
-                    view_ticket = self.tickets_section[ticket_index].get('view_ticket')
+                    self.records_section[ticket_index]['status'].setText("CLOSED")
+                    self.records_section[ticket_index]['close_btn'].hide()
+                    self.records_section[ticket_index]['open_btn'].show()
+                    view_ticket = self.records_section[ticket_index].get('view_ticket')
                     if view_ticket:
                         view_ticket.payout_widget.calc_btn.setEnabled(False)
                         view_ticket.payout_widget.calc_btn.setObjectName('LOCKED')
@@ -491,10 +479,10 @@ class RecordsTab(BaseTab):
                             widgets['update_btn'].style().unpolish(widgets['update_btn'])
                             widgets['update_btn'].style().polish(widgets['update_btn'])
                     QMessageBox.information(self, "Ticket Closed", f"Ticket {ticket_number} has been closed")
-                self.tickets_section[ticket_index]['status'].setText(
+                self.records_section[ticket_index]['status'].setText(
                     get_property("Consignments", "status", "consignment", ticket_number)
                 )
-                self.parent().setFocus()
+                self.records_section[ticket_index]['ticket_num'].setFocus()
             except Exception as e:
                 log.error(f"Could not {action} ticket {ticket_number}: {e}")
 

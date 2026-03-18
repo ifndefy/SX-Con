@@ -19,6 +19,7 @@ from datetime import datetime
 
 from src.core import get_average_price as avg
 from src.core import get_latest_price as latest
+from src.core.get_latest_rate import get_latest_rate
 from services.get_item import get_item
 from services.insert_item import insert_item
 from services.update_property import update_property
@@ -189,7 +190,7 @@ class ProductsTab(BaseTab):
         """
         self.remove_product_section()
 
-        conditions = ["c.type = 'product'"]
+        conditions = ["c.entity_type = 'product'"]
         properties = []
 
         def add_property(props, value, operator="="):
@@ -207,11 +208,8 @@ class ProductsTab(BaseTab):
 
         product_id = self.product_id_input.text().strip()
         if product_id:
-            try:
-                product_id_int = int(product_id)
-                add_property("product_id", product_id_int, "=")
-            except ValueError:
-                pass
+            product_id_int = int(product_id)
+            add_property("product_id", product_id_int, "=")
 
         product_name = self.product_name_input.text().strip()
         if product_name:
@@ -225,7 +223,7 @@ class ProductsTab(BaseTab):
                     SELECT DISTINCT p.product_id
                     FROM c
                     JOIN p IN c.products
-                    WHERE c.type = 'consignment'
+                    WHERE c.entity_type = 'consignment'
                     AND CONTAINS(c.datetime, '{last_consignment}')
                 """
                 results = list(consignment_container.query_items(
@@ -285,7 +283,6 @@ class ProductsTab(BaseTab):
                     'product_id': item.get('product_id'),
                     'product_name': item.get('product_name', ''),
                     'product_type': item.get('product_type', ''),
-                    'rate': item.get('rate', 'NA'),
                 })
 
             products.sort(key=lambda product: int(product['product_id']))
@@ -306,7 +303,7 @@ class ProductsTab(BaseTab):
                 last_cons_query = f"""
                     SELECT c.products, c.datetime
                     FROM c
-                    WHERE c.type = 'consignment'
+                    WHERE c.entity_type = 'consignment'
                     AND EXISTS(SELECT VALUE p FROM p IN c.products WHERE p.product_id IN ({product_id_list}))
                 """
                 last_cons = list(consignment_container.query_items(
@@ -354,7 +351,7 @@ class ProductsTab(BaseTab):
         :return: list of products
         :author(s): Joe Lee
         """
-        get_all_query = "SELECT * FROM c WHERE c.type = 'product'"
+        get_all_query = "SELECT * FROM c WHERE c.entity_type = 'product'"
         self.query_db(get_all_query)
 
     def add_product_section(self, prod_data):
@@ -422,20 +419,19 @@ class ProductsTab(BaseTab):
 
         line2_layout.addStretch()
 
-        line2_layout.addWidget(QLabel("Rate:"))
-        rate_input = QLineEdit()
-        rate_input.setText(str(prod_data['rate']))
-        rate_input.setProperty('edit_field', 'rate')
-        rate_input.setObjectName("READ_ONLY")
-        rate_input.setReadOnly(True)
-        rate_input.setMaxLength(30)
-        rate_input.setFixedWidth(100)
-        rate_input.setValidator(QIntValidator(0, 100, self))
-        line2_layout.addWidget(rate_input)
+        line2_layout.addWidget(QLabel("Last Rate:"))
+        last_rate = QLineEdit()
+        latest_rate_val = get_latest_rate(int(prod_data['product_id']))
+        last_rate.setText(f"{latest_rate_val}%")
+        last_rate.setReadOnly(True)
+        last_rate.setObjectName("LOCKED")
+        last_rate.setMaxLength(30)
+        last_rate.setFixedWidth(100)
+        line2_layout.addWidget(last_rate)
 
         line2_layout.addStretch()
 
-        line2_layout.addWidget(QLabel("last Price:"))
+        line2_layout.addWidget(QLabel("Last Price:"))
         last_price = QLineEdit()
         latest_price_val = latest.get_latest_price(prod_data['product_id'])
         last_price.setText(f"${latest_price_val:,.2f}")
@@ -516,6 +512,7 @@ class ProductsTab(BaseTab):
         :author(s): Tim Liu
         '''
         dialog = QDialog(self)
+        dialog.setFixedWidth(400)
         dialog.setWindowTitle("Create New Product")
 
         layout = QVBoxLayout(dialog)
@@ -544,12 +541,6 @@ class ProductsTab(BaseTab):
         product_type_input.setObjectName("product_type_input")
         product_type_input.setCurrentIndex(-1)
         layout.addWidget(product_type_input)
-
-        layout.addWidget(QLabel("rate:"))
-        rate_input = QLineEdit()
-        rate_input.setObjectName("rate_input")
-        rate_input.setValidator(QIntValidator(0, 100, self))
-        layout.addWidget(rate_input)
 
         layout.addStretch()
 
@@ -654,7 +645,6 @@ class ProductsTab(BaseTab):
             "product_id": product_id,
             "product_name": product_name,
             "product_type": dialog.findChild(QComboBox, "product_type_input").currentText(),
-            "rate": dialog.findChild(QLineEdit, "rate_input").text(),
             "type": "product"
         }
         return raw_product_data
@@ -710,8 +700,6 @@ class ProductsTab(BaseTab):
             if widget.objectName() == "DEFAULT":
                 field = widget.property("edit_field")
                 new_value = widget.text().strip()
-                if field == "rate":
-                    new_value = int(new_value)
                 if existing_item.get(field) != new_value:
                     update_property("Entities", "product", product_id, field, new_value)
                 widget.setReadOnly(True)

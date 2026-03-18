@@ -18,7 +18,9 @@ def test_integration_handle_calculate(app):
     }
     with patch("ui.core.revenue_payout.update_property", return_value=0), \
          patch("ui.core.revenue_payout.get_item", side_effect=[fake_consignment, fake_consignment]), \
-         patch("ui.core.revenue_payout.current_user") as fake_user:
+         patch("ui.core.revenue_payout.current_user") as fake_user, \
+         patch("ui.core.view_ticket.QMessageBox"), \
+         patch("ui.core.revenue_payout.QMessageBox"):
         fake_user.get_username.return_value = "fakeuser"
         fake_user.get_user_full_name.return_value = "fake user"
         widget = RevenuePayout()

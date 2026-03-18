@@ -22,7 +22,7 @@ from ui.core import format_state
 from services.get_item import get_item
 from services.insert_item import insert_item
 from services.update_property import update_property
-from validate.val_check_does_not_exist import val_check_does_not_exists
+import validate as VAL
 
 import utils.logger.logger as log
 from utils.message_bus import status_bar_instance
@@ -235,7 +235,7 @@ class VendorsTab(BaseTab):
         """
         self.remove_vendor_section()
 
-        conditions = ["c.type = 'vendor'"]
+        conditions = ["c.entity_type = 'vendor'"]
         properties = []
 
         def add_property(props, value, operator="="):
@@ -253,11 +253,8 @@ class VendorsTab(BaseTab):
 
         vendor_id = self.vendor_id_input.text().strip()
         if vendor_id:
-            try:
-                vendor_id_int = int(vendor_id)
-                add_property("vendor_id", vendor_id_int, "=")
-            except ValueError:
-                pass
+            vendor_id_int = int(vendor_id)
+            add_property("vendor_id", vendor_id_int, "=")
 
         phone = self.phone_number_input.text().strip().replace('-', '')
         if phone:
@@ -357,7 +354,7 @@ class VendorsTab(BaseTab):
                 last_cons_query = f"""
                     SELECT c.vendor_id, c.datetime
                     FROM c
-                    WHERE c.type = 'consignment'
+                    WHERE c.entity_type = 'consignment'
                     AND c.vendor_id IN ({vendor_id_list})
                 """
                 last_cons = list(consignment_container.query_items(
@@ -404,7 +401,7 @@ class VendorsTab(BaseTab):
         :return: list of users
         :author(s): Joe Lee
         """
-        get_all_query = "SELECT * FROM c WHERE c.type = 'vendor'"
+        get_all_query = "SELECT * FROM c WHERE c.entity_type = 'vendor'"
         self.query_db(get_all_query)
 
     def add_vendor_section(self, vendor):
@@ -594,6 +591,7 @@ class VendorsTab(BaseTab):
         :author(s): Colin Heinselman
         '''
         dialog = QDialog(self)
+        dialog.setFixedWidth(400)
         dialog.setWindowTitle("Create New Vendor")
 
         layout = QVBoxLayout(dialog)
@@ -702,15 +700,20 @@ class VendorsTab(BaseTab):
             vendor_id_input = dialog.findChild(QLineEdit, "vendor_id_input")
             vendor_id = vendor_id_input.text().strip()
 
-            if not vendor_id:
+            if not VAL.val_vendor_id(vendor_id):
+                log.info(f"Invalid Vendor ID: {vendor_id}")
+                QMessageBox.critical(dialog, "Error", "Invalid Vendor ID")
+                vendor_id_input.setFocus()
+                vendor_id_input.selectAll()
                 return
 
-            if not val_check_does_not_exists("Entities", "vendor", "vendor_id", int(vendor_id)):
+            if not VAL.val_check_does_not_exists("Entities", "vendor", "vendor_id", int(vendor_id)):
                 log.info(f"Vendor ID: {vendor_id} already in use")
                 QMessageBox.critical(dialog, "Error", "Vendor ID already in use")
                 vendor_id_input.setFocus()
                 vendor_id_input.selectAll()
                 return
+
         return handler
 
     def on_create_clicked(self, dialog):
@@ -724,8 +727,22 @@ class VendorsTab(BaseTab):
         return handler
 
     def validate_vendor_data(self, dialog):
-        # todo:
+        if not VAL.val_fl_name(dialog.findChild(QLineEdit, "first_name_input")):
+            return False
+        if not VAL.val_m_name(dialog.findChild(QLineEdit, "middle_name_input")):
+            return False
+        if not VAL.val_fl_name(dialog.findChild(QLineEdit, "last_name_input")):
+            return False
+        if not VAL.val_address(dialog.findChild(QLineEdit, "address_input")):
+            return False
+        if not VAL.val_city(dialog.findChild(QLineEdit, "city_input")):
+            return False
+        if not VAL.val_state(dialog.findChild(QLineEdit, "state_input")):
+            return False
+        if not VAL.val_zip(dialog.findChild(QLineEdit, "zip_code_input")):
+            return False
         return True
+
 
     def handle_dialog_accepted(self, dialog):
         """
@@ -745,7 +762,7 @@ class VendorsTab(BaseTab):
         :Author(s): Colin Heinselman, Joe Lee
         """
         vendor_id = dialog.findChild(QLineEdit, "vendor_id_input").text()
-        if not val_check_does_not_exists("Entities", "vendor", "vendor_id", int(vendor_id)):
+        if not VAL.val_check_does_not_exists("Entities", "vendor", "vendor_id", int(vendor_id)):
             # this should never proc unless running 2 programs in parallel
             QMessageBox.warning(dialog, "Warning", f"Vendor ID {vendor_id} already exists")
             return -1

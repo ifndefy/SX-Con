@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QMessageBox
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QHBoxLayout
 from PyQt6.QtWidgets import QLabel
@@ -165,6 +165,7 @@ class RevenuePayout(QWidget):
         if result != 0:
             log.error("Failed to save payout to database")
         else:
+            QMessageBox.information(self, "Success", "Payout saved to database")
             log.info(f"Payout saved for consignment {self.consignment_id}")
 
         self.vendor_input.setText(f"${grand_total:.2f}")

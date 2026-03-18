@@ -215,7 +215,7 @@ class UsersTab(BaseTab):
         """
         self.remove_user_section()
 
-        conditions = ["c.type = 'user'"]
+        conditions = ["c.entity_type = 'user'"]
         properties = []
 
         def add_property(props, value, operator="="):
@@ -233,11 +233,8 @@ class UsersTab(BaseTab):
 
         user_id = self.user_id_input.text().strip()
         if user_id:
-            try:
-                user_id_int = int(user_id)
-                add_property("user_id", user_id_int, "=")
-            except ValueError:
-                log.error(f"Invalid user_id entered: {user_id}")
+            user_id_int = int(user_id)
+            add_property("user_id", user_id_int, "=")
 
         username = self.username_input.text().strip()
         if username:
@@ -250,7 +247,7 @@ class UsersTab(BaseTab):
                 consignment_query = f"""
                     SELECT DISTINCT c.user_id
                     FROM c
-                    WHERE c.type = 'consignment'
+                    WHERE c.entity_type = 'consignment'
                     AND CONTAINS(c.datetime, '{last_consignment}')
                 """
                 results = list(consignment_container.query_items(
@@ -325,7 +322,7 @@ class UsersTab(BaseTab):
                 batch_query = f"""
                     SELECT c.user_id, c.datetime
                     FROM c
-                    WHERE c.type = 'consignment'
+                    WHERE c.entity_type = 'consignment'
                     AND c.user_id IN ({user_id_list})
                 """
                 last_cons = list(consignment_container.query_items(
@@ -373,7 +370,7 @@ class UsersTab(BaseTab):
         :return: list of users
         :author(s): Joe Lee
         """
-        get_all_query = "SELECT * FROM c WHERE c.type = 'user'"
+        get_all_query = "SELECT * FROM c WHERE c.entity_type = 'user'"
         self.query_db(get_all_query)
 
     def add_user_section(self, user_data):
@@ -522,6 +519,7 @@ class UsersTab(BaseTab):
         :author(s): Colin Heinselman
         '''
         dialog = QDialog(self)
+        dialog.setFixedWidth(400)
         dialog.setWindowTitle("Create New User")
 
         layout = QVBoxLayout(dialog)
@@ -570,13 +568,7 @@ class UsersTab(BaseTab):
         question1_response.setObjectName("response1")
         question1_response.setMaxLength(255)
         layout.addWidget(question1_response)
-
-        hr2 = QFrame()
-        hr2.setFrameShape(QFrame.Shape.HLine)
-        hr2.setFrameShadow(QFrame.Shadow.Sunken)
-        hr2.setObjectName("hr")
-        layout.addWidget(hr2)
-
+        
         # Question 2
         prompt_label = QLabel("Security Question 2:")
         prompt_label.setObjectName("label")

@@ -37,5 +37,5 @@ def get_item(container_name: str, entity_type: str, id: str, silent: bool = Fals
             log.error(f"Error reading document: {e}")
             return None
     except Exception as e:
-        log.error(f"Error in get_item: {e}")
+        log.error(f"Error: Failed to get item: {id}: {e}")
         return None

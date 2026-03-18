@@ -15,7 +15,7 @@ from ui.core.theme_manager import ThemeManager
 from ui.core.status_bar import StatusBar
 from ui.tabs.create_new import CreateNewTab
 from ui.tabs.vendor_tickets import VendorTicketsTab
-from ui.tabs.open_tickets import OpenTicketsTab
+from ui.tabs.search_tickets import SearchTicketsTab
 from ui.tabs.settings import SettingsTab
 from ui.tabs.admin_settings import AdminSettingsTab
 from services.connect_database import db_connection
@@ -32,7 +32,7 @@ class MainWindow(QWidget):
         self.tabs = None
         self.create_new_tab = None
         self.vendor_tickets_tab = None
-        self.open_tickets_tab = None
+        self.search_tickets_tab = None
         self.settings_tab = None
         self.admin_settings_tab = None
 
@@ -46,7 +46,7 @@ class MainWindow(QWidget):
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
-        self.setGeometry(0, 0, 1100, 902)
+        self.setGeometry(0, 0, 1100, 911)
         self.setMinimumSize(1100, 902)
 
     def setup_ui(self):
@@ -72,7 +72,7 @@ class MainWindow(QWidget):
         # Revision info
         self.revision_label = QLabel(SPOT.APP_VERSION)
         self.revision_label.setObjectName("revision_label")
-        log_rev_container.addWidget(self.revision_label)
+        log_rev_container.addWidget(self.revision_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         title_layout.addLayout(log_rev_container)
         layout.addLayout(title_layout)
@@ -100,11 +100,11 @@ class MainWindow(QWidget):
 
         if not self.offline_mode:
             self.vendor_tickets_tab = VendorTicketsTab(self.api_handler, self.db_connection)
-            self.open_tickets_tab = OpenTicketsTab(self.api_handler, self.db_connection)
+            self.search_tickets_tab = SearchTicketsTab(self.api_handler, self.db_connection)
             self.settings_tab = SettingsTab(self.api_handler)
 
             self.tabs.addTab(self.vendor_tickets_tab, "Vendor Tickets")
-            self.tabs.addTab(self.open_tickets_tab, "Open Tickets")
+            self.tabs.addTab(self.search_tickets_tab, "Search Tickets")
             self.tabs.addTab(self.settings_tab, "Settings")
 
             if current_user.is_admin():
