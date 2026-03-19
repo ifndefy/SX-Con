@@ -27,11 +27,11 @@ def get_item(container_name: str, entity_type: str, id: str, silent: bool = Fals
         try:
             document = container.read_item(item=item_id, partition_key=partition_key)
             if not silent:
-                log.info(f"Cosmos DB Container {container_name} found ID: {item_id} ID: {partition_key}")
+                log.info(f"Found ID: {item_id} ID: {partition_key}")
             return document
         except CosmosResourceNotFoundError:
             if not silent:
-                log.info(f"Cosmos DB container {container_name} not found ID: {item_id} ID: {partition_key}")
+                log.info(f"Did not find any items using ID: {item_id} ID: {partition_key}")
             return None
         except Exception as e:
             log.error(f"Error reading document: {e}")

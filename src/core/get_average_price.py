@@ -20,7 +20,7 @@ def get_average_price(product_id):
     dataframe = pd.DataFrame(price_data)
     
     if 'price' not in dataframe.columns:
-        log.error("no price field found in price_data")
+        log.error("No price field found in price_data")
         return 0
     
     #Strip dollar signs

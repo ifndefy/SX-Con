@@ -1531,7 +1531,7 @@ class CreateNewTab(BaseTab):
                 else:
                     item = result
 
-                log.info(f"Autopopulating vendor by {db_field}: {value}")
+                log.info(f"Autopopulating Vendor fields using {db_field}: {value}")
                 for field_name, input_field in populate_fields.items():
                     if field_name in item:
                         input_field.setText(str(item[field_name]))
