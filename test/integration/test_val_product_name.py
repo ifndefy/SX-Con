@@ -1,5 +1,3 @@
-# test/test_val_product_name.py
-from services.get_item_by_property import get_item_by_property
 from validate.val_product_name import val_product_name
 def test_val_product_name():
 
