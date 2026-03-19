@@ -25,7 +25,7 @@ def test_integration_qa_succeeds(app, fake_deps):
     dialog.answer2_input.setText("asdf")
     dialog.update_btn.click()
     result = dialog.val_responses()
-    assert result == True
+    assert result == True, "Expected to be able to change qa"
 
 def test_integration_qa_fails(app, fake_deps):
     with patch("ui.prompts.answer_sec_q.QMessageBox.warning"):
@@ -39,4 +39,4 @@ def test_integration_qa_fails(app, fake_deps):
         dialog.answer2_input.setText("fnwoiedskl")
         dialog.update_btn.click()
         result = dialog.val_responses()
-        assert result != True
+        assert result != True, "Expected to not be able to change qa"

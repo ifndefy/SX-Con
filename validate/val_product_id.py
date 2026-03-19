@@ -25,15 +25,4 @@ def val_product_id(prod_id: int) -> bool:
     if not prod_id_str.isdigit():
         return False
 
-    # Must not already exist in DB
-    exists_check = val_check_does_not_exists(
-        "Entities",
-        "product",
-        "product_id",
-        prod_id
-    )
-
-    if not exists_check:
-        return False
-
     return True

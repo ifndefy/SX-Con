@@ -28,7 +28,4 @@ def val_price(price: float | int) -> bool:
     if re.match(r'^\d+.\d{2}$', price_str) is None:
         return False
 
-    if price_str == "0.00":
-        return False
-
     return True

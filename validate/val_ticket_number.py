@@ -9,7 +9,7 @@ def val_ticket_number(ticket_num: int) -> bool:
     author: Tyler Slagboom
     """
 
-    if type(ticket_num) is None:
+    if ticket_num is None:
         log.error(f'ticket number cannot be None')
         return False
 
@@ -27,7 +27,7 @@ def val_ticket_number(ticket_num: int) -> bool:
         'consignment_id',
         ticket_num)
 
-    if check_exists == -1:
+    if not check_exists:
         log.error(f'ticket number {ticket_num} already exists')
         return False
 

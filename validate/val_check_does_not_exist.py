@@ -1,7 +1,4 @@
 from typing import Union
-
-from openpyxl.pivot.fields import Boolean
-
 from services.get_item_by_property import get_item_by_property
 
 import utils.logger.logger as log

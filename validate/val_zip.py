@@ -1,3 +1,6 @@
+import utils.logger.logger as log
+
+
 def val_zip(zip: int) -> bool:
     """
     validates a ZIP code
@@ -12,17 +15,19 @@ def val_zip(zip: int) -> bool:
     Author(s): Colin Henderson
     """
 
-    if zip is None:
+    if zip is None or zip == "":
+        log.error("Zip cannot be None")
+        return False
+
+    if not isinstance(zip, int):
+        log.error("Zip code must be a integer")
         return False
 
     zip_str = str(zip)
 
     # Must be exactly 5 characters
     if len(zip_str) != 5:
-        return False
-
-    # Must contain only digits
-    if not zip_str.isdigit():
+        log.error("Zip code must have a length of 5 integers")
         return False
 
     return True
