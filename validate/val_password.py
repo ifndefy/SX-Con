@@ -15,6 +15,6 @@ def val_password(password: str) -> int:
     # No special character requirements, so they are allowed.
     if len(password) > max_length or len(password) < min_length:
         log.error(f"Password must be between {max_length} and {min_length}")
-        return -1
+        return False
 
-    return 0
+    return True

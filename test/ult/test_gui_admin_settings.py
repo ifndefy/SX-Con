@@ -21,7 +21,7 @@ def admin_tab_offline(app):
         yield AdminSettingsTab(fake_api, fake_db)
 
 def test_online_subtab_count(admin_tab_online):
-    assert admin_tab_online.tabs.count() == 5
+    assert admin_tab_online.tabs.count() == 5, "Expected there to be 5 subtabs"
 
 def test_offline_subtab_count(admin_tab_offline):
-    assert admin_tab_offline.tabs.count() == 1
+    assert admin_tab_offline.tabs.count() == 1, "Expected there to be 1 subtab in offline mode"

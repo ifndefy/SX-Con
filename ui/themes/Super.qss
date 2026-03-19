@@ -255,7 +255,13 @@ QWidget QPushButton#crit_large_btn {
 
 /* Status Section */
 QWidget#status_container {
-    background-color: #5C4033;
+    background-color: #E5C59B;
+    border: 1px solid #000000;
+}
+
+QWidget#status_container::error {
+    background-color: #691601;
+    border: 1px solid #000000;
 }
 
 /* login screen styles */

@@ -32,7 +32,7 @@ def test_e2e_fail_settings_wrong_password_graceful(app):
     login_screen.username_input.setText("user")
     login_screen.password_input.setText("asdf")
     login_screen.login_btn.click()
-    assert current_user.get_username() == "user", "Login failed"
+    assert current_user.get_username() == "user", "Expected to be able to login"
 
     # 2 - Open main window and go to Settings tab
     window = MainWindow()

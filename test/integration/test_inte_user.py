@@ -15,4 +15,4 @@ def test_current_user_set_after_login(app):
     dialog.username_input.setText("user")
     dialog.password_input.setText("asdf")
     dialog.attempt_login()
-    assert current_user.get_username() == "user"
+    assert current_user.get_username() == "user", "Expected username to be set to user"

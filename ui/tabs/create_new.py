@@ -126,7 +126,7 @@ class CreateNewTab(BaseTab):
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
         self.vendor_id_input.setValidator(QRegularExpressionValidator(QRegularExpression(r"\d{0,4}"), self))
-        self.vendor_id_input.returnPressed.connect(self.auto_pop_vend)
+        self.vendor_id_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         # Phone Number
@@ -134,7 +134,7 @@ class CreateNewTab(BaseTab):
         self.phone_input = format_phone.PhoneNumField()
         self.phone_input.setObjectName("DEFAULT")
         self.phone_input.setFixedWidth(150)
-        self.phone_input.returnPressed.connect(self.auto_pop_vend_by_phone)
+        self.phone_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_1.addWidget(self.phone_input)
 
         vendor_section_row_1.addStretch()
@@ -162,6 +162,7 @@ class CreateNewTab(BaseTab):
         self.first_name_input.setMinimumWidth(263)
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
         self.first_name_input.setValidator(alpha_validator)
+        self.first_name_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_2.addWidget(self.first_name_input)
 
         # Middle Name
@@ -171,6 +172,7 @@ class CreateNewTab(BaseTab):
         self.middle_name_input.setMaxLength(10)
         self.middle_name_input.setMinimumWidth(103)
         self.middle_name_input.setValidator(alpha_validator)
+        self.middle_name_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_2.addWidget(self.middle_name_input)
 
         # Last Name
@@ -180,6 +182,7 @@ class CreateNewTab(BaseTab):
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setMinimumWidth(263)
         self.last_name_input.setValidator(alpha_validator)
+        self.last_name_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_2.addWidget(self.last_name_input)
 
         # End creation and adds vendor_section_row_2 to the window
@@ -1156,7 +1159,6 @@ class CreateNewTab(BaseTab):
 
         fields = [
             self.vendor_id_input,
-            self.phone_input,
             self.first_name_input,
             self.middle_name_input,
             self.last_name_input,
@@ -1171,7 +1173,8 @@ class CreateNewTab(BaseTab):
             field.setObjectName("DEFAULT")
             field.style().unpolish(field)
             field.style().polish(field)
-        self.auto_pop_vend()
+
+        self.phone_input.clear_phone()
 
         # Clear all product fields
         while self.products_layout.count():
@@ -1469,11 +1472,30 @@ class CreateNewTab(BaseTab):
         except Exception as e:
             log.error(f"Failed to fetch record by name: {e}")
 
-    def auto_pop_vend(self):
+    def auto_pop_vend_by_field(self):
         if SPOT.OFFLINE:
-            log.error(f"Unable to autopopulate the vendor fields using vendor id. Not connected to the database.")
+            log.error("Unable to autopopulate vendor fields. Not connected to the database.")
+            return
+
         try:
-            field_mapping = {
+            sender = self.sender()
+            if not sender:
+                return
+
+            field_map = {
+                self.vendor_id_input: "vendor_id",
+                self.phone_input: "phone",
+                self.first_name_input: "first_name",
+                self.middle_name_input: "middle_name",
+                self.last_name_input: "last_name",
+            }
+
+            db_field = field_map.get(sender)
+            if not db_field:
+                return
+
+            populate_fields = {
+                'vendor_id': self.vendor_id_input,
                 'phone': self.phone_input,
                 'first_name': self.first_name_input,
                 'middle_name': self.middle_name_input,
@@ -1481,91 +1503,55 @@ class CreateNewTab(BaseTab):
                 'address': self.address_input,
                 'city': self.city_input,
                 'state': self.state_input,
-                'zip': self.zip_input
+                'zip': self.zip_input,
             }
-            vend_id = self.vendor_id_input.text().strip()
 
-            if vend_id:
-                item = get_item("Entities", "vendor", vend_id)
-                if item is not None:
-                    log.info(f"Autopopulating with found vendor id {vend_id}")
-                    for field_name, input_field in field_mapping.items():
-                        if field_name in item:
-                            input_field.setText(str(item[field_name]))
-                            input_field.setObjectName("READ_ONLY")
-                            input_field.setReadOnly(True)
-                else:
-                    log.info(f"Did not find existing vendor with id {vend_id}")
-                    for input_field in field_mapping.values():
-                        input_field.setObjectName("DEFAULT")
-                        input_field.setReadOnly(False)
+            value = sender.text().strip()
+            if db_field == "vendor_id":
+                value = int(value)
+
+            if not value:
+                for input_field in populate_fields.values():
+                    if input_field is not sender:
                         input_field.clear()
-            else:
-                log.info("Vendor ID field is empty, clearing fields")
-                for input_field in field_mapping.values():
                     input_field.setObjectName("DEFAULT")
                     input_field.setReadOnly(False)
-                    input_field.clear()
-            for input_field in field_mapping.values():
+                for input_field in populate_fields.values():
+                    input_field.style().unpolish(input_field)
+                    input_field.style().polish(input_field)
+                return
+
+            result = get_all_items_by_property("Entities", "vendor", db_field, value)
+
+            if result is not None:
+                if isinstance(result, list):
+                    item = self.prompt_vendor_selection(result)
+                    if item is None:
+                        return
+                else:
+                    item = result
+
+                log.info(f"Autopopulating vendor by {db_field}: {value}")
+                for field_name, input_field in populate_fields.items():
+                    if field_name in item:
+                        input_field.setText(str(item[field_name]))
+                        if input_field is not sender:
+                            input_field.setObjectName("READ_ONLY")
+                            input_field.setReadOnly(True)
+            else:
+                log.info(f"No vendor found with {db_field}: {value}")
+                for input_field in populate_fields.values():
+                    if input_field is not sender:
+                        input_field.clear()
+                    input_field.setObjectName("DEFAULT")
+                    input_field.setReadOnly(False)
+
+            for input_field in populate_fields.values():
                 input_field.style().unpolish(input_field)
                 input_field.style().polish(input_field)
 
         except Exception as e:
-            log.error(f"Failed to fetch vendor: {e}")
-
-    def auto_pop_vend_by_phone(self):
-        if SPOT.OFFLINE:
-            log.error(f"Unable to autopopulate the vendor fields using phone number. Not connected to the database.")
-            return
-
-        try:
-            field_mapping = {
-                'vendor_id': self.vendor_id_input,
-                'first_name': self.first_name_input,
-                'middle_name': self.middle_name_input,
-                'last_name': self.last_name_input,
-                'address': self.address_input,
-                'city': self.city_input,
-                'state': self.state_input,
-                'zip': self.zip_input
-            }
-            phone = self.phone_input.text().strip()
-
-            if phone:
-                result = get_all_items_by_property("Entities", "vendor", "phone", phone)
-
-                if result is not None:
-                    if isinstance(result, list):
-                        item = self.prompt_vendor_selection(result)
-                        if item is None:
-                            return
-                    else:
-                        item = result
-
-                    log.info(f"Autopopulating with found phone number {phone}")
-                    for field_name, input_field in field_mapping.items():
-                        if field_name in item:
-                            input_field.setText(str(item[field_name]))
-                            input_field.setObjectName("READ_ONLY")
-                            input_field.setReadOnly(True)
-                else:
-                    log.info(f"Did not find existing vendor with phone number {phone}")
-                    for input_field in field_mapping.values():
-                        input_field.setObjectName("DEFAULT")
-                        input_field.setReadOnly(False)
-                        input_field.clear()
-            else:
-                log.info("Vendor ID field is empty, clearing fields")
-                for input_field in field_mapping.values():
-                    input_field.setObjectName("DEFAULT")
-                    input_field.setReadOnly(False)
-                    input_field.clear()
-            for input_field in field_mapping.values():
-                input_field.style().unpolish(input_field)
-                input_field.style().polish(input_field)
-
-        except Exception as e:
-            log.error(f"Failed to fetch vendor by phone: {e}")
+            log.error(f"Failed to fetch vendor by {db_field}: {e}")
 
     def prompt_vendor_selection(self, vendors):
         dialog = QDialog(self)
@@ -1586,9 +1572,10 @@ class CreateNewTab(BaseTab):
         for vend in vendors:
             v_id = vend.get('vendor_id', '')
             fname = vend.get('first_name', '')
+            mname = vend.get('middle_name', '')
             lname = vend.get('last_name', '')
             address = vend.get('address', '')
-            radio_btn = QRadioButton(f"{v_id} : {fname} {lname}\n"
+            radio_btn = QRadioButton(f"{v_id} : {fname} {mname} {lname}\n"
                                      f"{address}")
             radio_buttons.append(radio_btn)
             layout.addWidget(radio_btn)

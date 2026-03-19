@@ -1,8 +1,16 @@
 import re
+import utils.logger.logger as log
+
 
 def val_entity_type(etype: str) -> bool:
-    if not isinstance(etype, str): 
+    if not isinstance(etype, str):
+        log.error("Entity type must be string")
         return False
     
     regex = r"^(Consignment|User|Vendor|Product)$"
-    return bool(re.search(regex, etype))
+
+    if bool(re.search(regex, etype)):
+        return True
+    else:
+        log.error("Invalid entity type")
+        return False

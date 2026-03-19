@@ -19,16 +19,16 @@ def fake_deps():
 def test_dialog_opens(app):
     fake_theme = MagicMock()
     dialog = ForgotPasswordScreen(theme_manager=fake_theme)
-    assert dialog is not None
+    assert dialog is not None, "Expected a dialog to be opened"
 
 # should pass, window title is correct
 def test_dialog_title(app):
     fake_theme = MagicMock()
     dialog = ForgotPasswordScreen(theme_manager=fake_theme)
-    assert dialog.windowTitle() == "SX-Con - Password Reset"
+    assert dialog.windowTitle() == "SX-Con - Password Reset", "Expected window title to be 'SX-Con - Password Reset'"
 
 # should pass, username input exists
 def test_dialog_username_input_exist(app):
     fake_theme = MagicMock()
     dialog = ForgotPasswordScreen(theme_manager=fake_theme)
-    assert dialog.username_input is not None
+    assert dialog.username_input is not None, "Expected there to be a QLineEdit input for the username"
