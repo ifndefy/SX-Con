@@ -1,6 +1,5 @@
 import utils.logger.logger as log
-from services.get_item_by_property import get_item_by_property
-from src import SPOT
+from validate.val_check_does_not_exist import val_check_does_not_exists
 
 def val_ticket_number(ticket_num: int) -> bool:
 
@@ -22,17 +21,14 @@ def val_ticket_number(ticket_num: int) -> bool:
         log.error(f'ticket number must be greater than 0')
         return False
 
-    if not SPOT.OFFLINE:
+    check_exists = val_check_does_not_exists(
+        'Consignments',
+        'consignment',
+        'consignment_id',
+        ticket_num)
 
-        try:
-            item = get_item_by_property("Consignments", "consignment", "consignment_id", ticket_num)
-
-            if item is None:
-                pass
-            else:
-                log.error(f'ticket number cannot be a duplicate')
-                return False
-        except Exception as e:
-            log.error(f"Error querying the database: {e}")
+    if check_exists == -1:
+        log.error(f'ticket number {ticket_num} already exists')
+        return False
 
     return True
