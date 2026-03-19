@@ -1,7 +1,7 @@
 import re
 
 from validate.val_check_does_not_exist import val_check_does_not_exists
-
+import utils.logger.logger as log
 
 def val_product_name(prod_name: str) -> bool:
     """
@@ -19,21 +19,12 @@ def val_product_name(prod_name: str) -> bool:
 
     # Check None
     if prod_name is None:
+        log.error(f"Product Name cannot be None")
         return False
 
     # Check only letters and spaces
     if not re.fullmatch(r"[A-Za-z ]+", prod_name):
-        return False
-
-    # Check uniqueness in DB
-    exists_check = val_check_does_not_exists(
-        "Entities",
-        "product",
-        "product_name",
-        prod_name
-    )
-
-    if not exists_check:
+        log.error("Product name must only contain alphabetical characters")
         return False
 
     return True

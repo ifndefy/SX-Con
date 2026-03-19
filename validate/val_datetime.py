@@ -1,4 +1,5 @@
 import re as regex
+import utils.logger.logger as log
 
 def val_datetime(stat: str) -> bool:
     """
@@ -8,7 +9,13 @@ def val_datetime(stat: str) -> bool:
     return: True if valid name, False otherwise
     """
     temp = regex.split(r'\s*--\s*', stat)
-    if temp is None or (len(temp) != 2): return False
-    if regex.match(r'^\d\d/\d\d/\d\d$', temp[0]) is None: return False
-    if regex.match(r'^\d\d:\d\d$', temp[1]) is None: return False
+    if temp is None or (len(temp) != 2):
+        log.error(f"Invalid date time: {stat}")
+        return False
+    if regex.match(r'^\d\d/\d\d/\d\d$', temp[0]) is None:
+        log.error(f"Invalid date time: {stat}")
+        return False
+    if regex.match(r'^\d\d:\d\d$', temp[1]) is None:
+        log.error(f"Invalid date time: {stat}")
+        return False
     return True
