@@ -33,7 +33,7 @@ def val_product_name(prod_name: str) -> bool:
         prod_name
     )
 
-    if exists_check == -1:
+    if not exists_check:
         return False
 
     return True
