@@ -1,6 +1,4 @@
-import pytest
 from unittest.mock import patch, MagicMock
-import logging
 
 from src.user import current_user
 from ui.core.theme_manager import ThemeManager

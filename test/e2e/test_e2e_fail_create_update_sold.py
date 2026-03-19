@@ -1,5 +1,3 @@
-import pytest
-from unittest.mock import MagicMock
 from unittest.mock import patch
 import os
 import random
@@ -11,7 +9,6 @@ from ui.prompts.login import LoginScreen
 from ui.tabs import VendorTicketsTab
 from ui.tabs.create_new import CreateNewTab
 
-from services.delete_item import delete_item
 from services.get_item import get_item
 from utils.core.generate_pdf import PDF
 

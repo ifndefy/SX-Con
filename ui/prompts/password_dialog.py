@@ -1,8 +1,7 @@
 # ui/tabs/password_dialog.py
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
 from PyQt6.QtCore import Qt
-from src.core.hash_password import hash_password
-import utils.logger.logger as log
+
 
 class PasswordChangeDialog(QDialog):
     """

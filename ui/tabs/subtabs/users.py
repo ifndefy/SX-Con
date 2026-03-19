@@ -15,7 +15,6 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QMessageBox
 
 import validate
-from core.authenticate import authenticate_password
 from ui.tabs.base import BaseTab
 from ui.prompts.password_dialog import PasswordChangeDialog
 from src import SPOT

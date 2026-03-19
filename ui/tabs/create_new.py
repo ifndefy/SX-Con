@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QInputDialog, QRadioButton, QDialog
+from PyQt6.QtWidgets import QVBoxLayout, QRadioButton, QDialog
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QFrame

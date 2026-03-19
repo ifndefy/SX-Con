@@ -1,6 +1,3 @@
-import pytest
-from unittest.mock import MagicMock
-from unittest.mock import patch
 from src.core.update_quantities import _find_product_id
 from src.core.update_quantities import _validate_sold
 from src.core.update_quantities import update_quantities

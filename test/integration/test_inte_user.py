@@ -1,6 +1,5 @@
 from unittest.mock import MagicMock
 
-from src.user import User
 from src.user import current_user
 from ui.prompts.login import LoginScreen
 
