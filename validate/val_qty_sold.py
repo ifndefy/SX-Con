@@ -1,3 +1,5 @@
+import utils.logger.logger as log
+
 
 def val_qty_sold(sold: int, qty: int) -> bool:
     """
@@ -8,12 +10,15 @@ def val_qty_sold(sold: int, qty: int) -> bool:
         return: True if valid, False otherwise
     """
     if not isinstance(sold, int):
+        log.error(f"Quantity sold must be an integer")
         return False
 
     if sold > qty:
+        log.error(f"Quantity sold must be less than Quantity Signed {qty}")
         return False
 
     if sold < 0:
+        log.error(f"Quantity sold must be positive")
         return False
 
     return True
