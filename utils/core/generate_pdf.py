@@ -246,38 +246,28 @@ class PDF:
 
         y_type = y - 15
         c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(118, y, "Potential at Signing")
+        c.drawString(30, y, "Potential at Signing")
         y_pot = y - 15
-
-        c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(60, y_pot, "Vendor")
-        c.drawCentredString(118, y_pot, "Amount Sold")
-        c.drawCentredString(175, y_pot, "Super X")
-        y_pot -= 18
+        # y_pot -= 18
 
         shared = self.ticket_data["revenue"]["shared"]
         if shared:
             last_cut = shared[-1]
             c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, f"${last_cut.get('vendor', 0):.2f}")
-            c.rect(34 - 3, y_pot - 3, 60, 15)
-            c.drawCentredString(118, y_pot, str(last_cut.get("percentage")))
-            c.drawString(148, y_pot, f"${last_cut.get('super_x', 0):.2f}")
-            c.rect(148 - 3, y_pot - 3, 60, 15)
+            c.drawString(40, y_pot, f"${last_cut.get('vendor', 0):.2f}")
+            c.rect(40 - 3, y_pot - 3, 120, 15)
             y_pot -= 18
 
         y_pot -= 18
         c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(118, y_pot, "Payout")
+        c.drawString(30, y_pot, "Payout")
         y_pot -= 18
         payout = self.ticket_data['revenue']['payout']
         if payout:
             cashed_out = payout[-1]
             c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, f"${cashed_out.get('vendor', 0):.2f}")
-            c.rect(34 - 3, y_pot - 3, 60, 15)
-            c.drawString(148, y_pot, f"${cashed_out.get('super_x', 0):.2f}")
-            c.rect(148 - 3, y_pot - 3, 60, 15)
+            c.drawString(40, y_pot, f"${cashed_out.get('vendor', 0):.2f}")
+            c.rect(40 - 3, y_pot - 3, 120, 15)
             y_pot -= 18
         else:
             c.setFont("Helvetica", 10)
@@ -339,3 +329,6 @@ class PDF:
 
     def save_y(self, y_axis):
         self.y = y_axis
+
+test = PDF(90)
+test.create_supermarket_ticket()

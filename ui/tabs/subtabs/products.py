@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QDialog
 
+import validate
 from utils.message_bus import status_bar_instance
 from ui.tabs.base import BaseTab
 
@@ -577,7 +578,7 @@ class ProductsTab(BaseTab):
             product_id_input = dialog.findChild(QLineEdit, "product_id_input")
             product_id = product_id_input.text().strip()
 
-            if not product_id:
+            if not validate.val_product_id(product_id):
                 return
 
             if not val_check_does_not_exists("Entities", "product", "product_id", int(product_id)):
@@ -623,7 +624,12 @@ class ProductsTab(BaseTab):
         if self.new_product_data == -1:
             log.error(f"Failed to create new product")
             return
-        insert_item("Entities", "product", self.new_product_data)
+        res = insert_item("Entities", "product", self.new_product_data)
+        if res == 0:
+            p_id = self.new_product_data.get('product_id')
+            p_name = self.new_product_data.get('product_name')
+            log.info(f"Successfully created new product: {p_id} : {p_name}")
+            QMessageBox.information(dialog, "Success", f"{p_id}: {p_name} created successfully")
 
     def gather_new_product_data(self, dialog):
         """
@@ -642,14 +648,22 @@ class ProductsTab(BaseTab):
             return -1
 
         raw_product_data = {
-            "product_id": product_id,
+            "product_id": int(product_id),
             "product_name": product_name,
             "product_type": dialog.findChild(QComboBox, "product_type_input").currentText(),
-            "type": "product"
         }
         return raw_product_data
 
     def validate_product_data(self, dialog):
+        p_id = dialog.findChild(QLineEdit, "product_id_input").text()
+        if not val_check_does_not_exists("Entities", "product", "product_id", p_id):
+            return False
+        product_name = dialog.findChild(QLineEdit, "product_name_input").text()
+        if not val_check_does_not_exists("Entities", "product", "product_name", product_name):
+            return False
+        product_type = dialog.findChild(QComboBox, "product_type_input").currentText()
+        if not validate.val_product_type(product_type):
+            return False
         return True
 
     def on_edit_clicked(self):
