@@ -727,22 +727,21 @@ class VendorsTab(BaseTab):
         return handler
 
     def validate_vendor_data(self, dialog):
-        if not VAL.val_fl_name(dialog.findChild(QLineEdit, "first_name_input")):
+        if not VAL.val_fl_name(dialog.findChild(QLineEdit, "first_name_input").text()):
             return False
-        if not VAL.val_m_name(dialog.findChild(QLineEdit, "middle_name_input")):
+        if not VAL.val_m_name(dialog.findChild(QLineEdit, "middle_name_input").text()):
             return False
-        if not VAL.val_fl_name(dialog.findChild(QLineEdit, "last_name_input")):
+        if not VAL.val_fl_name(dialog.findChild(QLineEdit, "last_name_input").text()):
             return False
-        if not VAL.val_address(dialog.findChild(QLineEdit, "address_input")):
+        if not VAL.val_address(dialog.findChild(QLineEdit, "address_input").text()):
             return False
-        if not VAL.val_city(dialog.findChild(QLineEdit, "city_input")):
+        if not VAL.val_city(dialog.findChild(QLineEdit, "city_input").text()):
             return False
-        if not VAL.val_state(dialog.findChild(QLineEdit, "state_input")):
+        if not VAL.val_state(dialog.findChild(QLineEdit, "state_input").text()):
             return False
-        if not VAL.val_zip(dialog.findChild(QLineEdit, "zip_code_input")):
+        if not VAL.val_zip(int(dialog.findChild(QLineEdit, "zip_code_input").text())):
             return False
         return True
-
 
     def handle_dialog_accepted(self, dialog):
         """
@@ -753,7 +752,12 @@ class VendorsTab(BaseTab):
         if self.new_vendor_data == -1:
             log.error(f"Failed to create new vendor")
             return
-        insert_item("Entities", "vendor", self.new_vendor_data)
+        res = insert_item("Entities", "vendor", self.new_vendor_data)
+        if res == 0:
+            v_id = self.new_vendor_data.get("vendor_id")
+            v_name = " ".join([self.new_vendor_data.get("first_name"), self.new_vendor_data.get("middle_name"), self.new_vendor_data.get("last_name")])
+            log.info(f"Successfully created new vendor: {v_id} : {v_name}")
+            QMessageBox.information(dialog, "Success", f"{v_id}: {v_name} created successfully")
 
     def gather_vendor_data(self, dialog):
         """
@@ -768,7 +772,7 @@ class VendorsTab(BaseTab):
             return -1
 
         vendor_doc = {
-            "vendor_id": vendor_id,
+            "vendor_id": int(vendor_id),
             "phone": dialog.findChild(QLineEdit, "phone_number_input").text(),
             "first_name": dialog.findChild(QLineEdit, "first_name_input").text(),
             "middle_name": dialog.findChild(QLineEdit, "middle_name_input").text(),
@@ -777,7 +781,6 @@ class VendorsTab(BaseTab):
             "city": dialog.findChild(QLineEdit, "city_input").text(),
             "state": dialog.findChild(QLineEdit, "state_input").text(),
             "zip": int(dialog.findChild(QLineEdit, "zip_code_input").text()),
-            "type": "vendor"
         }
         return vendor_doc
 
