@@ -1,4 +1,7 @@
 from typing import Union
+
+from openpyxl.pivot.fields import Boolean
+
 from services.get_item_by_property import get_item_by_property
 
 import utils.logger.logger as log
@@ -9,7 +12,7 @@ def val_check_does_not_exists(
     etype: str,
     property_name: str,
     value: Union[str, int]
-) -> int:
+) -> bool:
     """
     Validates that a property value doesn't already exist
 

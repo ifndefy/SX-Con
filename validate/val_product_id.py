@@ -33,7 +33,7 @@ def val_product_id(prod_id: int) -> bool:
         prod_id
     )
 
-    if exists_check == -1:
+    if not exists_check:
         return False
 
     return True
