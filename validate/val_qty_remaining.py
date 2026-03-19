@@ -1,4 +1,4 @@
-def val_qty_sold(rem: int, qty: int) -> bool:
+def val_qty_rem(rem: int, qty: int) -> bool:
     """
         purpose: validate that the remaining is appropriate to quantity
         author(s): Tim Liu
