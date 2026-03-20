@@ -65,16 +65,26 @@ jobs:
     - name: Build to .EXE/ Package Data
       shell: powershell
       run: |
-        pyinstaller SXC.py
-        -w
-        --noupx
-        --add-data "./services/config.ini;./services"
-        --add-data "./ui/themes;./ui/themes" 
-        --add-data "./src/SPOT_CR.csv;./src" 
-        --add-data "./src/imgs/*.png;./src/imgs"
+        pyinstaller SXC.py `
+        -w `
+        --noupx `
+        --add-data "./services/config.ini;./services" `
+        --add-data "./ui/themes;./ui/themes" `
+        --add-data "./src/SPOT_CR.csv;./src" `
+        --add-data "./src/imgs/*.png;./src/imgs" `
 
     - name: Move user-facing files to root
       shell: powershell
       run: | 
         Move-Item -Path "./dist/SXC/_internal/ui" -Destination "./dist/SXC"
         Copy-Item -Path "./dist/SXC/_internal/src" -Destination "./dist/SXC"
+
+    - name: Compress to single folder
+      shell: powershell
+      run: | 
+        Compress-Archive -Path "./dist/SXC" -DestinationPath "./dist/SXC_win_x64.zip"
+
+    - name: Build Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "./dist/SXC_win_x64.zip"
