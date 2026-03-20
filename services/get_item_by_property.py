@@ -22,9 +22,9 @@ def get_item_by_property(container_name: str, entity_type: str, property_name: s
         container = db_connection.connect(container_name)
 
         if isinstance(property_value, (int, float)):
-            query = f"SELECT * FROM c WHERE c.type = '{entity_type}' AND c.{property_name} = {property_value}"
+            query = f"SELECT * FROM c WHERE c.entity_type = '{entity_type}' AND c.{property_name} = {property_value}"
         else:
-            query = f"SELECT * FROM c WHERE c.type = '{entity_type}' AND c.{property_name} = '{property_value}'"
+            query = f"SELECT * FROM c WHERE c.entity_type = '{entity_type}' AND c.{property_name} = '{property_value}'"
 
         items = list(container.query_items(
             query=query,
@@ -32,11 +32,11 @@ def get_item_by_property(container_name: str, entity_type: str, property_name: s
         ))
 
         if items:
-            log.info(f"Cosmos DB Container {container_name} found by {property_name}: {property_value}")
+            log.info(f"Found by {property_name}: {property_value}")
             return items[0]
         else:
-            log.info(f"Cosmos DB container {container_name} not found by {property_name}: {property_value}")
+            log.info(f"Did not find any items using {property_name}: {property_value}")
             return None
     except Exception as e:
-        log.error(f"Error in get_item_by_property: {e}")
+        log.error(f"Error: Failed to get item by property: {property_value} : {e}")
         return None

@@ -5,9 +5,7 @@ from validate.val_price import val_price
  Purpose: Different test cases to see if correct syntax is true and false otherwise
 """
 
-
 def test_val_price():
-    # Valid cases
     assert val_price(10), "Expected 10 to be converted to 10.00 then validated"
     assert val_price(10.50), "Expected 10.50 to be valid"
     assert not val_price("10.99"), "Expected '10.99' to be invalid for string data type"

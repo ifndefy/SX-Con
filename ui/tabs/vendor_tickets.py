@@ -243,7 +243,7 @@ class VendorTicketsTab(BaseTab):
         """
         self.remove_ticket_section()
 
-        conditions = ["c.type = 'vendor'"]
+        conditions = ["c.entity_type = 'vendor'"]
         properties = []
 
         def add_property(prop, value, operator="="):
@@ -334,7 +334,7 @@ class VendorTicketsTab(BaseTab):
                 results = list(consignment_container.query_items(
                     query="""
                         SELECT * FROM c
-                        WHERE c.type = 'consignment'
+                        WHERE c.entity_type = 'consignment'
                         AND c.vendor_id = @vendor_id
                     """,
                     parameters=[{"name": "@vendor_id", "value": vendor_id}],
@@ -379,7 +379,7 @@ class VendorTicketsTab(BaseTab):
         try:
             container = self.db_connection.connect("Consignments")
             results = list(container.query_items(
-                query="SELECT * FROM c WHERE c.type = 'consignment'",
+                query="SELECT * FROM c WHERE c.entity_type = 'consignment'",
                 enable_cross_partition_query=True
             ))
 

@@ -1,5 +1,3 @@
-import pytest
-from unittest.mock import MagicMock
 from unittest.mock import patch
 import os
 import random
@@ -11,7 +9,6 @@ from ui.prompts.login import LoginScreen
 from ui.tabs import VendorTicketsTab
 from ui.tabs.create_new import CreateNewTab
 
-from services.delete_item import delete_item
 from utils.core.generate_pdf import PDF
 
 
@@ -148,19 +145,29 @@ def test_e2e_create_payout_close(app):
     prod_4_sold_qty = str(random.randint(1, int(prod_4_qty)))
 
     open_view_ticket.product_widgets[0]['sold_edit'].setText(prod_1_sold_qty) # the widget index is used
-    open_view_ticket.product_widgets[0]['update_btn'].click()
+    with patch("ui.core.view_ticket.QMessageBox"), \
+            patch("ui.core.revenue_payout.QMessageBox"):
+        open_view_ticket.product_widgets[0]['update_btn'].click()
 
     open_view_ticket.product_widgets[1]['sold_edit'].setText(prod_2_sold_qty)
-    open_view_ticket.product_widgets[1]['update_btn'].click()
+    with patch("ui.core.view_ticket.QMessageBox"), \
+            patch("ui.core.revenue_payout.QMessageBox"):
+        open_view_ticket.product_widgets[1]['update_btn'].click()
 
     open_view_ticket.product_widgets[2]['sold_edit'].setText(prod_3_sold_qty)
-    open_view_ticket.product_widgets[2]['update_btn'].click()
+    with patch("ui.core.view_ticket.QMessageBox"), \
+            patch("ui.core.revenue_payout.QMessageBox"):
+        open_view_ticket.product_widgets[2]['update_btn'].click()
 
     open_view_ticket.product_widgets[3]['sold_edit'].setText(prod_4_sold_qty)
-    open_view_ticket.product_widgets[3]['update_btn'].click()
+    with patch("ui.core.view_ticket.QMessageBox"), \
+            patch("ui.core.revenue_payout.QMessageBox"):
+        open_view_ticket.product_widgets[3]['update_btn'].click()
 
     ### 10 - Recalculate using payout's calculate button
-    open_view_ticket.payout_widget.calc_btn.click()
+    with patch("ui.core.view_ticket.QMessageBox"), \
+            patch("ui.core.revenue_payout.QMessageBox"):
+        open_view_ticket.payout_widget.calc_btn.click()
     # don't need to test if the out is correct, it is being tested elsewhere
     assert open_view_ticket.payout_widget.vendor_input.text() != "$0.00", "Expected Vendor's payout to not be zero"
     assert open_view_ticket.payout_widget.super_x_input.text() != "$0.00", "Expected SuperX's payout to not be zero"

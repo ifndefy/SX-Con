@@ -1,5 +1,5 @@
 import re
-
+import utils.logger.logger as log
 def val_price(price: float | int) -> bool:
     """
     Author: Kyle Valdez
@@ -13,23 +13,23 @@ def val_price(price: float | int) -> bool:
 
     Returns True otherwise.
     """
-
     if price is None:
-        return False
-
-    if price is None:
+        log.error("Price cannot be None")
         return False
 
     if not isinstance(price, (float, int)):
+        log.error("Price must be a float or int")
         return False
 
     check = str(price)
     if isinstance(price, float) and len(check.split('.')[1]) > 2:
+        log.error("Price contains too many integers after the decimal point")
         return False
 
     price_str = str(f"{float(price):.2f}")
 
     if re.match(r'^\d+.\d{2}$', price_str) is None:
+        log.error("Price must contain only two digits after the decimal point")
         return False
 
     return True

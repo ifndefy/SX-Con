@@ -255,7 +255,13 @@ QWidget QPushButton#crit_large_btn {
 
 /* Status Section */
 QWidget#status_container {
-    background-color: #5C4033;
+    background-color: #E5C59B;
+    border: 1px solid #000000;
+}
+
+QWidget#status_container::error {
+    background-color: #691601;
+    border: 1px solid #000000;
 }
 
 /* login screen styles */
@@ -381,4 +387,17 @@ QLineEdit#entry_field{
 /*State 01: Read-Only -> we change the background of the field and then fall back to the default style for the rest*/
 QLineEdit#entry_field[state="READ_ONLY"] {
     background-color: #B0B0B0;
+}
+
+/* Radio Button Colors */
+QRadioButton::indicator {
+    border: 2px solid #000000;
+    border-radius: 7px;
+    width: 12px;
+    height: 12px;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #000000;
+    border-radius: 7px;
 }

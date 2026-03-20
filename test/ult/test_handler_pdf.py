@@ -40,4 +40,4 @@ def test_handler_live_pdf_creates_file(app, cleanup_pdf):
     handler_live_pdf(ticket_data['ticket_number'], vendor_data, product_data, revenue_data, ticket_data['datetime'])
     pdf = handler_live_pdf(ticket_data['ticket_number'], vendor_data, product_data, revenue_data, ticket_data['datetime'])
     cleanup_pdf.append(pdf.pdf_filename)
-    assert os.path.exists(pdf.pdf_filename)
+    assert os.path.exists(pdf.pdf_filename), "Expected to be able to generate a pdf"

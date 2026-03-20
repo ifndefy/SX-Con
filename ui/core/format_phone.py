@@ -48,3 +48,12 @@ class PhoneNumField(QLineEdit):
             super().keyPressEvent(event)
         else:
             super().keyPressEvent(event)
+
+    def clear_phone(self):
+        self.setInputMask("")
+        self.setText("")
+        self.setObjectName("DEFAULT")
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.setReadOnly(False)
+        self.masked = False

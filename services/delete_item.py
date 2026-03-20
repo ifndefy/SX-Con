@@ -31,5 +31,5 @@ def delete_item(container_name: str, type: str, id: str) -> int:
         log.info(f"Successfully deleted {arg} from {container_name}")
         return 0
     except Exception as e:
-        log.error(f"ERROR: failed to delete: {e}")
+        log.error(f"ERROR: Failed to delete: {e}")
         return -1

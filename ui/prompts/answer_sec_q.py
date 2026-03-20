@@ -24,7 +24,7 @@ class AnsSecQDialog(QDialog):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.setWindowTitle("Answer Security Questions")
-        self.setFixedSize(500, 400)
+        self.setFixedWidth(400)
         self.setModal(True)
 
         self.question_list = SPOT.QUESTIONS_LIST

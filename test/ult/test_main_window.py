@@ -15,7 +15,7 @@ def fake_deps():
          patch("ui.main_window.img_helpers.get_window_logo_path", return_value=os.path.abspath("src/imgs/logo.jpg")), \
          patch("ui.main_window.CreateNewTab", return_value=QWidget()), \
          patch("ui.main_window.VendorTicketsTab", return_value=QWidget()), \
-         patch("ui.main_window.OpenTicketsTab", return_value=QWidget()), \
+         patch("ui.main_window.SearchTicketsTab", return_value=QWidget()), \
          patch("ui.main_window.SettingsTab", return_value=QWidget()):
         fake_user.is_admin.return_value = False
         yield
@@ -23,22 +23,12 @@ def fake_deps():
 # should pass
 def test_main_window_opens(app, fake_deps):
     window = MainWindow()
-    assert window.windowTitle() == "SX-Con"
-
-# should fail due to wrong title
-def test_main_window_wrong_title(app, fake_deps):
-    window = MainWindow()
-    assert window.windowTitle() != "Not SX-Con"
+    assert window.windowTitle() == "SX-Con", "Expected window title to be 'SX-Con'"
 
 # should pass, not admin level specific test
 def test_main_window_has_tabs(app, fake_deps):
     window = MainWindow()
-    assert window.tabs.count() >= 4
-
-# should fail, should not instantiate all called tabs
-def test_main_window_not_enough_tabs(app, fake_deps):
-    window = MainWindow()
-    assert window.tabs.count() != 1
+    assert window.tabs.count() > 1, "Expected tabs on login"
 
 # should pass, should show admin tab
 def test_main_window_admin_tab(app, fake_deps):
@@ -46,9 +36,9 @@ def test_main_window_admin_tab(app, fake_deps):
          patch("ui.main_window.AdminSettingsTab", return_value=QWidget()):
         fake_user.is_admin.return_value = True
         window = MainWindow()
-        assert window.tabs.count() == 5
+        assert window.tabs.count() == 5, "Expected tabs count to be 5 on admin login"
 
 # should pass, should not show admin tab
 def test_main_window_no_admin_tab_for_non_admin(app, fake_deps):
     window = MainWindow()
-    assert window.tabs.count() == 4
+    assert window.tabs.count() == 4, "Expected tabs count to be 4 on non-admin login"

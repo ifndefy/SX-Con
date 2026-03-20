@@ -2,6 +2,7 @@
 from services.connect_database import db_connection
 from src import SPOT
 
+
 def test_connect_database():
     """
     purpose: test the success of the database connection
