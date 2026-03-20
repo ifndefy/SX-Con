@@ -69,4 +69,4 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         artifacts: "./dist/SXC_win_x64.zip"
-        allow_updates: true
+        allowUpdates: true
