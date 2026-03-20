@@ -17,21 +17,19 @@ def val_price(price: float | int) -> bool:
     if price is None:
         return False
 
-    price_str = str(price)
+    if price is None:
+        return False
+
+    if not isinstance(price, (float, int)):
+        return False
+
+    check = str(price)
+    if isinstance(price, float) and len(check.split('.')[1]) > 2:
+        return False
+
+    price_str = str(f"{float(price):.2f}")
 
     if re.match(r'^\d+.\d{2}$', price_str) is None:
         return False
-
-    # Reject alphabetic characters
-    if any(char.isalpha() for char in price_str):
-        return False
-
-    # Allow digits and at most one period
-    if price_str.count('.') > 1:
-        return False
-
-    for char in price_str:
-        if not (char.isdigit() or char == '.'):
-            return False
 
     return True
