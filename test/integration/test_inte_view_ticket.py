@@ -23,9 +23,9 @@ def ticket_data():
 def test_integration_products_show_up(app, ticket_data):
     view = ViewTicket(ticket_data['ticket_id'])
     view.setup_ui(ticket_data['ticket_section'], ticket_data['ticket_details'])
-    assert len(view.product_widgets) > 0
+    assert len(view.product_widgets) > 0, "Expected to find at least one product widget"
 
 def test_integration_revenue_shows_up(app, ticket_data):
     view = ViewTicket(ticket_data['ticket_id'])
     view.setup_ui(ticket_data['ticket_section'], ticket_data['ticket_details'])
-    assert ticket_data['ticket_data'].get('revenue') is not None
+    assert ticket_data['ticket_data'].get('revenue') is not None, "Expected to find revenue data"

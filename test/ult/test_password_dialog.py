@@ -4,29 +4,29 @@ from ui.prompts.password_dialog import PasswordChangeDialog
 # should pass, dialog opens
 def test_dialog_opens(app):
     dialog = PasswordChangeDialog(theme_manager=None)
-    assert dialog is not None
+    assert dialog is not None, "Expected dialog to be opened"
 
 # should pass, window title is correct
 def test_dialog_title(app):
     dialog = PasswordChangeDialog(theme_manager=None)
-    assert dialog.windowTitle() == "Change Password"
+    assert dialog.windowTitle() == "Change Password", "Expected windowTitle to be 'Change Password'"
 
 # should pass, there are inputs
 def test_dialog_has_password_inputs(app):
     dialog = PasswordChangeDialog(theme_manager=None)
-    assert dialog.new_password_input is not None
-    assert dialog.confirm_password_input is not None
+    assert dialog.new_password_input is not None, "Expected QLineEdit field for new_password_input"
+    assert dialog.confirm_password_input is not None, "Expected QLineEdit field for confirm_password_input"
 
 # should pass, password fields should start empty
 def test_dialog_inputs_start_empty(app):
     dialog = PasswordChangeDialog(theme_manager=None)
-    assert dialog.new_password_input.text() == ""
-    assert dialog.confirm_password_input.text() == ""
+    assert dialog.new_password_input.text() == "", "Expected initial text to be empty for new_password_input"
+    assert dialog.confirm_password_input.text() == "", "Expected initial text to be empty for confirm_password_input"
 
 # should pass, new_password should start as None before submission
 def test_dialog_new_password_starts_none(app):
     dialog = PasswordChangeDialog(theme_manager=None)
-    assert dialog.new_password is None
+    assert dialog.new_password is None, "Expected new_password to be None on start"
 
 # should pass, matching passwords should be accepted
 def test_dialog_accepts_change(app):
@@ -34,7 +34,7 @@ def test_dialog_accepts_change(app):
     dialog.new_password_input.setText("password")
     dialog.confirm_password_input.setText("password")
     dialog.on_update_clicked()
-    assert dialog.new_password == "password"
+    assert dialog.new_password == "password", "Expected new_password to be 'password' on update clicked for matching"
 
 # should pass, password change should get rejected for pw not matching
 def test_dialog_pw_change_fails_for_not_matching(app):
@@ -43,7 +43,7 @@ def test_dialog_pw_change_fails_for_not_matching(app):
         dialog.new_password_input.setText("password")
         dialog.confirm_password_input.setText("not password")
         dialog.on_update_clicked()
-        assert dialog.new_password is None
+        assert dialog.new_password is None, "Expected new_password to be None on update clicked for mismatch"
 
 # should pass, empty password should be rejected
 def test_dialog_pw_change_fails_for_empty_strings(app):
@@ -52,4 +52,4 @@ def test_dialog_pw_change_fails_for_empty_strings(app):
         dialog.new_password_input.setText("")
         dialog.confirm_password_input.setText("")
         dialog.on_update_clicked()
-        assert dialog.new_password is None
+        assert dialog.new_password is None, "Expected new_password to be None on update clicked for empty inputs"

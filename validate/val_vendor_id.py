@@ -15,6 +15,7 @@ def val_vendor_id(v_id) -> bool:
     try:
         # Check if it's already an integer
         if isinstance(v_id, int):
+            log.error(f"Vendor ID: {v_id} is not an integer")
             return True
         
         # Check if it's a string that represents an integer

@@ -97,7 +97,7 @@ def test_product_sections_input(create_new_tab):
         assert tab.product_sections[i]['rate'] is not None, f'Expected rate field to exist for section[{i}]'
         for j in range(len(types)):
             tab.product_sections[i]['product_type'].setCurrentIndex(j)
-            assert tab.product_sections[i]['rate'].text() == str(tab.rates_container[types[j]]), \
+            assert tab.product_sections[i]['rate'].text() == str(f"{tab.rates_container[types[j]]}%"), \
                 f'Expected rate to be {tab.rates_container[types[j]]} for {types[j]} in section[{i}]'
         assert tab.product_sections[i]['product_name'] is not None, f'Expected product id to exist for section[{i}]'
         assert tab.product_sections[i]['notes'] is not None, f'Expected product id to exist for section[{i}]'
@@ -113,7 +113,7 @@ def test_product_sections_input(create_new_tab):
     assert tab.product_sections[3]['rate'] is not None, f'Expected rate field to exist for section[3]'
     for j in range(len(types)):
         tab.product_sections[3]['product_type'].setCurrentIndex(j)
-        assert tab.product_sections[3]['rate'].text() == str(tab.rates_container[types[j]]), \
+        assert tab.product_sections[3]['rate'].text() == str(f"{tab.rates_container[types[j]]}%"), \
             f'Expected rate to be {tab.rates_container[types[j]]} for {types[j]} in section[3]'
     assert tab.product_sections[3]['product_name'] is not None, f'Expected product id to exist for section[3]'
     assert tab.product_sections[3]['notes'] is not None, f'Expected product id to exist for section[3]'

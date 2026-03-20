@@ -43,8 +43,8 @@ def test_admin(users_tab):
     tab = users_tab
     assert tab.admin_field is not None, 'Expected admin input to exist'
     assert tab.admin_field.count() == 2
-    assert tab.admin_field.itemText(0) == 'True'
-    assert tab.admin_field.itemText(1) == 'False'
+    assert tab.admin_field.itemText(0) == 'True', "Expected first field of qcombobox to be 'True'"
+    assert tab.admin_field.itemText(1) == 'False', "Expected second field of qcombobox to be 'False'"
 
 def test_button_exists(users_tab):
     tab = users_tab

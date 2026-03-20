@@ -16,25 +16,15 @@ def fake_deps():
 # should pass
 def test_dialog_opens(app, fake_deps):
     dialog = SecurityQuestionsDialog(theme_manager=None)
-    assert dialog is not None
+    assert dialog is not None, "Expected dialog to be opened"
 
 # should pass
 def test_dialog_title(app, fake_deps):
     dialog = SecurityQuestionsDialog(theme_manager=None)
-    assert dialog.windowTitle() == "Change Security Questions"
-
-# should fail, wrong title
-def test_dialog_wrong_title(app, fake_deps):
-    dialog = SecurityQuestionsDialog(theme_manager=None)
-    assert dialog.windowTitle() != "Wrong Title"
+    assert dialog.windowTitle() == "Change Security Questions", "Expected window title to be 'Change Security Questions'"
 
 # should pass
 def test_dialog_has_two_questions(app, fake_deps):
     dialog = SecurityQuestionsDialog(theme_manager=None)
-    assert dialog.question1_combo is not None
-    assert dialog.question2_combo is not None
-
-# should pass, theme_manager=None should not crash
-def test_dialog_no_theme_manager(app, fake_deps):
-    dialog = SecurityQuestionsDialog(theme_manager=None)
-    assert dialog is not None
+    assert dialog.question1_combo is not None, "Expected there to be a question1 for qcombobox"
+    assert dialog.question2_combo is not None, "Expected there to be a question2 for qcombobox"

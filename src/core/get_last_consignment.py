@@ -24,7 +24,7 @@ def get_last_consignment(entity_type: str, entity_id: str) -> datetime | None:
             query = f"""
                 SELECT VALUE MAX(c.datetime)
                 FROM c
-                WHERE c.type = 'consignment'
+                WHERE c.entity_type = 'consignment'
                 AND c.vendor_id = {entity_id}
             """
 
@@ -32,7 +32,7 @@ def get_last_consignment(entity_type: str, entity_id: str) -> datetime | None:
             query = f"""
                 SELECT VALUE MAX(c.datetime)
                 FROM c
-                WHERE c.type = 'consignment'
+                WHERE c.entity_type = 'consignment'
                 AND ARRAY_CONTAINS(c.products, {entity_id})
             """
 
@@ -40,7 +40,7 @@ def get_last_consignment(entity_type: str, entity_id: str) -> datetime | None:
             query = f"""
                 SELECT VALUE MAX(c.datetime)
                 FROM c
-                WHERE c.type = 'consignment'
+                WHERE c.entity_type = 'consignment'
                 AND c.user_id = {entity_id}
             """
 

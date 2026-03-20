@@ -48,4 +48,4 @@ class AdminSettingsTab(BaseTab):
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
     def on_tab_changed(self, index):
-        log.info(f"Admin: {self.tabs.tabText(index)} tab clicked")
+        log.info(f"Switched to {self.tabs.tabText(index)} tab")

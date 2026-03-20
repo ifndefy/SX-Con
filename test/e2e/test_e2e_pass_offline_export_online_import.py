@@ -43,26 +43,26 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     current_user.set_user("offline", False)
 
     ### 1 - offline mode
-    assert current_user.get_username() == "offline"
+    assert current_user.get_username() == "offline", "Expected username to be set to 'offline'"
 
     ### 2 - main window opens -> lands on create new
     window = MainWindow(offline_mode=True)
 
-    assert isinstance(window.create_new_tab, CreateNewTab)
+    assert isinstance(window.create_new_tab, CreateNewTab), "Expected CreateNewTab to be instantiated"
     assert window.tabs.count() == 1, "Expected only CreateNewTab in offline mode"
-    assert window.tabs.tabText(0) == "Create New"
-    assert window.tabs.currentIndex() == 0
-    assert window.vendor_tickets_tab is None
-    assert window.open_tickets_tab is None
-    assert window.settings_tab is None
-    assert window.admin_settings_tab is None
+    assert window.tabs.tabText(0) == "Create New", "Expected to land on CreateNewTab"
+    assert window.tabs.currentIndex() == 0, "Expected to land on tab index 0"
+    assert window.vendor_tickets_tab is None, "Expected VendorTicketsTab to not be instantiated"
+    assert window.search_tickets_tab is None, "Expected SearchTicketsTab to not be instantiated"
+    assert window.settings_tab is None, "Expected SettingsTab to not be instantiated"
+    assert window.admin_settings_tab is None, "Expected AdminSettingsTab to not be instantiated"
 
     ### 3 - set/emit values into vendor and product fields
     currentTab = window.create_new_tab
     v_data = {
         'v_id': random.randint(1000, 9999),
-        'phone': '000010110',
-        'fname': 'e2e',
+        'phone': '0000101101',
+        'fname': 'adsf',
         'mname': '',
         'lname': 'test',
         'address': '111 e2e test',
@@ -71,6 +71,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
         'zip': 12345,
     }
     currentTab.vendor_id_input.setText(str(v_data['v_id']))
+    currentTab.phone_input.setText(v_data['phone'])
     currentTab.phone_input.textEdited.emit(v_data['phone'])
     currentTab.first_name_input.setText(v_data['fname'])
     currentTab.middle_name_input.setText(v_data['mname'])
@@ -92,7 +93,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     currentTab.product_sections[0]['product_type'].setCurrentIndex(product_types.index(p_data['type']))
     currentTab.product_sections[0]['product_name'].setText(p_data['p_name'])
     currentTab.product_sections[0]['price'].textEdited.emit(str(p_data['price']))
-    assert currentTab.product_sections[0]['price'].text() == "$12.34"
+    assert currentTab.product_sections[0]['price'].text() == "$12.34", "Expected price to be formatted into $12.34"
     currentTab.product_sections[0]['quantity'].setText(str(p_data['qty']))
 
     ### 4 - clicks utility buttons (excel, pdf)
@@ -100,7 +101,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     with patch("utils.core.generate_excel.QFileDialog.getSaveFileName",
                return_value=(output_path, "Excel File (*.xlsx)")):
         currentTab.excel_btn.click()
-    assert os.path.exists(output_path)
+    assert os.path.exists(output_path), "Expected to be able to generate an excel file"
     os.remove(output_path)
 
     pdf_output = os.path.join(os.path.dirname(__file__), "e2e_test.pdf")
@@ -110,7 +111,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     with patch.object(PDF, "set_pdf_filename", set_pdf_filename), \
             patch('ui.tabs.create_new.QMessageBox.information'):
         currentTab.pdf_btn.click()
-    assert os.path.exists(pdf_output)
+    assert os.path.exists(pdf_output), "Expected to be able to generate a pdf file"
     os.remove(pdf_output)
 
     ### 5 - click on export record -> successful
@@ -121,12 +122,12 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
 
     ### 6 - Verify that record exported into json file
     exported_file = offline_dir / f"{ticket_number}.json"
-    assert exported_file.exists()
+    assert exported_file.exists(), "Expected to be able to export a record in offline mode"
 
     ### 7 - Verify that input values are the same ones exported
     record = json.loads(exported_file.read_text())
-    assert record['vendor']['vendor_id'] == v_data['v_id']
-    assert record['consignment']['consignment_id'] == ticket_number
+    assert record['vendor']['vendor_id'] == v_data['v_id'], "Expected vendor_id to be the same as the test input"
+    assert record['consignment']['consignment_id'] == ticket_number, "Expected ticket_number to be the same as the offline generated ticket number"
 
     ### 8 - Go online, close offline window
     monkeypatch.setattr(SPOT, 'OFFLINE', False)
@@ -140,7 +141,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     login.password_input.setText("asdf")
     login.login_btn.click()
 
-    assert current_user.get_username() == "user"
+    assert current_user.get_username() == "user", "Expected to be logged in as 'user'"
 
     ### 10 - Go to settings tab
     window = MainWindow()
@@ -149,7 +150,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
         if window.tabs.tabText(i) == "Settings":
             settings_index = i
             break
-    assert settings_index is not None, "Settings tab not found"
+    assert settings_index is not None, "Expected Settings tab to be instantiated"
     window.tabs.setCurrentIndex(settings_index)
 
     ### 11 - Click on Sync
@@ -160,7 +161,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     new_ticket_number = str(get_max_value("Consignments", "consignment_id"))
     result = get_item("Consignments", "consignment", new_ticket_number)
     assert result is not None, f"Expected synced ticket to exist in DB"
-    assert result['vendor_id'] == v_data['v_id']
+    assert result['vendor_id'] == v_data['v_id'], "Expected vendor_id to be the same as the test input"
 
     ### 13 - Delete the items
     delete_item("Consignments", "consignment", new_ticket_number)

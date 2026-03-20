@@ -8,6 +8,7 @@ def val_address(address: str) -> bool:
     :author(s): Colin Heinselman
     """
     if address is None:
+        log.error("Address is None")
         return False
 
     allowed_chars = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

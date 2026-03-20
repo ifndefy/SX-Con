@@ -9,7 +9,7 @@ def val_check_does_not_exists(
     etype: str,
     property_name: str,
     value: Union[str, int]
-) -> int:
+) -> bool:
     """
     Validates that a property value doesn't already exist
 

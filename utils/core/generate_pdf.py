@@ -61,32 +61,61 @@ class PDF:
         self.cursor = canvas.Canvas(self.pdf_filename, pagesize=letter)
 
     def create_supermarket_ticket(self):
-        if self.num_prods <= 9:
+        valid_products = []
+        for p in self.ticket_data["products"]:
+            if self._is_valid_product(p):
+                valid_products.append(p)
+
+        page_height = int(self.height) - 60
+        header_height = 100
+        footer_height = 130
+        row_height = 20
+
+        header_content = (page_height - header_height) // row_height
+        header_content_footer = (page_height - header_height - footer_height) // row_height
+        rows_with_footer = 5
+        num_rows = len(valid_products)
+
+        if num_rows <= 6:
             self.draw_2_in_one()
         else:
-            valid_products = []
-            for p in self.ticket_data["products"]:
-                if self._is_valid_product(p):
-                    valid_products.append(p)
+            self._draw_pages(valid_products, header_content, header_content_footer, rows_with_footer)
+            self._draw_pages(valid_products, header_content, header_content_footer, rows_with_footer)
 
-            rows_per_page = 29
-            total_pages = (len(valid_products) + rows_per_page - 1) // rows_per_page
-            i = 0
-            page_num = 1
-            while i < len(valid_products):
-                chunk = valid_products[i:i + rows_per_page]
-                is_last = (i + rows_per_page) >= len(valid_products)
-                self.y = self.height - 30
-                self.draw_header(self.cursor, self.y)
-                # Pass page number and total pages to draw_ticket_content
-                self.draw_ticket_content(self.cursor, self.y, products=chunk,
-                                         page_num=page_num, total_pages=total_pages)
-                if is_last:
-                    self.draw_footer(self.cursor, self.y)
-                self.cursor.showPage()
-                i += rows_per_page
-                page_num += 1
         self.cursor.save()
+
+    def _draw_pages(self, products, header_content, header_content_footer, rows_with_footer):
+        num_rows = len(products)
+
+        if num_rows <= header_content_footer:
+            total_pages = 1
+        else:
+            total_pages = ((num_rows - header_content_footer - 1) // header_content) + 2
+
+        last_page_rows = num_rows - (total_pages - 1) * header_content
+        if last_page_rows < rows_with_footer and total_pages > 1:
+            last_page_rows = rows_with_footer
+
+        first_pages_total = num_rows - last_page_rows
+
+        offset = 0
+        for page_num in range(1, total_pages + 1):
+            self.y = self.height - 30
+            is_last = page_num == total_pages
+
+            if is_last:
+                chunk = products[offset:]
+            else:
+                take = min(header_content, first_pages_total - offset)
+                chunk = products[offset:offset + take]
+                offset += take
+
+            self.draw_header(self.cursor, self.y)
+            self.draw_ticket_content(self.cursor, self.y, products=chunk,
+                                     page_num=page_num, total_pages=total_pages)
+            if is_last:
+                self.draw_footer(self.cursor, self.y)
+            self.cursor.showPage()
 
     def draw_2_in_one(self):
         self.draw_header(self.cursor, self.y)
@@ -109,24 +138,23 @@ class PDF:
         c.setStrokeColorRGB(1, 1, 1, 0)
         c.drawImage(logo, 30, y - 50, width=305, height=73, preserveAspectRatio=True, mask='auto')
         c.restoreState()
-
         c.setFont("Helvetica-Bold", 16)
-        c.drawString(400, y, "Consignment Ticket")
-        y -= 20
+        c.drawString(30, y - 50, "Consignment Ticket")
+
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(400, y, "Ticket Number:")
-        c.rect(500, y - 3, 80, 15)
-        c.drawString(500 + 4, y, str(self.ticket_num))
-        y -= 20
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(400, y, "Vendor ID:")
-        c.rect(500, y - 3, 80, 15)
-        c.drawString(500 + 4, y, str(self.vendor_id))
-        y -= 20
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(400, y, "Date Time:")
+        c.drawString(375, y, "Ticket Number:")
         c.rect(475, y - 3, 105, 15)
-        c.drawString(475 + 6, y, self.ticket_data['datetime'])
+        c.drawString(475 + 3, y, str(self.ticket_num))
+        y -= 20
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(375, y, "Vendor ID:")
+        c.rect(475, y - 3, 105, 15)
+        c.drawString(475 + 3, y, str(self.vendor_id))
+        y -= 20
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(375, y, "Date Time:")
+        c.rect(475, y - 3, 105, 15)
+        c.drawString(475 + 3, y, self.ticket_data['datetime'])
         y -= 20
 
         c.line(30, y, self.width - 30, y)
@@ -172,34 +200,37 @@ class PDF:
                 vendor_amount = payout_products[payout_index].get("vendor", 0)
                 payout_index += 1
 
-            c.setFont("Helvetica-Bold", 10)
+            c.setFont("Helvetica-Bold", 8)
             c.drawString(30, y_prod, "ID:")
-            c.rect(45, y_prod - 3, 34, 15)
-            c.drawString(45 + 3, y_prod + 1, str(prod.get("product_id", "")))
-            c.drawString(84, y_prod, "Name:")
-            c.rect(116, y_prod - 3, 173, 15)
-            c.drawString(116 + 3, y_prod + 1, prod.get("product_name", ""))
-            c.drawString(293, y_prod, "Price:")
-            c.rect(322, y_prod - 3, 43, 15)
-            c.drawString(322 + 3, y_prod + 1, f"${prod.get('price', 0):.2f}")
-            c.drawString(369, y_prod, "Signed:")
-            c.rect(410, y_prod - 3, 29, 15)
-            c.drawString(410 + 3, y_prod + 1, str(prod.get("quantity", "")))
-            c.drawString(444, y_prod, "Sold:")
-            c.rect(471, y_prod - 3, 29, 15)
-            c.drawString(471 + 3, y_prod + 1, str(prod.get("sold", "")))
-            c.drawString(505, y_prod, "Total:")
+            c.rect(42, y_prod - 3, 34, 15)
+            c.drawString(42 + 3, y_prod + 1, str(prod.get("product_id", "")))
+            c.drawString(79, y_prod, "Name:")
+            c.rect(105, y_prod - 3, 157, 15)
+            c.drawString(105 + 3, y_prod + 1, prod.get("product_name", ""))
+            c.drawString(265, y_prod, "Price:")
+            c.rect(289, y_prod - 3, 50, 15)
+            c.drawString(289 + 3, y_prod + 1, f"${prod.get('price', 0):.2f}")
+            c.drawString(342, y_prod, "Rate:")
+            c.rect(364, y_prod - 3, 25, 15)
+            c.drawString(364 + 3, y_prod + 1, f"{str(prod.get('rate'))}%")
+            c.drawString(392, y_prod, "Signed:")
+            c.rect(423, y_prod - 3, 29, 15)
+            c.drawString(423 + 3, y_prod + 1, str(prod.get("quantity", "")))
+            c.drawString(455, y_prod, "Sold:")
+            c.rect(477, y_prod - 3, 29, 15)
+            c.drawString(477 + 3, y_prod + 1, str(prod.get("sold", "")))
+            c.drawString(509, y_prod, "Total:")
             c.rect(533, y_prod - 3, 48, 15)
             c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}" if vendor_amount else "TBD")
             y_prod -= 20
 
         # Replace line with page number if both arguments are provided
         if page_num is not None and total_pages is not None:
-            c.setFont("Helvetica", 10)
+            c.setFont("Helvetica-Bold", 8)
             page_text = f"Page {page_num} of {total_pages}"
             c.drawCentredString(self.width / 2, y_prod - 5, page_text)
         else:
-            c.setFont("Helvetica", 10)
+            c.setFont("Helvetica-Bold", 8)
             page_text = f"Page 1 of 1"
             c.drawCentredString(self.width / 2, y_prod - 5, page_text)
 
@@ -215,38 +246,28 @@ class PDF:
 
         y_type = y - 15
         c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(118, y, "Potential at Signing")
+        c.drawString(30, y, "Potential at Signing")
         y_pot = y - 15
-
-        c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(60, y_pot, "Vendor")
-        c.drawCentredString(118, y_pot, "Amount Sold")
-        c.drawCentredString(175, y_pot, "Super X")
-        y_pot -= 18
+        # y_pot -= 18
 
         shared = self.ticket_data["revenue"]["shared"]
         if shared:
             last_cut = shared[-1]
             c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, f"${last_cut.get('vendor', 0):.2f}")
-            c.rect(34 - 3, y_pot - 3, 60, 15)
-            c.drawCentredString(118, y_pot, str(last_cut.get("percentage")))
-            c.drawString(148, y_pot, f"${last_cut.get('super_x', 0):.2f}")
-            c.rect(148 - 3, y_pot - 3, 60, 15)
+            c.drawString(40, y_pot, f"${last_cut.get('vendor', 0):.2f}")
+            c.rect(40 - 3, y_pot - 3, 120, 15)
             y_pot -= 18
 
         y_pot -= 18
         c.setFont("Helvetica-Bold", 10)
-        c.drawCentredString(118, y_pot, "Payout")
+        c.drawString(30, y_pot, "Payout")
         y_pot -= 18
         payout = self.ticket_data['revenue']['payout']
         if payout:
             cashed_out = payout[-1]
             c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, f"${cashed_out.get('vendor', 0):.2f}")
-            c.rect(34 - 3, y_pot - 3, 60, 15)
-            c.drawString(148, y_pot, f"${cashed_out.get('super_x', 0):.2f}")
-            c.rect(148 - 3, y_pot - 3, 60, 15)
+            c.drawString(40, y_pot, f"${cashed_out.get('vendor', 0):.2f}")
+            c.rect(40 - 3, y_pot - 3, 120, 15)
             y_pot -= 18
         else:
             c.setFont("Helvetica", 10)
@@ -308,3 +329,6 @@ class PDF:
 
     def save_y(self, y_axis):
         self.y = y_axis
+
+test = PDF(90)
+test.create_supermarket_ticket()

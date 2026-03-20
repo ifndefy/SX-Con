@@ -14,20 +14,20 @@ def fake_deps():
 def test_dialog_opens(app):
     fake_theme = MagicMock()
     dialog = LoginScreen(theme_manager=fake_theme)
-    assert dialog is not None
+    assert dialog is not None, "Expected dialog to open"
 
 # should pass, window title is correct
 def test_dialog_title(app):
     fake_theme = MagicMock()
     dialog = LoginScreen(theme_manager=fake_theme)
-    assert dialog.windowTitle() == "SX-Con - Login"
+    assert dialog.windowTitle() == "SX-Con - Login", "Expected window title to be 'SX-Con - Login'"
 
 # should pass, there are inputs
 def test_dialog_input_fields_exist(app):
     fake_theme = MagicMock()
     dialog = LoginScreen(theme_manager=fake_theme)
-    assert dialog.username_input is not None
-    assert dialog.password_input is not None
+    assert dialog.username_input is not None, "Expected QLineEdit for username to exist"
+    assert dialog.password_input is not None, "Expected QLineEdit for password to exist"
 
 # should pass, tries to login with username
 def test_login_flow_on_success(app, fake_deps):
@@ -36,7 +36,7 @@ def test_login_flow_on_success(app, fake_deps):
         dialog = LoginScreen(theme_manager=fake_theme)
         dialog.username_input.setText("username")
         dialog.attempt_login()
-        assert dialog.username == "username"
+        assert dialog.username == "username", "Expected username input to be used for login attempt"
 
 # should pass, fails to login due to wrong pw
 def test_authenticate_fails_to_login(app, fake_deps):
@@ -45,7 +45,7 @@ def test_authenticate_fails_to_login(app, fake_deps):
     with patch("ui.prompts.login.db_connection") as fake_db:
         fake_db.connect.return_value.query_items.return_value = []
         result = dialog.authenticate("username", "wrongpw")
-        assert result == False
+        assert result == False, "Expected to fail attempted login with wrong password"
 
 # should pass, successfully logs in
 def test_authenticate_successful_login(app, fake_deps):
@@ -57,4 +57,4 @@ def test_authenticate_successful_login(app, fake_deps):
             {"username": "testuser", "password": "hashed_password"}
         ]
         result = dialog.authenticate("testuser", "correctpassword")
-        assert result == True
+        assert result == True, "Expected to be able to login with valid credentials"

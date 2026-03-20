@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout, QRadioButton, QDialog
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QFrame
@@ -21,6 +21,7 @@ from src import SPOT
 from handlers.handler_pdf import handler_live_pdf
 from handlers import handler_print
 from services.get_item import get_item
+from services.get_all_items_by_property import get_all_items_by_property
 from services.get_item_by_property import get_item_by_property
 from services.get_max_value import get_max_value
 from services.insert_item import insert_item
@@ -37,6 +38,7 @@ from ui.core import format_state
 from utils.core.export_doc import export_offline_record
 from utils.core import generate_excel as xls_gen
 from utils.parse_consignment_table import fetch_consignment_data
+import validate as VAL
 
 from utils.message_bus import status_bar_instance
 import utils.logger.logger as log
@@ -123,8 +125,8 @@ class CreateNewTab(BaseTab):
         self.vendor_id_input.setPlaceholderText("V ID")
         self.vendor_id_input.setMaxLength(4)
         self.vendor_id_input.setFixedWidth(80)
-        self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
-        self.vendor_id_input.returnPressed.connect(self.auto_pop_vend)
+        self.vendor_id_input.setValidator(QRegularExpressionValidator(QRegularExpression(r"\d{0,4}"), self))
+        self.vendor_id_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_1.addWidget(self.vendor_id_input)
 
         # Phone Number
@@ -132,7 +134,7 @@ class CreateNewTab(BaseTab):
         self.phone_input = format_phone.PhoneNumField()
         self.phone_input.setObjectName("DEFAULT")
         self.phone_input.setFixedWidth(150)
-        self.phone_input.returnPressed.connect(self.auto_pop_vend_by_phone)
+        self.phone_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_1.addWidget(self.phone_input)
 
         vendor_section_row_1.addStretch()
@@ -160,6 +162,7 @@ class CreateNewTab(BaseTab):
         self.first_name_input.setMinimumWidth(263)
         alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
         self.first_name_input.setValidator(alpha_validator)
+        self.first_name_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_2.addWidget(self.first_name_input)
 
         # Middle Name
@@ -169,6 +172,7 @@ class CreateNewTab(BaseTab):
         self.middle_name_input.setMaxLength(10)
         self.middle_name_input.setMinimumWidth(103)
         self.middle_name_input.setValidator(alpha_validator)
+        self.middle_name_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_2.addWidget(self.middle_name_input)
 
         # Last Name
@@ -178,6 +182,7 @@ class CreateNewTab(BaseTab):
         self.last_name_input.setMaxLength(30)
         self.last_name_input.setMinimumWidth(263)
         self.last_name_input.setValidator(alpha_validator)
+        self.last_name_input.returnPressed.connect(self.auto_pop_vend_by_field)
         vendor_section_row_2.addWidget(self.last_name_input)
 
         # End creation and adds vendor_section_row_2 to the window
@@ -305,6 +310,11 @@ class CreateNewTab(BaseTab):
         rev_by_prod_title = QLabel("Revenue by Product Type")
         rev_by_prod_title.setObjectName("post_title")
         rev_prod_section.addWidget(rev_by_prod_title, alignment=Qt.AlignmentFlag.AlignRight)
+        hr_prod = QFrame()
+        hr_prod.setFrameShape(QFrame.Shape.HLine)
+        hr_prod.setFrameShadow(QFrame.Shadow.Sunken)
+        hr_prod.setObjectName("hr")
+        rev_prod_section.addWidget(hr_prod)
         self.rev_by_prod = RevenueByProdType()
         rev_prod_section.addWidget(self.rev_by_prod)
         middle_top_row.addWidget(rev_by_prod_widget)
@@ -320,6 +330,11 @@ class CreateNewTab(BaseTab):
         revenue_title = QLabel("Revenue Sharing")
         revenue_title.setObjectName("post_title")
         revenue_section.addWidget(revenue_title, alignment=Qt.AlignmentFlag.AlignCenter)
+        hr_rev = QFrame()
+        hr_rev.setFrameShape(QFrame.Shape.HLine)
+        hr_rev.setFrameShadow(QFrame.Shadow.Sunken)
+        hr_rev.setObjectName("hr")
+        revenue_section.addWidget(hr_rev)
         self.revenue_generation = RevenueGeneration()
         revenue_section.addWidget(self.revenue_generation)
         revenue_section.addStretch()
@@ -528,7 +543,7 @@ class CreateNewTab(BaseTab):
     def on_price_qty_changed(self, section):
         price_text = section['price'].text().strip()
         qty_text = section['quantity'].text().strip()
-        rate_text = section['rate'].text().strip()
+        rate_text = section['rate'].text().strip().replace('%', '')
 
         if not price_text or not qty_text or not rate_text:
             # require all fields, prevent invalid data
@@ -559,7 +574,7 @@ class CreateNewTab(BaseTab):
                 log.error("Could not retreive type and rate subwidgets")
                 return
             new_rate = self.rates_container[type_widget.currentText()]
-            rate_widget.setText(str(new_rate))
+            rate_widget.setText(f"{str(new_rate)}%")
         except Exception as e:
             log.error(f"Failed to auto-set rate: {e}")
 
@@ -650,12 +665,12 @@ class CreateNewTab(BaseTab):
     def on_pdf_clicked(self):
         vendor_data = self._gather_vendor_data()
         if vendor_data is None:
-            log.warning("PDF generation skipped: Validation failed")
+            log.warning("PDF generation skipped: No Vendor data found")
             return False
 
         products_data = self._gather_products_data()
         if products_data is None:
-            log.warning("PDF generation skipped: Validation failed")
+            log.warning("PDF generation skipped: No Products data found")
             return False
 
         self.update_revenue_fields()
@@ -687,21 +702,105 @@ class CreateNewTab(BaseTab):
         raw_vendor_id = self.vendor_id_input.text().strip()
         vendor_id = int(raw_vendor_id) if raw_vendor_id else None
 
-        if not vendor_id:
-            log.error("Vendor ID is required")
+        if VAL.val_vendor_id(vendor_id):
+            validated_vendor_id = vendor_id
+        else:
+            validated_vendor_id = None
+            self.vendor_id_input.setFocus()
+            self.vendor_id_input.selectAll()
+            log.error("Invalid Vendor ID")
+            return None
+
+        phone = self.phone_input.text().strip() or None
+        if VAL.val_phone_number(phone):
+            validated_phone_number = phone
+        else:
+            validated_phone_number = None
+            self.phone_input.setFocus()
+            self.phone_input.selectAll()
+            log.error("Invalid Phone Number")
+            return None
+
+        fname = self.first_name_input.text().strip() or None
+        if VAL.val_fl_name(fname):
+            validated_first_name = fname
+        else:
+            validated_first_name = None
+            self.first_name_input.setFocus()
+            self.first_name_input.selectAll()
+            log.error("Invalid First Name")
+            return None
+
+        mname = self.middle_name_input.text().strip() or None
+        if VAL.val_m_name(mname):
+            validated_middle_name = mname
+        else:
+            validated_middle_name = None
+            self.middle_name_input.setFocus()
+            self.middle_name_input.selectAll()
+            log.error("Invalid Middle Name")
+            return None
+
+        lname = self.last_name_input.text().strip() or None
+        if VAL.val_fl_name(lname):
+            validated_last_name = lname
+        else:
+            validated_last_name = None
+            self.last_name_input.setFocus()
+            self.last_name_input.selectAll()
+            log.error("Invalid Last Name")
+            return None
+
+        address = self.address_input.text().strip() or None
+        if VAL.val_address(address):
+            validated_address = address
+        else:
+            validated_address = None
+            self.address_input.setFocus()
+            self.address_input.selectAll()
+            log.error("Invalid Address")
+            return None
+
+        city = self.city_input.text().strip() or None
+        if VAL.val_city(city):
+            validated_city = city
+        else:
+            validated_city = None
+            self.city_input.setFocus()
+            self.city_input.selectAll()
+            log.error("Invalid City")
+            return None
+
+        state = self.state_input.text().strip() or None
+        if VAL.val_state(state):
+            validated_state = state
+        else:
+            validated_state = None
+            self.state_input.setFocus()
+            self.state_input.selectAll()
+            log.error("Invalid State")
+            return None
+
+        zip = int(self.zip_input.text().strip()) if self.zip_input.text().strip() else None
+        if VAL.val_zip(zip):
+            validated_zip = zip
+        else:
+            validated_zip = None
+            self.zip_input.setFocus()
+            self.zip_input.selectAll()
+            log.error("Invalid Zip")
             return None
 
         return {
-            'vendor_id': vendor_id,
-            'phone': self.phone_input.text().strip() or None,
-            'datetime': self.datetime_input.text().strip() or None,
-            'first_name': self.first_name_input.text().strip() or None,
-            'middle_name': self.middle_name_input.text().strip() or None,
-            'last_name': self.last_name_input.text().strip() or None,
-            'address': self.address_input.text().strip() or None,
-            'city': self.city_input.text().strip() or None,
-            'state': self.state_input.text().strip() or None,
-            'zip': int(self.zip_input.text().strip()) if self.zip_input.text().strip() else None
+            'vendor_id': validated_vendor_id,
+            'phone': validated_phone_number,
+            'first_name': validated_first_name,
+            'middle_name': validated_middle_name,
+            'last_name': validated_last_name,
+            'address': validated_address,
+            'city': validated_city,
+            'state': validated_state,
+            'zip': validated_zip
         }
 
     def _gather_revenue_data(self):
@@ -715,41 +814,88 @@ class CreateNewTab(BaseTab):
         products = []
         has_valid_product = False
         for section in self.product_sections:
-            product_id = self._convert_product_id(section['product_id'].text().strip())
-            if product_id is None:
+            if self.check_empty_prod_section(section):
                 continue
+            product_id = self._convert_product_id(section['product_id'].text().strip())
+            if VAL.val_product_id(product_id):
+                validated_product_id = product_id
+            else:
+                validated_product_id = None
+                section['product_id'].setFocus()
+                section['product_id'].selectAll()
+                log.error(f"Invalid product id: {product_id}")
+                return None
 
             product_type = section['product_type'].currentText().strip() or None
-            product_name = section['product_name'].text().strip().lower() or None
+            if VAL.val_product_type(product_type):
+                validated_product_type = product_type
+            else:
+                validated_product_type = None
+                section['product_type'].setFocus()
+                section['product_type'].showPopup()
+                log.error(f"Invalid product type: {product_type}")
+                return None
+
+            product_name = section['product_name'].text().strip() or None
+            if VAL.val_product_name(product_name):
+                validated_product_name = product_name
+            else:
+                validated_product_name = None
+                section['product_name'].setFocus()
+                section['product_name'].selectAll()
+                log.error(f"Invalid product name: {product_name}")
+                return None
+
             rate = self._convert_rate(section['rate'].text().strip())
             if rate is None:
                 rate = self.rates_container.get(product_type)
-            quantity = self._convert_quantity(section['quantity'].text().strip())
-            price = self._parse_money(section['price'].text())
-
-            if not product_name:
-                log.error(f"Product {product_id} is missing a name")
+            if VAL.val_rate(rate):
+                validated_rate = rate
+            else:
+                validated_rate = None
+                section['rate'].setFocus()
+                section['rate'].selectAll()
+                log.error(f"Invalid rate: {rate}")
                 return None
-            if not product_type or not price or price <= 0 or not quantity:
-                log.warning(f"Product {product_id} skipped, missing type/price/quantity")
-                continue
+
+            price = self._parse_money(section['price'].text())
+            if VAL.val_price(price):
+                validated_price = price
+            else:
+                validated_price = None
+                section['price'].setFocus()
+                section['price'].selectAll()
+                log.error(f"Invalid price: {price}")
+                return None
+
+            quantity = self._convert_quantity(section['quantity'].text().strip())
+            if VAL.val_quantity(quantity):
+                validated_quantity = quantity
+            else:
+                validated_quantity = None
+                section['quantity'].setFocus()
+                section['quantity'].selectAll()
+                log.error(f"Invalid quantity: {quantity}")
+                return None
 
             has_valid_product = True
             products.append({
-                'product_id': product_id,
-                'product_type': product_type,
-                'product_name': product_name,
+                'product_id': validated_product_id,
+                'product_type': validated_product_type,
+                'product_name': validated_product_name,
                 'notes': section['notes'].text().strip() or "",
-                'rate': rate,
-                'price': price,
-                'quantity': quantity,
+                'rate': validated_rate,
+                'price': validated_price,
+                'quantity': validated_quantity,
                 'total': self._parse_money(section['total'].text()),
                 'sold': 0,
-                'remaining': quantity
+                'remaining': validated_quantity,
             })
 
         if not has_valid_product:
-            log.error("At least one product requires Type, Price, and Quantity")
+            log.error("All product sections are empty")
+            self.product_sections[0]['product_id'].setFocus()
+            self.product_sections[0]['product_id'].selectAll()
             return None
 
         return products
@@ -760,12 +906,12 @@ class CreateNewTab(BaseTab):
             log.error("Ticket number is required")
             return None
         ticket_number = raw_ticket if SPOT.OFFLINE else int(raw_ticket)
+
         return {
-            'type':'consignment',
             'consignment_id': ticket_number,
             'vendor_id': vendor_data['vendor_id'],
             'user_id': current_user.get_user_id(),
-            'datetime': vendor_data['datetime'],
+            'datetime': self.datetime_input.text().strip(),
             'status': "OPEN",
             'products': products_data,
             'revenue': revenue_data
@@ -783,7 +929,7 @@ class CreateNewTab(BaseTab):
             for product in products_data:
                 if val_check_does_not_exists("Entities", "product", "product_id", product['product_id']):
                     product_doc = dict(product)
-                    product_doc['type'] = 'product'
+                    product_doc['rate'] = ''
                     if insert_item("Entities", "product", product_doc) == -1:
                         log.error(f"Failed to insert product {product['product_id']}")
                         continue
@@ -818,11 +964,17 @@ class CreateNewTab(BaseTab):
             QApplication.processEvents()
 
             vendor_data = self._gather_vendor_data()
+            if vendor_data is None:
+                # log.error("Error: Could not gather vendor data")
+                return -1
+
             products_data = self._gather_products_data()
+            if products_data is None:
+                # log.error("Error: Could not gather products data")
+                return -1
+
             revenue_data = self._gather_revenue_data()
 
-            if products_data is None:
-                return -1
 
             record_id = self._post_to_database(vendor_data, products_data, revenue_data)
 
@@ -922,7 +1074,7 @@ class CreateNewTab(BaseTab):
             return None
         if rate_str == "NULL":
             return None
-        cleaned = str(rate_str).strip()
+        cleaned = str(rate_str).strip().replace('%', '')
         if cleaned == "":
             return None
         try:
@@ -989,7 +1141,12 @@ class CreateNewTab(BaseTab):
         :author(s): Kyle Valdez
         """
         datetime = str(generate_host_datetime())
-        self.datetime_input.setText(datetime)
+        if VAL.val_datetime(datetime):
+            validated_datetime = datetime
+            self.datetime_input.setText(validated_datetime)
+        else:
+            self.datetime_input.setText(datetime)
+            log.error(f"Failed to generate a valid datetime: {datetime}")
 
     def clear_form(self):
         """
@@ -1002,7 +1159,6 @@ class CreateNewTab(BaseTab):
 
         fields = [
             self.vendor_id_input,
-            self.phone_input,
             self.first_name_input,
             self.middle_name_input,
             self.last_name_input,
@@ -1017,7 +1173,8 @@ class CreateNewTab(BaseTab):
             field.setObjectName("DEFAULT")
             field.style().unpolish(field)
             field.style().polish(field)
-        self.auto_pop_vend()
+
+        self.phone_input.clear_phone()
 
         # Clear all product fields
         while self.products_layout.count():
@@ -1037,10 +1194,12 @@ class CreateNewTab(BaseTab):
     def _parse_money(self, s: str) -> float:
         """Parse '$1,234.56' / '1234.56' / '' -> float (empty -> 0.0). Raises ValueError if bad."""
         if s is None:
-            return 0.0
+            log.error(f"Invalid price: {s} is None")
+            return None
         cleaned = s.replace("$", "").replace(",", "").strip()
         if cleaned == "":
-            return 0.0
+            log.error(f"Invalid price: {s} is Empty")
+            return None
         return float(cleaned)
 
     def _parse_int(self, s: str) -> int:
@@ -1064,22 +1223,56 @@ class CreateNewTab(BaseTab):
             return False
 
     def handle_calc_btn(self):
-        self.val_prod_sections()
+        if not self.val_prod_sections():
+            return
         self.handle_total()
         self.update_revenue_fields()
         self.rev_by_prod.handle_updating(self.product_sections)
 
+    def check_empty_prod_section(self, prod_section):
+        empty = (prod_section['product_id'].text().strip() == ''
+                 and prod_section['product_name'].text().strip() == ''
+                 and prod_section['product_type'].currentIndex() == -1
+                 and prod_section['rate'].text().strip() == ''
+                 and prod_section['price'].text().strip() == ''
+                 and prod_section['quantity'].text().strip() == '')
+        return empty
+
     def val_prod_sections(self):
+        has_valid = False
         for prod in self.product_sections:
-            if prod['price'] is None:
-                log.error(f"Invalid price: {self.product_sections[prod]['price']}")
+            if self.check_empty_prod_section(prod):
+                continue
+            has_valid = True
+            if prod['product_id'].text().strip() == '':
+                log.error(f"Please enter a product id")
+                prod['product_id'].setFocus()
+                prod['product_id'].selectAll()
                 return False
-            if prod['quantity'] is None:
-                log.error(f"Invalid quantity: {self.product_sections[prod]['quantity']}")
-                return False
-            if prod['rate'] is None:
-                log.error(f"Invalid rate: {self.product_sections[prod]['rate']}")
-                return False
+            else:
+                if prod['product_type'].currentIndex() == -1:
+                    log.error(f"Please enter a product type")
+                    prod['product_type'].setFocus()
+                    prod['product_type'].showPopup()
+                    return False
+                if prod['price'].text().replace('$', '').strip() == '':
+                    log.error(f"Please enter a price")
+                    prod['price'].setFocus()
+                    prod['price'].selectAll()
+                    return False
+                if prod['quantity'].text().strip() == '':
+                    log.error(f"Please enter a quantity")
+                    prod['quantity'].setFocus()
+                    prod['quantity'].selectAll()
+                    return False
+                if prod['rate'].text().replace('%', '').strip() == '':
+                    log.error(f"Error: Failed to sync rate")
+                    prod['rate'].setFocus()
+                    prod['rate'].selectAll()
+                    return False
+        if not has_valid:
+            log.info(f"No products to calculate")
+            return False
         return True
 
     def update_revenue_fields(self) -> int:
@@ -1157,6 +1350,9 @@ class CreateNewTab(BaseTab):
         return: none
         author: Tyler Slagboom, Joe Lee, Colin Henderson
         """
+        if SPOT.OFFLINE:
+            log.error(f"Unable to autopopulate product fields using product id. Not connected to the database.")
+            return
         try:
             sender = self.sender()
             if not sender:
@@ -1166,6 +1362,17 @@ class CreateNewTab(BaseTab):
                 if product_section['product_id'] is sender:
                     prod_id = product_section['product_id'].text().strip()
                     if not prod_id:
+                        product_section['product_name'].clear()
+                        product_section['product_name'].setObjectName("DEFAULT")
+                        product_section['product_name'].setReadOnly(False)
+                        product_section['product_name'].style().unpolish(product_section['product_name'])
+                        product_section['product_name'].style().polish(product_section['product_name'])
+
+                        product_section['product_type'].setCurrentIndex(-1)
+                        product_section['product_type'].setObjectName("DEFAULT")
+                        product_section['product_type'].setEnabled(True)
+                        product_section['product_type'].style().unpolish(product_section['product_type'])
+                        product_section['product_type'].style().polish(product_section['product_type'])
                         return
 
                     item = get_item("Entities", "product", prod_id)
@@ -1187,12 +1394,6 @@ class CreateNewTab(BaseTab):
                             product_section['product_type'].setEnabled(False)
                             product_section['product_type'].style().unpolish(product_section['product_type'])
                             product_section['product_type'].style().polish(product_section['product_type'])
-                        if "product_rate" in product_section:
-                            if item and "rate" in item and item["rate"] is not None:
-                                product_section['rate'].setText(str(item["rate"]))
-                        else:
-                         product_section['rate'].setText(str(self.rates_container[item.get("product_type")]) if item else "")
-
                     else:
                         log.info(f"Did not find existing product with id {prod_id}")
                         # Product doesn't exist - clear and unlock
@@ -1207,14 +1408,13 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].setEnabled(True)
                         product_section['product_type'].style().unpolish(product_section['product_type'])
                         product_section['product_type'].style().polish(product_section['product_type'])
-
-                        if 'rate' in product_section:
-                            product_section['rate'].setText("Rate")
                     break
         except Exception as e:
             log.error(f"Failed to fetch record: {e}")
 
     def auto_pop_prod_by_name(self):
+        if SPOT.OFFLINE:
+            log.error(f"Unable to autopopulate product fields using product name. Not connected to the database.")
         try:
             sender = self.sender()
             if not sender:
@@ -1224,6 +1424,17 @@ class CreateNewTab(BaseTab):
                 if product_section['product_name'] is sender:
                     prod_name = sender.text().strip()
                     if not prod_name:
+                        product_section['product_id'].clear()
+                        product_section['product_id'].setObjectName("DEFAULT")
+                        product_section['product_id'].setReadOnly(False)
+                        product_section['product_id'].style().unpolish(product_section['product_id'])
+                        product_section['product_id'].style().polish(product_section['product_id'])
+
+                        product_section['product_type'].setCurrentIndex(-1)
+                        product_section['product_type'].setObjectName("DEFAULT")
+                        product_section['product_type'].setEnabled(True)
+                        product_section['product_type'].style().unpolish(product_section['product_type'])
+                        product_section['product_type'].style().polish(product_section['product_type'])
                         return
 
                     item = get_item_by_property("Entities", "product", "product_name", prod_name)
@@ -1245,12 +1456,6 @@ class CreateNewTab(BaseTab):
                             product_section['product_type'].setEnabled(False)
                             product_section['product_type'].style().unpolish(product_section['product_type'])
                             product_section['product_type'].style().polish(product_section['product_type'])
-
-                        if 'rate' in product_section:
-                            if "rate" in item and item["rate"] is not None:
-                                product_section['rate'].setText(str(item["rate"]))
-                            else:
-                                product_section['rate'].setText(self.rates_container[item.get("product_type")])
                     else:
                         log.info(f"Did not find existing product with name {prod_name}")
                         product_section['product_id'].setObjectName("DEFAULT")
@@ -1263,16 +1468,34 @@ class CreateNewTab(BaseTab):
                         product_section['product_type'].setEnabled(True)
                         product_section['product_type'].style().unpolish(product_section['product_type'])
                         product_section['product_type'].style().polish(product_section['product_type'])
-
-                        product_section['rate'].setObjectName("DEFAULT")
-                        product_section['rate'].setText("Rate")
                     break
         except Exception as e:
             log.error(f"Failed to fetch record by name: {e}")
 
-    def auto_pop_vend(self):
+    def auto_pop_vend_by_field(self):
+        if SPOT.OFFLINE:
+            log.error("Unable to autopopulate vendor fields. Not connected to the database.")
+            return
+
         try:
-            field_mapping = {
+            sender = self.sender()
+            if not sender:
+                return
+
+            field_map = {
+                self.vendor_id_input: "vendor_id",
+                self.phone_input: "phone",
+                self.first_name_input: "first_name",
+                self.middle_name_input: "middle_name",
+                self.last_name_input: "last_name",
+            }
+
+            db_field = field_map.get(sender)
+            if not db_field:
+                return
+
+            populate_fields = {
+                'vendor_id': self.vendor_id_input,
                 'phone': self.phone_input,
                 'first_name': self.first_name_input,
                 'middle_name': self.middle_name_input,
@@ -1280,74 +1503,107 @@ class CreateNewTab(BaseTab):
                 'address': self.address_input,
                 'city': self.city_input,
                 'state': self.state_input,
-                'zip': self.zip_input
+                'zip': self.zip_input,
             }
-            vend_id = self.vendor_id_input.text().strip()
 
-            if vend_id:
-                item = get_item("Entities", "vendor", vend_id)
-                if item is not None:
-                    log.info(f"Autopopulating with found vendor id {vend_id}")
-                    for field_name, input_field in field_mapping.items():
-                        if field_name in item:
-                            input_field.setText(str(item[field_name]))
+            value = sender.text().strip()
+            if db_field == "vendor_id":
+                value = int(value)
+
+            if not value:
+                for input_field in populate_fields.values():
+                    if input_field is not sender:
+                        input_field.clear()
+                    input_field.setObjectName("DEFAULT")
+                    input_field.setReadOnly(False)
+                for input_field in populate_fields.values():
+                    input_field.style().unpolish(input_field)
+                    input_field.style().polish(input_field)
+                return
+
+            result = get_all_items_by_property("Entities", "vendor", db_field, value)
+
+            if result is not None:
+                if isinstance(result, list):
+                    item = self.prompt_vendor_selection(result)
+                    if item is None:
+                        return
+                else:
+                    item = result
+
+                log.info(f"Autopopulating Vendor fields using {db_field}: {value}")
+                for field_name, input_field in populate_fields.items():
+                    if field_name in item:
+                        input_field.setText(str(item[field_name]))
+                        if input_field is not sender:
                             input_field.setObjectName("READ_ONLY")
                             input_field.setReadOnly(True)
-                else:
-                    log.info(f"Did not find existing vendor with id {vend_id}")
-                    for input_field in field_mapping.values():
-                        input_field.setObjectName("DEFAULT")
-                        input_field.setReadOnly(False)
-                        input_field.clear()
             else:
-                for input_field in field_mapping.values():
+                log.info(f"No vendor found with {db_field}: {value}")
+                for input_field in populate_fields.values():
+                    if input_field is not sender:
+                        input_field.clear()
                     input_field.setObjectName("DEFAULT")
                     input_field.setReadOnly(False)
 
-            for input_field in field_mapping.values():
+            for input_field in populate_fields.values():
                 input_field.style().unpolish(input_field)
                 input_field.style().polish(input_field)
 
         except Exception as e:
-            log.error(f"Failed to fetch vendor: {e}")
+            log.error(f"Failed to fetch vendor by {db_field}: {e}")
 
-    def auto_pop_vend_by_phone(self):
-        try:
-            field_mapping = {
-                'vendor_id': self.vendor_id_input,
-                'first_name': self.first_name_input,
-                'middle_name': self.middle_name_input,
-                'last_name': self.last_name_input,
-                'address': self.address_input,
-                'city': self.city_input,
-                'state': self.state_input,
-                'zip': self.zip_input
-            }
-            phone = self.phone_input.text().strip()
+    def prompt_vendor_selection(self, vendors):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Multiple Vendors Found")
+        dialog.setModal(True)
 
-            if phone:
-                item = get_item_by_property("Entities", "vendor", "phone", phone)
-                if item is not None:
-                    log.info(f"Autopopulating with found phone number {phone}")
-                    for field_name, input_field in field_mapping.items():
-                        if field_name in item:
-                            input_field.setText(str(item[field_name]))
-                            input_field.setObjectName("READ_ONLY")
-                            input_field.setReadOnly(True)
-                else:
-                    log.info(f"Did not find existing vendor with phone number {phone}")
-                    for input_field in field_mapping.values():
-                        input_field.setObjectName("DEFAULT")
-                        input_field.setReadOnly(False)
-                        input_field.clear()
-            else:
-                for input_field in field_mapping.values():
-                    input_field.setObjectName("DEFAULT")
-                    input_field.setReadOnly(False)
+        layout = QVBoxLayout()
 
-            for input_field in field_mapping.values():
-                input_field.style().unpolish(input_field)
-                input_field.style().polish(input_field)
+        label = QLabel("Select a vendor:")
+        layout.addWidget(label)
+        hr0 = QFrame()
+        hr0.setFrameShape(QFrame.Shape.HLine)
+        hr0.setFrameShadow(QFrame.Shadow.Sunken)
+        hr0.setObjectName("hr")
+        layout.addWidget(hr0)
 
-        except Exception as e:
-            log.error(f"Failed to fetch vendor by phone: {e}")
+        radio_buttons = []
+        for vend in vendors:
+            v_id = vend.get('vendor_id', '')
+            fname = vend.get('first_name', '')
+            mname = vend.get('middle_name', '')
+            lname = vend.get('last_name', '')
+            address = vend.get('address', '')
+            radio_btn = QRadioButton(f"{v_id} : {fname} {mname} {lname}\n"
+                                     f"{address}")
+            radio_buttons.append(radio_btn)
+            layout.addWidget(radio_btn)
+            hr = QFrame()
+            hr.setFrameShape(QFrame.Shape.HLine)
+            hr.setFrameShadow(QFrame.Shadow.Sunken)
+            hr.setObjectName("hr")
+            layout.addWidget(hr)
+
+        if radio_buttons:
+            radio_buttons[0].setChecked(True)
+
+        confirm_btn = QPushButton("Confirm")
+        layout.addWidget(confirm_btn)
+
+        selected = [None]
+
+        def on_confirm():
+            for i, rb in enumerate(radio_buttons):
+                if rb.isChecked():
+                    selected[0] = vendors[i]
+                    break
+            dialog.accept()
+
+        confirm_btn.clicked.connect(on_confirm)
+
+        dialog.setLayout(layout)
+
+        if dialog.exec() == QDialog.DialogCode.Accepted and selected[0] is not None:
+            return selected[0]
+        return None

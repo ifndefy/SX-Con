@@ -1,3 +1,5 @@
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QVBoxLayout
@@ -88,6 +90,8 @@ class SettingsTab(BaseTab):
 
         self.current_username_input = QLineEdit("test")
         self.current_username_input.setText(current_user.get_username() or "Not logged in")
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.current_username_input.setValidator(alpha_validator)
         self.current_username_input.setReadOnly(True)
         user_layout_line_0.addWidget(self.current_username_input)
 
@@ -458,7 +462,7 @@ class SettingsTab(BaseTab):
             container = db_connection.connect('Entities')
             
             # Query for user by username
-            query = f"SELECT * FROM c WHERE c.username = '{username}' AND c.type = 'user'"
+            query = f"SELECT * FROM c WHERE c.username = '{username}' AND c.entity_type = 'user'"
             users = list(container.query_items(
                 query=query,
                 enable_cross_partition_query=True

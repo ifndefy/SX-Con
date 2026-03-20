@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QMessageBox
 
+import validate
 from ui.tabs.base import BaseTab
 from ui.prompts.password_dialog import PasswordChangeDialog
 from src import SPOT
@@ -215,7 +216,7 @@ class UsersTab(BaseTab):
         """
         self.remove_user_section()
 
-        conditions = ["c.type = 'user'"]
+        conditions = ["c.entity_type = 'user'"]
         properties = []
 
         def add_property(props, value, operator="="):
@@ -233,11 +234,8 @@ class UsersTab(BaseTab):
 
         user_id = self.user_id_input.text().strip()
         if user_id:
-            try:
-                user_id_int = int(user_id)
-                add_property("user_id", user_id_int, "=")
-            except ValueError:
-                log.error(f"Invalid user_id entered: {user_id}")
+            user_id_int = int(user_id)
+            add_property("user_id", user_id_int, "=")
 
         username = self.username_input.text().strip()
         if username:
@@ -250,7 +248,7 @@ class UsersTab(BaseTab):
                 consignment_query = f"""
                     SELECT DISTINCT c.user_id
                     FROM c
-                    WHERE c.type = 'consignment'
+                    WHERE c.entity_type = 'consignment'
                     AND CONTAINS(c.datetime, '{last_consignment}')
                 """
                 results = list(consignment_container.query_items(
@@ -325,7 +323,7 @@ class UsersTab(BaseTab):
                 batch_query = f"""
                     SELECT c.user_id, c.datetime
                     FROM c
-                    WHERE c.type = 'consignment'
+                    WHERE c.entity_type = 'consignment'
                     AND c.user_id IN ({user_id_list})
                 """
                 last_cons = list(consignment_container.query_items(
@@ -373,7 +371,7 @@ class UsersTab(BaseTab):
         :return: list of users
         :author(s): Joe Lee
         """
-        get_all_query = "SELECT * FROM c WHERE c.type = 'user'"
+        get_all_query = "SELECT * FROM c WHERE c.entity_type = 'user'"
         self.query_db(get_all_query)
 
     def add_user_section(self, user_data):
@@ -522,6 +520,7 @@ class UsersTab(BaseTab):
         :author(s): Colin Heinselman
         '''
         dialog = QDialog(self)
+        dialog.setFixedWidth(400)
         dialog.setWindowTitle("Create New User")
 
         layout = QVBoxLayout(dialog)
@@ -570,13 +569,7 @@ class UsersTab(BaseTab):
         question1_response.setObjectName("response1")
         question1_response.setMaxLength(255)
         layout.addWidget(question1_response)
-
-        hr2 = QFrame()
-        hr2.setFrameShape(QFrame.Shape.HLine)
-        hr2.setFrameShadow(QFrame.Shadow.Sunken)
-        hr2.setObjectName("hr")
-        layout.addWidget(hr2)
-
+        
         # Question 2
         prompt_label = QLabel("Security Question 2:")
         prompt_label.setObjectName("label")
@@ -669,6 +662,26 @@ class UsersTab(BaseTab):
                 dialog.accept()
         return handler
 
+    def validate_user_data(self, dialog):
+        """
+        :Purpose: execute a series of validations on user data
+        :Author(s): Colin Heinselman, Joe Lee
+        """
+        username = dialog.findChild(QLineEdit, "username_input").text()
+        if not self.username_is_clean(username):
+            return False
+        if not validate.val_username(username):
+            return False
+        if not validate.val_fl_name(dialog.findChild(QLineEdit, "first_name_input").text()):
+            return False
+        if not validate.val_fl_name(dialog.findChild(QLineEdit, "last_name_input").text()):
+            return False
+        if not validate.val_password(dialog.findChild(QLineEdit, "password_input").text()):
+            return False
+        if not self.validate_security_questions(dialog):
+            return False
+        return True
+
     def handle_dialog_accepted(self, dialog):
         """
         :Purpose: executes a sequence of events
@@ -679,7 +692,11 @@ class UsersTab(BaseTab):
             log.error(f"Failed to create new user")
             return
         self.hash_security_q_and_a()
-        insert_item("Entities", "user", self.new_user_data)
+        res = insert_item("Entities", "user", self.new_user_data)
+        if res == 0:
+            username = self.new_user_data.get("username")
+            log.info(f"Successfully created new user: {username}")
+            QMessageBox.information(dialog, "Success", f"Successfully created new user: {username}")
 
     def gather_new_user_data(self, dialog):
         """
@@ -700,7 +717,7 @@ class UsersTab(BaseTab):
             return -1
 
         raw_user_data = {
-            "user_id": user_id,
+            "user_id": int(user_id),
             "username": username,
             "first_name": dialog.findChild(QLineEdit, "first_name_input").text().strip(),
             "last_name": dialog.findChild(QLineEdit, "last_name_input").text().strip(),
@@ -741,18 +758,6 @@ class UsersTab(BaseTab):
         self.new_user_data["q1_a"] = q_values[0]
         self.new_user_data["q2_q"] = q_keys[1]
         self.new_user_data["q2_a"] = q_values[1]
-
-    def validate_user_data(self, dialog):
-        """
-        :Purpose: execute a series of validations on user data
-        :Author(s): Colin Heinselman, Joe Lee
-        """
-        username = dialog.findChild(QLineEdit, "username_input").text()
-        if not self.username_is_clean(username):
-            return False
-        if not self.validate_security_questions(dialog):
-            return False
-        return True
 
     def validate_security_questions(self, dialog):
         """
