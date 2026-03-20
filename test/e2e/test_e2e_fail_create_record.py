@@ -17,7 +17,7 @@ Sequence:
 """
 
 
-def test_e2e_create_record_fail_graceful(app):
+def test_e2e_fail_create_record(app):
     # 1 - Login
     theme_manager = ThemeManager()
     login_screen = LoginScreen(theme_manager)
@@ -41,26 +41,27 @@ def test_e2e_create_record_fail_graceful(app):
     create_tab.state_input.setText("CA")
     create_tab.zip_input.setText("12345")
 
-    # 4 - Fill first product line with valid data
+    # 4 - Fill first product line with valid data, except for price
     product = create_tab.product_sections[0]
     product["product_id"].setText("54321")
     product["product_type"].setCurrentText("General")
     product["product_name"].setText("Widget")
-    product["price"].setText("10")
     product["quantity"].setText("2")
+    # product["price"] is left blank
 
     # Let rate/total/revenue update through normal UI flow
     create_tab.calc_btn.click()
 
-    # 5 - Capture state before failure
+    # 5 - Capture state before click
     original_vendor_id = create_tab.vendor_id_input.text()
     original_product_id = product["product_id"].text()
     original_product_name = product["product_name"].text()
     original_product_count = len(create_tab.product_sections)
-    original_button_enabled = create_tab.create_btn.isEnabled()
 
-    # 6 - Force backend failure at the chosen endpoint
-    with patch.object(create_tab, "_post_to_database", return_value=-1):
+    with patch("ui.tabs.create_new.QMessageBox.warning"), \
+            patch("ui.tabs.create_new.QMessageBox.critical"):
+
+        # 6 - Click create button
         create_tab.create_btn.click()
 
         # 7 - Graceful failure checks:
@@ -71,5 +72,5 @@ def test_e2e_create_record_fail_graceful(app):
         assert len(create_tab.product_sections) == original_product_count
 
         # user should still be able to retry
-        assert create_tab.create_btn.isEnabled() == original_button_enabled
         assert create_tab.create_btn.isEnabled()
+        assert create_tab.product_sections[0]["price"].isEnabled()
