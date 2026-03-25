@@ -105,7 +105,7 @@ def test_e2e_pass_offline_porting(app, monkeypatch, tmp_path):
     os.remove(output_path)
 
     pdf_output = os.path.join(os.path.dirname(__file__), "e2e_test.pdf")
-    def set_pdf_filename(self):
+    def set_pdf_filename(self, payout_number=None):
         self.pdf_filename = pdf_output
 
     with patch.object(PDF, "set_pdf_filename", set_pdf_filename), \
