@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from pathlib import Path
 from src import SPOT
 from src.user import current_user
@@ -40,7 +40,11 @@ def test_export(app, monkeypatch):
 def test_sync_btn_import(app, monkeypatch):
     monkeypatch.setattr(SPOT, 'OFFLINE', False)
     monkeypatch.setattr(current_user, "_raw_username", "user")
-    tab = SettingsTab(api_handler=None)
+    fake_theme_manager = MagicMock()
+    fake_theme_manager.get_current_theme.return_value = "Super"
+    fake_theme_manager.get_available_themes.return_value = ["Super"]
+    fake_app = MagicMock()
+    tab = SettingsTab(api_handler=None, theme_manager=fake_theme_manager, app=fake_app)
 
     with patch('ui.tabs.settings.QMessageBox'):
         tab.sync_btn.click()
