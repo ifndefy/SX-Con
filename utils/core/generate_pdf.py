@@ -50,8 +50,11 @@ class PDF:
     def set_vendor_data(self):
         self.vendor_data = get_item_by_property("Entities", "vendor", "vendor_id", self.vendor_id)
 
-    def set_pdf_filename(self):
-        self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
+    def set_pdf_filename(self, payout_number=None):
+        if payout_number is not None:
+            self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}_payout_{payout_number}.pdf")
+        else:
+            self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
 
     def set_cursor(self, f_name):
         if f_name:
@@ -191,8 +194,7 @@ class PDF:
         if "revenue" in self.ticket_data and "payout" in self.ticket_data["revenue"]:
             payout_list = self.ticket_data["revenue"]["payout"]
             if payout_list and len(payout_list) > 0:
-                payout_products = payout_list[0].get("products", [])
-
+                payout_products = payout_list[-1].get("products", [])
         payout_index = 0
         for prod in valid_products:
             vendor_amount = 0
@@ -246,9 +248,8 @@ class PDF:
 
         y_type = y - 15
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(30, y, "Potential at Signing")
+        c.drawString(30, y, "Total Potential Payout at Signing")
         y_pot = y - 15
-        # y_pot -= 18
 
         shared = self.ticket_data["revenue"]["shared"]
         if shared:
@@ -256,7 +257,15 @@ class PDF:
             c.setFont("Helvetica", 10)
             c.drawString(40, y_pot, f"${last_cut.get('vendor', 0):.2f}")
             c.rect(40 - 3, y_pot - 3, 120, 15)
-            y_pot -= 18
+
+        y_pot -= 18
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(30, y_pot, "Accumulated Payouts")
+        y_pot -= 18
+        accumulated = self.ticket_data.get('revenue', {}).get('accumulated', {})
+        c.setFont("Helvetica", 10)
+        c.drawString(40, y_pot, f"${accumulated.get('vendor', 0):.2f}")
+        c.rect(40 - 3, y_pot - 3, 120, 15)
 
         y_pot -= 18
         c.setFont("Helvetica-Bold", 10)
@@ -329,6 +338,3 @@ class PDF:
 
     def save_y(self, y_axis):
         self.y = y_axis
-
-test = PDF(90)
-test.create_supermarket_ticket()
