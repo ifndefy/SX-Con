@@ -11,7 +11,7 @@ def val_check_does_not_exists(
     value: Union[str, int]
 ) -> int:
     """
-    Validates that a property value doesn't already exist
+    Purpose: Validates that a property value doesn't already exist
 
     Returns:
         True -> value does not exist
