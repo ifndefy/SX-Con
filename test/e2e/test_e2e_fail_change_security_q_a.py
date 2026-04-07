@@ -28,6 +28,12 @@ from unittest.mock import patch
 
 
 def test_e2e_fail_change_security_q_a(app):
+    """
+    :purpose: e2e intentional fail test for changing security questions and answers
+    :return: None
+    :author(s): Colin Heinselman
+    """
+
     ### 1 - Opens program (login screen)
     theme_manager = ThemeManager()
     login_screen = LoginScreen(theme_manager)

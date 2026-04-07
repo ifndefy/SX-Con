@@ -1,6 +1,12 @@
 from validate.val_city import val_city
 
 def test_val_city():
+    """
+    :purpose: Tests the validation city function
+    :return: None
+    :author(s): Colin Heinselman
+
+    """
 
     # Invalid Inputs : "Empty" values
     if val_city(None) == True:

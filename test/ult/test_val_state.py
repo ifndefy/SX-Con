@@ -3,6 +3,7 @@ from validate.val_state import val_state
 def test_val_state():
     """
         :purpose: Unit test for val_state() function
+        :return: None
         :author(s): Colin Heinselman
     """
 
