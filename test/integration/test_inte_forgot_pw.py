@@ -18,7 +18,7 @@ def test_fail_username_not_in_db(app, fake_deps):
         dialog = ForgotPasswordScreen(theme_manager=fake_theme)
         dialog.username_input.setText("fake_user")
         dialog.req_btn.click()
-        assert not hasattr(dialog, "user_id")
+        assert not hasattr(dialog, "user_id"), "Expected to not be able to find fake username"
 
 # integration: "user" is found
 def test_integration_user_found(app):
@@ -28,4 +28,4 @@ def test_integration_user_found(app):
         dialog = ForgotPasswordScreen(theme_manager=fake_theme)
         dialog.username_input.setText("user")
         dialog.req_btn.click()
-        assert hasattr(dialog, "user_id")
+        assert hasattr(dialog, "user_id"), "Expected to be able to find real username"

@@ -22,7 +22,7 @@ from services.connect_database import db_connection
 import utils.logger.logger as log
 
 class MainWindow(QWidget):
-    def __init__(self, offline_mode = False):
+    def __init__(self, offline_mode = False, app = None, theme_manager = None):
         super().__init__()
         self.offline_mode = offline_mode
         self.current_user = current_user
@@ -38,11 +38,11 @@ class MainWindow(QWidget):
 
         self.logo_path = img_helpers.get_window_logo_path()
         self.api_handler = APIHandler()
-        self.theme_manager = ThemeManager()
         self.db_connection = db_connection
         self.setup_window()
+        self.app = app
+        self.theme_manager = theme_manager if theme_manager else ThemeManager()
         self.setup_ui()
-        self.theme_manager.apply_default_theme(self)
 
     def setup_window(self):
         self.setWindowTitle("SX-Con")
@@ -101,7 +101,7 @@ class MainWindow(QWidget):
         if not self.offline_mode:
             self.vendor_tickets_tab = VendorTicketsTab(self.api_handler, self.db_connection)
             self.search_tickets_tab = SearchTicketsTab(self.api_handler, self.db_connection)
-            self.settings_tab = SettingsTab(self.api_handler)
+            self.settings_tab = SettingsTab(self.api_handler, self.theme_manager, self.app)
 
             self.tabs.addTab(self.vendor_tickets_tab, "Vendor Tickets")
             self.tabs.addTab(self.search_tickets_tab, "Search Tickets")
@@ -114,7 +114,7 @@ class MainWindow(QWidget):
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
     def on_tab_changed(self, index):
-        log.info(f"{self.tabs.tabText(index)} tab clicked")
+        log.info(f"Switched to {self.tabs.tabText(index)} tab")
 
     def change_status_label(self, message):
         if self.status_label:

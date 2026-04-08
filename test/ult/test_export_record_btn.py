@@ -1,5 +1,6 @@
 import os
 from unittest.mock import patch
+import json
 
 from src import SPOT
 
@@ -11,7 +12,6 @@ def test_export_record_btn_exists(app, monkeypatch):
     assert tab.export_btn is not None, "Expected Export Record button to exist"
     assert tab.create_btn is None, "Expected Create Record button to not exist"
 
-import json
 
 def test_export_record_btn_works(app, monkeypatch):
     monkeypatch.setattr(SPOT, 'OFFLINE', True)
@@ -39,8 +39,9 @@ def test_export_record_btn_works(app, monkeypatch):
     sec['quantity'].setText("12")
 
     ticket = tab.ticket_input.text().strip()
-    with patch('ui.tabs.create_new.QMessageBox'):
-        tab.export_btn.click()
+    with patch('ui.tabs.create_new.QMessageBox'), \
+        patch('validate.val_check_does_not_exist.get_item_by_property', return_value=None):
+            tab.export_btn.click()
 
     offline_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath("utils/core/export_doc.py"))), "OFFLINE_tickets")
     expected_path = os.path.join(offline_dir, f"{ticket}.json")

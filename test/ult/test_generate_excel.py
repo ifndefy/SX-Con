@@ -24,4 +24,4 @@ def test_excel_creates_file(cleanup_excel):
                return_value=(test_path, "Excel File (*.xlsx)")):
         generate_excel(test_data)
 
-    assert os.path.exists(test_path)
+    assert os.path.exists(test_path), "Expected to be able to generate an excel file"

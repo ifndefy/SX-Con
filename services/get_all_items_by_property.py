@@ -33,10 +33,10 @@ def get_all_items_by_property(container_name: str, entity_type: str, property_na
         log.info(f"Query returned {len(items)} item(s) for {property_name}: {property_value}")
 
         if items:
-            log.info(f"Cosmos DB Container {container_name} found {len(items)} item(s) by {property_name}: {property_value}")
+            log.info(f"Found {len(items)} item(s) by {property_name}: {property_value}")
             return items[0] if len(items) == 1 else items
         else:
-            log.info(f"Cosmos DB container {container_name} not found by {property_name}: {property_value}")
+            log.info(f"Did not find any items using {property_name}: {property_value}")
             return None
     except Exception as e:
         log.error(f"Error: Failed to get item(s) by property: {property_value} : {e}")

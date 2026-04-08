@@ -11,5 +11,5 @@ def search_tickets_tab(app):
 
 def test_btns_exist(search_tickets_tab):
     tab = search_tickets_tab
-    tab.clear_btn is not None, "Expectec clear button to exist"
-    tab.search_btn is not None, "Expectec search btn to exist"
+    assert tab.clear_btn is not None, "Expected clear button to exist"
+    assert tab.search_btn is not None, "Expected search btn to exist"

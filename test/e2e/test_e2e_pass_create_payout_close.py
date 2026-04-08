@@ -1,8 +1,8 @@
-import pytest
-from unittest.mock import MagicMock
 from unittest.mock import patch
 import os
 import random
+
+from PyQt6.QtWidgets import QMessageBox
 
 from src.user import current_user
 from ui.core.theme_manager import ThemeManager
@@ -11,7 +11,6 @@ from ui.prompts.login import LoginScreen
 from ui.tabs import VendorTicketsTab
 from ui.tabs.create_new import CreateNewTab
 
-from services.delete_item import delete_item
 from utils.core.generate_pdf import PDF
 
 
@@ -27,10 +26,11 @@ Sequence:
     ### 8 - search for vendor 1 tickets
     ### 9 - update sold values for each product
     ### 10 - Recalculate using payout's calculate button
-    ### 11 - prints ticket -> emulate success
+    ### 11 - Payout
+    ### 12 - prints ticket -> emulate success
         # commented out
-    ### 12 - clicks close ticket -> succeeds
-    ### 13 - Delete the ticket
+    ### 13 - clicks close ticket -> succeeds
+    ### 14 - Delete the ticket
         # this is commented out to generate some data for the DB
 """
 
@@ -107,7 +107,7 @@ def test_e2e_create_payout_close(app):
     os.remove(output_path)
 
     pdf_output = os.path.join(os.path.dirname(__file__), "e2e_test.pdf")
-    def set_pdf_filename(self):
+    def set_pdf_filename(self, payout_number=None):
         self.pdf_filename = pdf_output
 
     with patch.object(PDF, "set_pdf_filename", set_pdf_filename), \
@@ -175,15 +175,22 @@ def test_e2e_create_payout_close(app):
     assert open_view_ticket.payout_widget.vendor_input.text() != "$0.00", "Expected Vendor's payout to not be zero"
     assert open_view_ticket.payout_widget.super_x_input.text() != "$0.00", "Expected SuperX's payout to not be zero"
 
-    ### 11 - prints ticket -> emulate success
+    ### 11 - Payout
+    with patch("ui.core.revenue_payout.QMessageBox.question", return_value=QMessageBox.StandardButton.Yes), \
+            patch("ui.core.revenue_payout.QMessageBox.information"):
+        open_view_ticket.payout_widget.payout_btn.click()
+
+    assert open_view_ticket.payout_widget.vendor_input.text() == "$0.00", "Expected vendor payout to reset after commit"
+
+    ### 12 - prints ticket -> emulate success
     ## uncomment to see that it worked
     # current_tab.tickets_section[0]['print_btn'].click()
 
-    ### 12 - clicks close ticket -> succeeds
+    ### 13 - clicks close ticket -> succeeds
     with patch('ui.tabs.vendor_tickets.QMessageBox.information') :
         current_tab.tickets_section[0]['close_btn'].click()
     assert current_tab.tickets_section[0]['status'].text() == "CLOSED", "Expected ticket to be closed"
 
-    ### 13 - Delete the ticket
+    ### 14 - Delete the ticket
     # result = delete_item("Consignments", "consignment", ticket_number)
     # assert result == 0, "Failed to delete created item"

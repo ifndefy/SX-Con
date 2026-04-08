@@ -21,7 +21,6 @@ def val_state(state: str) -> bool:
         log.error("Error: State cannot be empty or only spaces")
         return False
 
-
     if len(state) != 2:
         log.error("Error: State must be exactly 2 characters long")
         return False

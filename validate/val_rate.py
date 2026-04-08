@@ -1,3 +1,6 @@
+import utils.logger.logger as log
+
+
 def val_rate(rate: int) -> bool:
     """
     Author: Kyle Valdez
@@ -14,6 +17,7 @@ def val_rate(rate: int) -> bool:
     """
 
     if rate is None:
+        log.error(f"Rate field cannot be None")
         return False
 
     # Convert to string for character validation
@@ -21,16 +25,19 @@ def val_rate(rate: int) -> bool:
 
     # Reject alphabetic characters
     if any(char.isalpha() for char in rate_str):
+        log.error(f"Rate input must only be integers")
         return False
 
     # Reject special characters (anything not numeric)
     if not rate_str.isdigit():
+        log.error(f"Rate input must only contain digits")
         return False
 
     # Convert to integer for numeric validation
     rate_int = int(rate_str)
 
     if rate_int > 100:
+        log.error(f"Rate input must be less than 100")
         return False
 
     return True
