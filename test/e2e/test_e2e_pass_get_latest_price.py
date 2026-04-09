@@ -20,11 +20,13 @@ import utils.logger.logger as log
 Sequence:
     ### 1 - opens program (login screen)
     ### 2 - main window opens -> lands on create new
-    ### 3 - set/emit values into vendor and product fields, Set different prices based on the ticket number
-    ### 5 - click on export record -> successful
-    ### 10 - Go to settings tab
-    ### 12 - Verifies that record now exists in DB
-    ### 13 - Delete the inserted items
+    ### 3 - set/emit values into vendor and product fields, use a specific dummy PID
+    ### 4 - click on create ticket
+    ### 5 - Go to admin settings tab -> products
+    ### 6 - Verify that product type is properly fetched on search 
+    ### 7 - Verify that the latest price matches the most recent value added by the test
+    ### 8 - Delete the consignment ticket that we created in testing
+    ### 9 - Delete the product created at the dummy PID
 """
 
 def test_e2e_pass_get_latest_price(app, monkeypatch, tmp_path):
@@ -117,5 +119,5 @@ def test_e2e_pass_get_latest_price(app, monkeypatch, tmp_path):
     ###Cleanup Test Objects
     for i in ticket_number:
         assert delete_item("Consignments", "consignment", i) == 0, f"Failed to delete ticket num: {i}"
-    
+
     assert delete_item("Entities", "product", 999) == 0, "Failed to clean-up test product with ID: 999"
