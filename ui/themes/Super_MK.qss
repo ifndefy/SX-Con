@@ -33,12 +33,25 @@ QTabWidget::pane {
     top: -1px;
 }
 
+
+QTabWidget#subtabs::pane{
+    background-color: #686969;
+}
+
 QTabWidget QStackedWidget {
     background-color: transparent;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
     border-top-right-radius: 4px;
     border: 4px inset #2e75af;
+}
+
+QTabWidget#subtabs QStackedWidget {
+    background-color: transparent;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-top-right-radius: 4px;
+    border: 4px inset #963835;
 }
 
 QTabWidget QStackedWidget QWidget{
@@ -49,7 +62,7 @@ QTabWidget QStackedWidget QWidget{
 QTabBar::tab {
     background-color: #213f8B;
     color: #DCE1DE;
-    border: 1px solid transparent;
+    border: 1px solid #213f8B;
     padding: 12px 18px ;
     margin: 0px;
     top: 6px;
@@ -62,18 +75,28 @@ QTabBar::tab:first {
 
 QTabBar::tab:last {
     border-top-right-radius: 4px;
+    border: 1px solid #691601;
 }
 
 QTabWidget#subtabs QTabBar::tab {
     background-color: #691601;
+    border: 1px solid #691601;
 }
 
 QTabWidget#subtabs QTabBar::tab:selected {
-    background-color: #2e75af;
+    background-color: #963835;
+    border: 0px;
 }
 
-QTabWidget#subtabs::pane{
-    background-color: #686969;
+QTabWidget#subtabs QTabBar::tab:hover {
+    background-color: #963835;
+    border: 1px solid #ffffff;
+}
+
+QTabWidget#subtabs QTabBar::tab:selected:hover {
+    background-color: #963835;
+    border: 0px;
+    top: 0px;
 }
 
 QTabBar::tab:selected {
@@ -132,10 +155,17 @@ QPushButton#red_btn {
     background-color: #691601;
 }
 
+QPushButton#red_btn:hover {
+    background-color: #963835;
+}
+
 QPushButton#red_btn:pressed {
     background-color: #DCE1DE;
 }
 
+
+
+/* Scroll Area styling */
 QTabWidget#subtabs QWidget QScrollArea {
     border-radius: 4px;
     background: #555555;
@@ -174,6 +204,14 @@ QLabel#post_title {
     background-color: transparent;
     font-size: 18px;
     font-weight: bold;
+}
+
+/* Horizontal Rule Style */
+QTabWidget QStackedWidget QWidget#hr {
+    background-color: #000000;
+    border: 1px inset #454747;
+    padding: 0px;
+    margin: 0px;
 }
 
 /* DROP DOWN MENU STYLING */
@@ -291,10 +329,19 @@ QPushButton#large_btn {
     padding: 12px 20px;
     font-size: 14px;
     font-weight: bold;
+    background-color: #691601;
+}
+
+QPushButton#large_btn:hover {
+    background-color: #963835;
+}
+
+QPushButton#large_btn:pressed {
+    background-color: #DCE1DE;
 }
 
 /* Large button style */
-QWidget QPushButton#crit_large_btn {
+QPushButton#crit_large_btn {
     background-color: #691601;
     max-height: 64px;
     max-width: 129px;
@@ -303,6 +350,14 @@ QWidget QPushButton#crit_large_btn {
     padding: 12px 20px;
     font-size: 14px;
     font-weight: bold;
+}
+
+QPushButton#crit_large_btn:hover{
+    background-color: #963835;
+}
+
+QPushButton#crit_large_btn:pressed {
+    background-color: #DCE1DE;
 }
 
 /* Status Section */
