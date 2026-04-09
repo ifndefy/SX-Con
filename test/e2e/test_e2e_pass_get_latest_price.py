@@ -9,8 +9,6 @@ from ui.tabs.subtabs.products import ProductsTab as ProductsSubTab
 from ui.core.theme_manager import ThemeManager
 
 from services.delete_item import delete_item
-from services.get_max_value import get_max_value
-from services.get_item import get_item
 
 import re
 import random
