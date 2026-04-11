@@ -62,6 +62,8 @@ def test_e2e_pass_get_latest_price(app, monkeypatch, tmp_path):
 
     current_tab.product_sections[0]['product_id'].setText('999')
     current_tab.product_sections[0]['product_id'].returnPressed.emit()
+    current_tab.product_sections[0]['product_name'].setText('latest price test')
+    current_tab.product_sections[0]['product_type'].setCurrentIndex(0)
     current_tab.product_sections[0]['price'].textEdited.emit(prod_1_price)
     current_tab.product_sections[0]['quantity'].setText(prod_1_qty)
 
