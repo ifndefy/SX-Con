@@ -1,0 +1,406 @@
+/* BASE STYLING */
+QWidget {
+    background-color: #F2F2F2;
+    color: #1A1A1A;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+QWidget#view_bg {
+    background-color: #F2F2F2;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    color: #1A1A1A;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+QWidget#transparent {
+    background-color: transparent;
+}
+
+/* TAB WIDGET */
+QTabWidget::pane {
+    border: 1px solid #1A1A1A;
+    top: -1px;
+}
+
+QTabWidget QStackedWidget {
+    background-color: #4A4A4A;
+}
+
+QTabBar::tab {
+    background-color: #777777;
+    color: #1A1A1A;
+    border: 1px solid #1A1A1A;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    padding: 8px 16px;
+    margin: 0px;
+    width: 120px;
+}
+
+QTabWidget#subtabs QTabBar::tab {
+    background-color: #691601;
+    color: #F2F2F2;
+    width: 120px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+QTabWidget#subtabs QTabBar::tab:selected {
+    background-color: #393939;
+    width: 120px;
+}
+
+QTabWidget#subtabs QTabBar::tab:hover{
+    color: #A1A1A1;
+    border: 1px solid #1A1A1A;
+    width: 120px;
+}
+
+QTabBar::tab:selected {
+    background-color: #393939;
+    color: #F2F2F2;
+    border-color: #1A1A1A;
+    font-weight: bold;
+    width: 120px;
+}
+
+QTabBar::tab:!selected {
+    border-bottom: 1px solid #1A1A1A;
+    width: 120px;
+}
+
+QTabBar::tab:hover {
+    background-color: #A1A1A1;
+    color: #F2F2F2;
+    border: 1px solid #1A1A1A;
+    width: 120px;
+}
+
+QTabBar::tab:selected:hover {
+    border-bottom: 1px solid #1A1A1A;
+    width: 120px;
+}
+
+/* BUTTON STYLING */
+QPushButton {
+    background-color: #777777;
+    color: #F2F2F2;
+    border-radius: 5px;
+    padding: 6px 12px;
+}
+
+QPushButton#red_btn {
+    background-color: #691601;
+}
+
+QPushButton#green_btn {
+    background-color: #008000;
+}
+
+QPushButton#LOCKED {
+    background-color: #A1A1A1;
+}
+
+/* LABEL STYLING */
+QLabel {
+    background-color: transparent;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+QLabel#post_title {
+    background-color: transparent;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* DROP DOWN MENU STYLING */
+QComboBox {
+    background-color: #777777;
+    color: #1A1A1A;
+    border: 1px solid #0A0A0A;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 120px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: transparent;
+    color: #0A0A0A;
+    padding: 4px 8px;
+    min-width: 120px;
+    font-size: 18px;
+}
+
+QComboBox QAbstractItemView:item {
+    background-color: #A1A1A1;
+    color: #0A0A0A;
+    border: 1px solid #585858;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 120px;
+    font-size: 18px;
+}
+
+QComboBox QAbstractItemView::item:hover {
+    background-color: #008000;
+    color: #0A0A0A;
+    border: 1px solid #585858;
+    min-width: 120px;
+    font-size: 18px;
+}
+
+QComboBox#READ_ONLY,
+QComboBox#LOCKED {
+    background-color: #393939;
+    color: #A1A1A1;
+    border: 1px solid #585858;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 120px;
+}
+
+QComboBox:hover {
+    background-color: #008000;
+}
+
+QComboBox::drop-down {
+    background-color: #4A4A4A;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #1A1A1A;
+    width: 0px;
+    height: 0px;
+}
+
+/* Program Name Styling */
+QLabel#program_name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #0A0A0A;
+}
+
+QLabel#revision_label {
+    font-size: 12px;
+    color: #777777;
+    font-style: italic;
+}
+
+QWidget QLineEdit {
+    background-color: #F2F2F2;
+    color: #1A1A1A;
+    border: 1px solid #1A1A1A;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+QWidget QLineEdit#READ_ONLY,
+QWidget QLineEdit#LOCKED {
+    background-color: #393939;
+    color: #A1A1A1;
+    border: 1px solid #0A0A0A;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+QWidget QPushButton {
+    background-color: #0862C8;
+    border: 1px solid #777777;
+    border-radius: 3px;
+    padding: 6px 12px;
+}
+
+QWidget QPushButton:hover {
+    background-color: #008000;
+    color: #F2F2F2;
+    font-weight: bold;
+}
+
+/* Horizontal Rule Style */
+QLabel#hr {
+    background-color: #585858;
+    min-height: 1px;
+    max-height: 1px;
+    padding: 0px;
+    margin: 0px;
+}
+
+/* Large button style */
+QPushButton#large_btn {
+    max-height: 76px;
+    max-width: 129px;
+    min-height: 76px;
+    min-width: 129px;
+    padding: 12px 20px;
+    font-size: 14px;
+}
+
+/* Large button style */
+QWidget QPushButton#crit_large_btn {
+    background-color: #691601;
+    max-height: 64px;
+    max-width: 129px;
+    min-height: 64px;
+    min-width: 129px;
+    padding: 12px 20px;
+    font-size: 14px;
+}
+
+/* Status Section */
+QWidget#status_container {
+    background-color: #F2F2F2;
+    border: 2px solid #0A0A0A;
+}
+
+QWidget#status_container::error {
+    background-color: #691601;
+    border: 1px solid #0A0A0A;
+}
+
+/* login screen styles */
+LoginScreen {
+    background-color: #F2F2F2;
+    color: #0A0A0A;
+    font-family: "Cascadia Mono";
+    font-size: 16px;
+}
+
+LoginScreen QLabel {
+    background-color: transparent;
+    color: #0A0A0A;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+LoginScreen QLabel#login_title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #0A0A0A;
+}
+
+LoginScreen QLabel#rev_label {
+    font-size: 12px;
+    color: #585858;
+    font-style: italic;
+}
+
+
+/* forgot_pw screen styles */
+ForgotPasswordScreen {
+    background-color: #F2F2F2;
+    color: #0A0A0A;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+ForgotPasswordScreen QLabel {
+    background-color: transparent;
+    color: #0A0A0A;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLabel#title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #0A0A0A;
+}
+
+ForgotPasswordScreen QLabel#label {
+    background-color: transparent;
+    color: #0A0A0A;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLineEdit#response_field {
+    background-color: #F2F2F2;
+    color: #0A0A0A;
+    font-size: 16px;
+    font-weight: normal;
+}
+
+ForgotPasswordScreen QComboBox {
+    background-color: #777777;
+    color: #F2F2F2;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox::item {
+    background-color: #777777;
+    color: #F2F2F2;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView {
+    background-color: #777777;
+    font-size: 16px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item {
+    background-color: #777777;
+    color: #F2F2F2;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:hover {
+    background-color: #A1A1A1;
+    color: #0A0A0A;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
+    background-color: #A1A1A1;
+    color: #0A0A0A;
+}
+
+/*Entry QSS : admin_settings->rates*/
+QWidget#entry_body {
+    background-color: #A1A1A1;
+    border: 1px solid #777777;
+}
+
+QWidget#entry_body:hover,
+QWidget#entry_body[state="READ_WRITE"]{
+    background-color: #393939;
+    color: #A1A1A1;
+    border: 0 px solid #777777;
+}
+
+/*Default entry Style: all entry field objects fall back to here for missing properties/invalid states*/
+QLineEdit#entry_field{
+    background-color: #777777;
+    border: 1px solid #1A1A1A;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+/*State 01: Read-Only -> we change the background of the field and then fall back to the default style for the rest*/
+QLineEdit#entry_field[state="READ_ONLY"] {
+    background-color: #4A4A4A;
+    color: #A1A1A1;
+}
+
+/* Radio Button Colors */
+QRadioButton::indicator {
+    border: 2px solid #0A0A0A;
+    border-radius: 7px;
+    width: 12px;
+    height: 12px;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #0A0A0A;
+    border-radius: 7px;
+}
