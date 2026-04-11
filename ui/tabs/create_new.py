@@ -1192,7 +1192,13 @@ class CreateNewTab(BaseTab):
         self.update_ticket_number()
 
     def _parse_money(self, s: str) -> float:
-        """Parse '$1,234.56' / '1234.56' / '' -> float (empty -> 0.0). Raises ValueError if bad."""
+        """
+        Parse '$1,234.56' / '1234.56' / '' -> float (empty -> 0.0). Raises ValueError if bad.
+        Purpose: Parse strings to make sure valid integer or float
+        Return: float/int and True when checking for valid inputs, None/0 for error and False for invalid inputs
+        Author: Kyle Valdez
+
+        """
         if s is None:
             log.error(f"Invalid price: {s} is None")
             return None
@@ -1277,10 +1283,9 @@ class CreateNewTab(BaseTab):
 
     def update_revenue_fields(self) -> int:
         """
-        - Compute subtotal = sum(price * quantity) across product lines
-        - For each row (25/50/75/100%), call RevenueGeneration.calculate_revenues
-        - Validate outputs and populate the revenue widget fields
-        - Update status; return -1 on any error, 0 on success
+        Purpose: Compute subtotal = sum(price * quantity) across product lines and validate outputs and populate the revenue widget fields
+        Return: -1 on any error, 0 on success
+        Author: Kyle Valdez
         """
         try:
             records = getattr(self.revenue_generation, "revenue_records", None)
