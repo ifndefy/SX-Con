@@ -16,6 +16,11 @@ Sequence:
 """
 
 def test_e2e_pass_answer_security_questions(app):
+    """
+    :purpose: Serves as a simple test to check that correct security answers can be verified through UI
+    :return: None
+    :author(s): Colin Heinselman
+    """
 
     ### 1 - Open program and land on login screen
     theme_manager = ThemeManager()
