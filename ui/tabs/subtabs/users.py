@@ -632,7 +632,15 @@ class UsersTab(BaseTab):
         self.create_btn.clicked.connect(self.create_new_user_prompt)
 
     def check_username(self, dialog):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Validates the username input
+            :Author(s): Joe Lee
+            """
             username_input = dialog.findChild(QLineEdit, "username_input")
             username = username_input.text().strip()
 
@@ -659,6 +667,10 @@ class UsersTab(BaseTab):
         :Author(s): Joe Lee
         """
         def handler():
+            """
+            :Purpose: Validates user input data for user creation
+            :Author(s): Joe Lee
+            """
             if self.validate_user_data(dialog):
                 dialog.accept()
         return handler
@@ -863,6 +875,10 @@ class UsersTab(BaseTab):
                 log.error(f"Password reset failed for user_id: {user_id}")
 
     def on_edit_clicked(self):
+        """
+        :Purpose: Handles edit button via a sequence of events
+        :Author(s): Joe Lee
+        """
         btn = self.sender()
         section_widget = btn.parent()
 
@@ -888,6 +904,10 @@ class UsersTab(BaseTab):
         btn.clicked.connect(self.on_save_clicked)
 
     def on_save_clicked(self):
+        """
+        :Purpose: Handles save button via a sequence of events
+        :Author(s): Joe Lee
+        """
         btn = self.sender()
         section_widget = btn.parent()
 

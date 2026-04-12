@@ -362,7 +362,15 @@ class SearchTicketsTab(BaseTab):
         self.tickets_section.append(tickets_section)
 
     def handle_open_close_btns(self, ticket_index, action):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the open and close button via a sequence of events
+            :Author(s): Joe Lee
+            """
             try:
                 ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
 
@@ -421,7 +429,15 @@ class SearchTicketsTab(BaseTab):
         return handler
 
     def make_print_handler(self, ticket_number_input):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the print sequence
+            :Author(s): Joe Lee
+            """
             ticket_number = ticket_number_input.text().strip()
             try:
                 handler_db_pdf(int(ticket_number))
@@ -439,7 +455,15 @@ class SearchTicketsTab(BaseTab):
         return handler
 
     def make_form_handler(self, ticket_index):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Maksym Komarov
+        """
         def gather_ticket():
+            """
+            :Purpose: Gathers consignment data
+            :Author(s): Maksym Komarov
+            """
             ticket = self.tickets_section[ticket_index]
             ticket_number = ticket['ticket_num'].text().strip()
             ticket_details = self.view(ticket_number)
@@ -463,12 +487,24 @@ class SearchTicketsTab(BaseTab):
         return gather_ticket
 
     def make_pdf_handler(self, ticket_number_input):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the PDF generation
+            :Author(s): Joe Lee
+            """
             ticket_number = int(ticket_number_input.text().strip())
             self.handle_pdf_btn_clicked(ticket_number)
         return handler
 
     def handle_pdf_btn_clicked(self, ticket_number):
+        """
+        :Purpose: Handles the PDF generation
+        :Author(s): Joe Lee
+        """
         try:
             handler_db_pdf(ticket_number)
             log.info(f"PDF generated for ticket {ticket_number}")
@@ -478,7 +514,15 @@ class SearchTicketsTab(BaseTab):
             QMessageBox.information(self, "PDF Generation Failed", f"Ticket {ticket_number} failed to generate a PDF")
 
     def make_view_handler(self, ticket_index):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the view generation
+            :Author(s): Joe Lee
+            """
             self.on_view_clicked(ticket_index)
         return handler
 
@@ -502,6 +546,10 @@ class SearchTicketsTab(BaseTab):
         status_bar_instance.send_message("All tickets cleared")
 
     def on_view_clicked(self, ticket_index):
+        """
+        :Purpose: Handles view button via a sequence of events
+        :Author(s): Joe Lee
+        """
         try:
             ticket_section = self.tickets_section[ticket_index]
             ticket_number = ticket_section['ticket_num'].text().strip()
