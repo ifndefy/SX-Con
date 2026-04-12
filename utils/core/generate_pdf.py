@@ -42,18 +42,41 @@ class PDF:
                         break
 
     def set_ticket_data(self):
+        """
+        :Purpose: Retrieves ticket data from DB
+        :Author(s): Joe Lee
+        """
         self.ticket_data = get_item_by_property("Consignments", "consignment", "consignment_id", self.ticket_num)
 
-    def set_vendor_num(self, ):
+    def set_vendor_num(self):
+        """
+        :Purpose: Sets vendor id from ticket data
+        :Author(s): Joe Lee
+        """
         self.vendor_id = self.ticket_data["vendor_id"]
 
     def set_vendor_data(self):
+        """
+        :Purpose: Retrieves vendor data from DB
+        :Author(s): Joe Lee
+        """
         self.vendor_data = get_item_by_property("Entities", "vendor", "vendor_id", self.vendor_id)
 
-    def set_pdf_filename(self):
-        self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
+    def set_pdf_filename(self, payout_number=None):
+        """
+        :Purpose: Sets PDF file name
+        :Author(s): Joe Lee
+        """
+        if payout_number is not None:
+            self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}_payout_{payout_number}.pdf")
+        else:
+            self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
 
     def set_cursor(self, f_name):
+        """
+        :Purpose: Creates Cursor for f_name file
+        :Author(s): Joe Lee
+        """
         if f_name:
             self.pdf_filename = f_name
         if self.pdf_filename is None:
@@ -61,6 +84,10 @@ class PDF:
         self.cursor = canvas.Canvas(self.pdf_filename, pagesize=letter)
 
     def create_supermarket_ticket(self):
+        """
+        :Purpose: Creates the consignment ticket in PDF form
+        :Author(s): Joe Lee
+        """
         valid_products = []
         for p in self.ticket_data["products"]:
             if self._is_valid_product(p):
@@ -85,6 +112,10 @@ class PDF:
         self.cursor.save()
 
     def _draw_pages(self, products, header_content, header_content_footer, rows_with_footer):
+        """
+        :Purpose: Populates the PDF file with the consignment details
+        :Author(s): Joe Lee
+        """
         num_rows = len(products)
 
         if num_rows <= header_content_footer:
@@ -118,6 +149,10 @@ class PDF:
             self.cursor.showPage()
 
     def draw_2_in_one(self):
+        """
+        :Purpose: Draws two copies of the consignment ticket on one page
+        :Author(s): Joe Lee
+        """
         self.draw_header(self.cursor, self.y)
         self.draw_ticket_content(self.cursor, self.y)
         self.draw_footer(self.cursor, self.y)
@@ -128,6 +163,10 @@ class PDF:
         self.draw_footer(self.cursor, self.y)
 
     def draw_header(self, cursor, y_axis):
+        """
+        :Purpose: Draws the header of the ticket
+        :Author(s): Joe Lee
+        """
         y = y_axis
         c = cursor
 
@@ -176,6 +215,10 @@ class PDF:
 
     def draw_ticket_content(self, cursor, y_axis, products=None,
                             page_num=None, total_pages=None):
+        """
+        :Purpose: Draws the ticket product details
+        :Author(s): Joe Lee
+        """
         y_prod = y_axis
         c = cursor
 
@@ -191,8 +234,7 @@ class PDF:
         if "revenue" in self.ticket_data and "payout" in self.ticket_data["revenue"]:
             payout_list = self.ticket_data["revenue"]["payout"]
             if payout_list and len(payout_list) > 0:
-                payout_products = payout_list[0].get("products", [])
-
+                payout_products = payout_list[-1].get("products", [])
         payout_index = 0
         for prod in valid_products:
             vendor_amount = 0
@@ -238,6 +280,10 @@ class PDF:
         self.y = y_prod
 
     def draw_footer(self, cursor, y_axis):
+        """
+        :Purpose: Draws the consignment footer
+        :Author(s): Joe Lee
+        """
         c = cursor
         y = y_axis
         c.line(30, y, self.width - 30, y)
@@ -246,9 +292,8 @@ class PDF:
 
         y_type = y - 15
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(30, y, "Potential at Signing")
+        c.drawString(30, y, "Total Potential Payout at Signing")
         y_pot = y - 15
-        # y_pot -= 18
 
         shared = self.ticket_data["revenue"]["shared"]
         if shared:
@@ -256,7 +301,15 @@ class PDF:
             c.setFont("Helvetica", 10)
             c.drawString(40, y_pot, f"${last_cut.get('vendor', 0):.2f}")
             c.rect(40 - 3, y_pot - 3, 120, 15)
-            y_pot -= 18
+
+        y_pot -= 18
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(30, y_pot, "Accumulated Payouts")
+        y_pot -= 18
+        accumulated = self.ticket_data.get('revenue', {}).get('accumulated', {})
+        c.setFont("Helvetica", 10)
+        c.drawString(40, y_pot, f"${accumulated.get('vendor', 0):.2f}")
+        c.rect(40 - 3, y_pot - 3, 120, 15)
 
         y_pot -= 18
         c.setFont("Helvetica-Bold", 10)
@@ -329,6 +382,3 @@ class PDF:
 
     def save_y(self, y_axis):
         self.y = y_axis
-
-test = PDF(90)
-test.create_supermarket_ticket()

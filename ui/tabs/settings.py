@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import QMessageBox
 
 import json
 
-from ui.core.theme_manager import ThemeManager
 from ui.prompts.security_dialog import SecurityQuestionsDialog
 from ui.tabs.base import BaseTab
 from ui.prompts.login import LoginScreen
@@ -30,7 +29,7 @@ from utils.core.import_doc import import_offline_records
 import utils.logger.logger as log
 
 class SettingsTab(BaseTab):
-    def __init__(self, api_handler, main_window=None):
+    def __init__(self, api_handler, theme_manager, app, main_window=None):
         self.save_btn = None
         self.load_btn = None
         self.sync_btn = None
@@ -39,8 +38,9 @@ class SettingsTab(BaseTab):
         self.tickets_layout = None
         self.current_username_input = None
         self.change_username_btn = None
-        self.theme_manager = ThemeManager()
         self.main_window = main_window
+        self.theme_manager = theme_manager
+        self.app = app
 
         super().__init__(api_handler, "settings")
 
@@ -165,7 +165,11 @@ class SettingsTab(BaseTab):
         self.load_user_preferences(silent=True)
 
     def on_theme_changed(self, theme_name):
-        self.theme_manager.apply_theme(theme_name, self)
+        """
+        :Purpose: Logs when theme is changed
+        :Author(s): Joe Lee
+        """
+        self.theme_manager.apply_theme(theme_name, self.app)
         log.info(f"Changed theme to {theme_name}")
 
     def setup_button_connections(self):
@@ -182,6 +186,10 @@ class SettingsTab(BaseTab):
         self.save_btn.clicked.connect(self.save_user_preferences)
 
     def on_sync_clicked(self):
+        """
+        :Purpose: uploads offline tickets to the database
+        :Author(s): Joe Lee
+        """
         try:
             import_offline_records()
             QMessageBox.information(self, "Sync Complete", "Offline records synced successfully.")
@@ -492,10 +500,12 @@ class SettingsTab(BaseTab):
         user_id = self._get_current_user_id()
         if user_id is None:
             log.error(f"Failed to find user id")
+            self.theme_manager.apply_default_theme(self.app)
             return
 
         user_prefs = self._get_user_preferences(user_id)
         if user_prefs is None:
+            self.theme_manager.apply_default_theme(self.app)
             if not silent:
                 QMessageBox.information(self, "Settings Loaded", "No preference found. \nPlease save a preference first.")
                 return
@@ -572,14 +582,14 @@ class SettingsTab(BaseTab):
             self.theme_dropdown_menu.blockSignals(True)
             self.theme_dropdown_menu.setCurrentText(theme)
             self.theme_dropdown_menu.blockSignals(False)
-            self.theme_manager.apply_theme(theme, self)
+            self.theme_manager.apply_theme(theme, self.app)
             log.info(f"Applied theme '{theme}' from preferences.")
         else:
             log.info("No valid theme preference found. Applying default theme.")
             self.theme_dropdown_menu.blockSignals(True)
             self.theme_dropdown_menu.setCurrentText("Super")
             self.theme_dropdown_menu.blockSignals(False)
-            self.theme_manager.apply_theme(theme, self)
+            self.theme_manager.apply_default_theme(self.app)
 
     def save_user_preferences(self):
         """

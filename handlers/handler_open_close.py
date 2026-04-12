@@ -1,14 +1,15 @@
-"""
-Handler for close button
-Wraps update_property to change the property "status" from "OPEN" to "CLOSED"
-"""
-
 from services.update_property import update_property
 
 import utils.logger.logger as log
 
 
 def handler_open_close_btns(ticket_index, action):
+    """
+    :Purpose: Handler for close button
+    :Method: Wraps update_property to change the property "status" from "OPEN" to "CLOSED"
+    :Author(s): Joe Lee
+    """
+
     try:
         update_property(
             container_name="Consignments",

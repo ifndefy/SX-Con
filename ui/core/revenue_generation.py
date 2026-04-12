@@ -153,6 +153,11 @@ class RevenueGeneration(QWidget):
         super_x = gross * rate
         vendor  = gross * (1 - rate)
         where `rate` is a fraction (0..1). If passed as an integer, treated as percent.
+
+        Purpose: Generate Revenue based on the math provided.
+        Author(s): Kyle Valdez
+        Returns: Dictionary of gross, vendor, and super_x if valid or -1 if invalid
+
         """
         q2 = Decimal("0.01")
 
@@ -172,7 +177,7 @@ class RevenueGeneration(QWidget):
                 log.error(f"Error: {d_qty} is not a number")
                 return -1
 
-            # percentile parsing (your existing logic)
+            # percentile parsing
             if isinstance(percentile, str):
                 p_str = percentile.strip()
                 if p_str.endswith("%"):
@@ -188,7 +193,7 @@ class RevenueGeneration(QWidget):
                 log.error(f"Percentage cut is not between 0 and 1: {p}")
                 return -1
 
-            # rate parsing (NEW)
+            # rate parsing
             r = Decimal(str(rate).strip())
             if r > 1:
                 r = r / Decimal(100)

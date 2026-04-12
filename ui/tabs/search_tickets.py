@@ -362,9 +362,23 @@ class SearchTicketsTab(BaseTab):
         self.tickets_section.append(tickets_section)
 
     def handle_open_close_btns(self, ticket_index, action):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the open and close button via a sequence of events
+            :Author(s): Joe Lee
+            """
             try:
                 ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
+
+                def restyle(widget, obj_name):
+                    widget.setObjectName(obj_name)
+                    widget.style().unpolish(widget)
+                    widget.style().polish(widget)
+
                 if action == "open":
                     handler_open_close_btns(ticket_number, action.upper())
                     log.info(f"OPENED ticket {ticket_number}")
@@ -374,19 +388,16 @@ class SearchTicketsTab(BaseTab):
                     view_ticket = self.tickets_section[ticket_index].get('view_ticket')
                     if view_ticket:
                         view_ticket.payout_widget.calc_btn.setEnabled(True)
-                        view_ticket.payout_widget.calc_btn.setObjectName('DEFAULT')
-                        view_ticket.payout_widget.calc_btn.setText("Calculate Payout")
-                        view_ticket.payout_widget.calc_btn.style().unpolish(view_ticket.payout_widget.calc_btn)
-                        view_ticket.payout_widget.calc_btn.style().polish(view_ticket.payout_widget.calc_btn)
+                        view_ticket.payout_widget.calc_btn.setText("Calculate")
+                        restyle(view_ticket.payout_widget.calc_btn, 'DEFAULT')
+                        view_ticket.payout_widget.payout_btn.setEnabled(True)
+                        view_ticket.payout_widget.payout_btn.setText("Payout")
+                        restyle(view_ticket.payout_widget.payout_btn, 'DEFAULT')
                         for widgets in view_ticket.product_widgets.values():
                             widgets['sold_edit'].setReadOnly(False)
-                            widgets['sold_edit'].setObjectName("DEFAULT")
-                            widgets['sold_edit'].style().unpolish(widgets['sold_edit'])
-                            widgets['sold_edit'].style().polish(widgets['sold_edit'])
+                            restyle(widgets['sold_edit'], "DEFAULT")
                             widgets['update_btn'].setEnabled(True)
-                            widgets['update_btn'].setObjectName("DEFAULT")
-                            widgets['update_btn'].style().unpolish(widgets['update_btn'])
-                            widgets['update_btn'].style().polish(widgets['update_btn'])
+                            restyle(widgets['update_btn'], "DEFAULT")
                     QMessageBox.information(self, "Ticket Opened", f"Ticket {ticket_number} has been opened")
                 elif action == "closed":
                     handler_open_close_btns(ticket_number, action.upper())
@@ -397,19 +408,16 @@ class SearchTicketsTab(BaseTab):
                     view_ticket = self.tickets_section[ticket_index].get('view_ticket')
                     if view_ticket:
                         view_ticket.payout_widget.calc_btn.setEnabled(False)
-                        view_ticket.payout_widget.calc_btn.setObjectName('LOCKED')
                         view_ticket.payout_widget.calc_btn.setText("TICKET CLOSED")
-                        view_ticket.payout_widget.calc_btn.style().unpolish(view_ticket.payout_widget.calc_btn)
-                        view_ticket.payout_widget.calc_btn.style().polish(view_ticket.payout_widget.calc_btn)
+                        restyle(view_ticket.payout_widget.calc_btn, 'LOCKED')
+                        view_ticket.payout_widget.payout_btn.setEnabled(False)
+                        view_ticket.payout_widget.payout_btn.setText("TICKET CLOSED")
+                        restyle(view_ticket.payout_widget.payout_btn, 'LOCKED')
                         for widgets in view_ticket.product_widgets.values():
                             widgets['sold_edit'].setReadOnly(True)
-                            widgets['sold_edit'].setObjectName("LOCKED")
-                            widgets['sold_edit'].style().unpolish(widgets['sold_edit'])
-                            widgets['sold_edit'].style().polish(widgets['sold_edit'])
+                            restyle(widgets['sold_edit'], "LOCKED")
                             widgets['update_btn'].setEnabled(False)
-                            widgets['update_btn'].setObjectName("LOCKED")
-                            widgets['update_btn'].style().unpolish(widgets['update_btn'])
-                            widgets['update_btn'].style().polish(widgets['update_btn'])
+                            restyle(widgets['update_btn'], "LOCKED")
                     QMessageBox.information(self, "Ticket Closed", f"Ticket {ticket_number} has been closed")
                 self.tickets_section[ticket_index]['status'].setText(
                     get_property("Consignments", "status", "consignment", ticket_number)
@@ -421,7 +429,15 @@ class SearchTicketsTab(BaseTab):
         return handler
 
     def make_print_handler(self, ticket_number_input):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the print sequence
+            :Author(s): Joe Lee
+            """
             ticket_number = ticket_number_input.text().strip()
             try:
                 handler_db_pdf(int(ticket_number))
@@ -439,7 +455,15 @@ class SearchTicketsTab(BaseTab):
         return handler
 
     def make_form_handler(self, ticket_index):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Maksym Komarov
+        """
         def gather_ticket():
+            """
+            :Purpose: Gathers consignment data
+            :Author(s): Maksym Komarov
+            """
             ticket = self.tickets_section[ticket_index]
             ticket_number = ticket['ticket_num'].text().strip()
             ticket_details = self.view(ticket_number)
@@ -463,12 +487,24 @@ class SearchTicketsTab(BaseTab):
         return gather_ticket
 
     def make_pdf_handler(self, ticket_number_input):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the PDF generation
+            :Author(s): Joe Lee
+            """
             ticket_number = int(ticket_number_input.text().strip())
             self.handle_pdf_btn_clicked(ticket_number)
         return handler
 
     def handle_pdf_btn_clicked(self, ticket_number):
+        """
+        :Purpose: Handles the PDF generation
+        :Author(s): Joe Lee
+        """
         try:
             handler_db_pdf(ticket_number)
             log.info(f"PDF generated for ticket {ticket_number}")
@@ -478,7 +514,15 @@ class SearchTicketsTab(BaseTab):
             QMessageBox.information(self, "PDF Generation Failed", f"Ticket {ticket_number} failed to generate a PDF")
 
     def make_view_handler(self, ticket_index):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the view generation
+            :Author(s): Joe Lee
+            """
             self.on_view_clicked(ticket_index)
         return handler
 
@@ -502,6 +546,10 @@ class SearchTicketsTab(BaseTab):
         status_bar_instance.send_message("All tickets cleared")
 
     def on_view_clicked(self, ticket_index):
+        """
+        :Purpose: Handles view button via a sequence of events
+        :Author(s): Joe Lee
+        """
         try:
             ticket_section = self.tickets_section[ticket_index]
             ticket_number = ticket_section['ticket_num'].text().strip()

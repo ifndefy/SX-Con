@@ -6,8 +6,9 @@ import utils.logger.logger as log
 
 def get_last_consignment(entity_type: str, entity_id: str) -> datetime | None:
     """
-    Returns the datetime of the most recent consignment
+    Purpose: Returns the datetime of the most recent consignment
     associated with the given entity.
+    Returns: list()
     Author(s): Colin Henderson
     """
 

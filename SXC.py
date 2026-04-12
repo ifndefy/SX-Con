@@ -21,12 +21,12 @@ def main():
             login_screen = LoginScreen(theme_manager)
             if login_screen.exec() != QDialog.DialogCode.Accepted:
                 break
-            window = MainWindow()
+            window = MainWindow(app=app, theme_manager=theme_manager)
         else:
             QMessageBox.information(None, "Error", "Failed to connect to database\n"
                                                    "Initializing in OFFLINE Mode")
             current_user.set_user("offline", False)
-            window = MainWindow(offline_mode=True)
+            window = MainWindow(offline_mode=True, app=app, theme_manager=theme_manager)
 
         window.show()
         app.exec()
