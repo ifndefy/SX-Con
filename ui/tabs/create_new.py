@@ -616,6 +616,11 @@ class CreateNewTab(BaseTab):
         return msg_box.clickedButton() == confirm_btn
 
     def gather_record(self):
+        ''' 
+        :purpose: Gathers data from the create_new tab to fill an excel table
+        :return: Dictionary containing data to export to excel. Keys correspond to column names in the table
+        :author: Maksym Komarov
+        '''
         vendor_info = self._gather_vendor_data()
         product_info = self._gather_products_data()
         revenue_data = self._gather_revenue_data()
