@@ -14,7 +14,7 @@ def generate_excel(data):
     """
     try:
         log.info("Creating Save File Dialog")
-        file_path = QFileDialog.getSaveFileName(None, "Save Excel File", "./")
+        file_path = QFileDialog.getSaveFileName(None, "Save Excel File", "./", "Excel File (*.xlsx)", "Excel File (*.xlsx)")
     except Exception as e:
         log.error(f"File Dialog Window Error: {e}")
         return

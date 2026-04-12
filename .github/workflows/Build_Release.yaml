@@ -58,7 +58,6 @@ jobs:
       shell: powershell
       run: | 
         Move-Item -Path "./dist/SXC/_internal/ui" -Destination "./dist/SXC"
-        Copy-Item -Path "./dist/SXC/_internal/src" -Destination "./dist/SXC" -Recurse
 
     - name: Compress to single folder
       shell: powershell

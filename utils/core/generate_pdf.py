@@ -1,4 +1,6 @@
+import sys
 import os
+from pathlib import Path
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -11,10 +13,9 @@ from services.get_item_by_property import get_item_by_property
 class PDF:
     def __init__(self, ticket_num):
         self.project_root = None
-        self.current_file = __file__
-        self.project_root = os.path.dirname(os.path.dirname(os.path.dirname(self.current_file)))
-        self.tickets_dir = os.path.join(self.project_root, "utils", "tickets")
-        os.makedirs(self.tickets_dir, exist_ok=True)
+        self.current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent.parent
+        self.tickets_dir = self.current_dir / "tickets"
+        self.tickets_dir.mkdir(parents= True, exist_ok=True)
 
         self.width, self.height = letter
         self.y = self.height - 30
