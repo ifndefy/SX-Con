@@ -8,6 +8,10 @@ from PyQt6.QtWidgets import QFileDialog
 import utils.logger.logger as log
 
 def generate_excel(data):
+    """
+    :Purpose: Generates an xlsx file from gathered consignment data
+    :Author(s): Maksym Komarov, Joe Lee
+    """
     try:
         log.info("Creating Save File Dialog")
         file_path = QFileDialog.getSaveFileName(None, "Save Excel File", "./")

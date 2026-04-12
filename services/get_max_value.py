@@ -4,9 +4,10 @@ from services.connect_database import db_connection
 from src import SPOT
 import utils.logger.logger as log
 
+
 def get_max_value(container_name, property_name):
     """
-    :purpose: gets the max value of a property
+    :purpose: gets the max value of a property through the database if online or through local files if offline
     :param container_name: name of the container
     :param property_name: name of the property
     :return: max value of a property

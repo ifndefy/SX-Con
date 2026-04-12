@@ -246,6 +246,10 @@ class ViewTicket(QObject):
             product_layout.addLayout(revenue_container_layout)
 
     def handle_update_clicked(self):
+        """
+        :Purpose: handles update button clicked via a sequence of events
+        :Author(s): Joe Lee
+        """
         product_id, product_index, widgets = self.get_product_and_widgets()
         if not product_id:
             log.error(f"Failed to find product id")
@@ -347,6 +351,10 @@ class ViewTicket(QObject):
 
     @staticmethod
     def fix_price(price_val):
+        """
+        :Purpose: Backup price formatting for backwards compatibility when prices were stored with '$'
+        :Author(s): Joe Lee
+        """
         price_str = str(price_val)
         if not price_str.startswith('$'):
             price_str = '$' + price_str

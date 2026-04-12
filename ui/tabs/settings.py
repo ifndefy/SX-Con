@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import QMessageBox
 
 import json
 
-from ui.core.theme_manager import ThemeManager
 from ui.prompts.security_dialog import SecurityQuestionsDialog
 from ui.tabs.base import BaseTab
 from ui.prompts.login import LoginScreen
@@ -166,6 +165,10 @@ class SettingsTab(BaseTab):
         self.load_user_preferences(silent=True)
 
     def on_theme_changed(self, theme_name):
+        """
+        :Purpose: Logs when theme is changed
+        :Author(s): Joe Lee
+        """
         self.theme_manager.apply_theme(theme_name, self.app)
         log.info(f"Changed theme to {theme_name}")
 
@@ -183,6 +186,10 @@ class SettingsTab(BaseTab):
         self.save_btn.clicked.connect(self.save_user_preferences)
 
     def on_sync_clicked(self):
+        """
+        :Purpose: uploads offline tickets to the database
+        :Author(s): Joe Lee
+        """
         try:
             import_offline_records()
             QMessageBox.information(self, "Sync Complete", "Offline records synced successfully.")
