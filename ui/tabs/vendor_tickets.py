@@ -626,12 +626,14 @@ class VendorTicketsTab(BaseTab):
     def make_form_handler(self, ticket_index):
         ''' 
         :purpose: Defines function closure for the current ticket to gather data from the fields to fill an excel table
+        
         :return: Function reference for the specific ticket.
         :author: Maksym Komarov
         '''
         def gather_ticket():
             ''' 
             :purpose: Gathers data to fill an excel table
+            
             :return: Dictionary containing data to export to excel.
             :author: Maksym Komarov
             '''

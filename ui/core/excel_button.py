@@ -5,6 +5,7 @@ import utils.logger.logger as log
 class ExcelButton(QPushButton):
     ''' 
     :purpose: Extends the QPushButton class to add callbacks to form specific data gathering and export functions
+    
     :return: None
     :author: Maksym Komarov
     '''
@@ -23,6 +24,7 @@ class ExcelButton(QPushButton):
     def exec_function(self):
         ''' 
         :purpose: Gathers and exports the form data into an excel file. 'Clicked' event callback.
+        
         :return: None
         :author: Maksym Komarov
         '''      

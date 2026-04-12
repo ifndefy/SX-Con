@@ -618,6 +618,7 @@ class CreateNewTab(BaseTab):
     def gather_record(self):
         ''' 
         :purpose: Gathers data from the create_new tab to fill an excel table
+        
         :return: Dictionary containing data to export to excel. Keys correspond to column names in the table
         :author: Maksym Komarov
         '''
