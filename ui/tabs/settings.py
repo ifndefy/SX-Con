@@ -500,10 +500,12 @@ class SettingsTab(BaseTab):
         user_id = self._get_current_user_id()
         if user_id is None:
             log.error(f"Failed to find user id")
+            self.theme_manager.apply_default_theme(self.app)
             return
 
         user_prefs = self._get_user_preferences(user_id)
         if user_prefs is None:
+            self.theme_manager.apply_default_theme(self.app)
             if not silent:
                 QMessageBox.information(self, "Settings Loaded", "No preference found. \nPlease save a preference first.")
                 return
@@ -587,7 +589,7 @@ class SettingsTab(BaseTab):
             self.theme_dropdown_menu.blockSignals(True)
             self.theme_dropdown_menu.setCurrentText("Super")
             self.theme_dropdown_menu.blockSignals(False)
-            self.theme_manager.apply_theme(theme, self.app)
+            self.theme_manager.apply_default_theme(self.app)
 
     def save_user_preferences(self):
         """
