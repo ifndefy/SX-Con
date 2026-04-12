@@ -1,0 +1,407 @@
+/* BASE STYLING */
+QWidget {
+    background-color: #686969;
+    color: #DCE1DE;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+QWidget#view_bg {
+    background-color: #686969;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    color: #000000;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+QWidget#transparent {
+    background-color: transparent;
+}
+
+/* TAB WIDGET */
+QTabBar{
+    background-color: transparent;
+}
+
+QTabWidget::pane {
+    background-color: #454747;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-top-right-radius: 4px;
+    border: 0px;
+    top: -1px;
+}
+
+
+QTabWidget#subtabs::pane{
+    background-color: #686969;
+}
+
+QTabWidget QStackedWidget {
+    background-color: transparent;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-top-right-radius: 4px;
+    border: 4px inset #2e75af;
+}
+
+QTabWidget#subtabs QStackedWidget {
+    background-color: transparent;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-top-right-radius: 4px;
+    border: 4px inset #963835;
+}
+
+QTabWidget QStackedWidget QWidget{
+    background-color: transparent;
+    border 0px solid transparent;
+}
+
+QTabBar::tab {
+    background-color: #213f8B;
+    color: #DCE1DE;
+    border: 1px solid #213f8B;
+    padding: 12px 18px ;
+    margin: 0px;
+    top: 6px;
+    width: 120px;
+}
+
+QTabBar::tab:first {
+    border-top-left-radius: 4px;
+}
+
+QTabBar::tab:last {
+    border-top-right-radius: 4px;
+    border: 1px solid #691601;
+}
+
+QTabWidget#subtabs QTabBar::tab {
+    background-color: #691601;
+    border: 1px solid #691601;
+}
+
+QTabWidget#subtabs QTabBar::tab:selected {
+    background-color: #963835;
+    border: 0px;
+}
+
+QTabWidget#subtabs QTabBar::tab:hover {
+    background-color: #963835;
+    border: 1px solid #ffffff;
+}
+
+QTabWidget#subtabs QTabBar::tab:selected:hover {
+    background-color: #963835;
+    border: 0px;
+    top: 0px;
+}
+
+QTabBar::tab:selected {
+    background-color: #2e75af;
+    color: #ffffff;
+    border: 0px;
+    font-weight: bold;
+    padding: 12px 48px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    top: 0px;
+}
+
+QTabBar::tab:hover {
+    background-color: #2e75af;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    font-weight: bold;
+    top: 3px;
+}
+
+QTabBar::tab:selected:hover {
+    border: 0px;
+    top: 0px;
+}
+
+/* BUTTON STYLING */
+QPushButton:!hover {
+    background-color: #213f8B;
+    color: #DCE1DE;
+    border-radius: 5px;
+    padding: 6px 12px;
+    margin: 0px 0px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #2e75af;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    margin: 1px 1px;
+    padding: 5px 11px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton:pressed {
+    margin: 3px 3px;
+    padding: 3px 9px;
+    background-color: #DCE1DE;
+}
+
+QPushButton#red_btn {
+    background-color: #691601;
+}
+
+QPushButton#red_btn:hover {
+    background-color: #963835;
+}
+
+QPushButton#red_btn:pressed {
+    background-color: #DCE1DE;
+}
+
+
+
+/* Scroll Area styling */
+QTabWidget#subtabs QWidget QScrollArea {
+    border-radius: 4px;
+    background: #555555;
+}
+
+QTabWidget#subtabs QWidget QScrollArea > QWidget{
+    background: #213f8B;
+}
+
+QTabWidget QWidget#search_tickets_tab QScrollArea {
+    border-radius: 4px;
+    background: #555555;
+}
+
+QTabWidget QWidget#search_tickets_tab QScrollArea > QWidget{
+    background: #213f8B;
+}
+
+QTabWidget QWidget#vendor_tickets_tab QScrollArea {
+    border-radius: 4px;
+    background: #555555;
+}
+
+QTabWidget QWidget#vendor_tickets_tab QScrollArea > QWidget{
+    background: #213f8B;
+}
+
+/* LABEL STYLING */
+QLabel {
+    background-color: transparent;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+QLabel#post_title {
+    background-color: transparent;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Horizontal Rule Style */
+QTabWidget QStackedWidget QWidget#hr {
+    background-color: #000000;
+    border: 1px inset #454747;
+    padding: 0px;
+    margin: 0px;
+}
+
+/* DROP DOWN MENU STYLING */
+QTabWidget QStackedWidget QComboBox {
+    background-color: #DCE1DE;
+    color: #000000;
+    border: 0px;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 120px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #DCE1DE;
+    color: #000000;
+    padding: 0px;
+    min-width: 120px;
+    font-size: 18px;
+}
+
+QComboBox QAbstractItemView:item {
+    background-color: #DCE1DE;
+    color: #000000;
+    border-top: 1px solid #213f8B;
+    margin: 0px;
+    padding: 4px;
+    min-width: 120px;
+    font-size: 18px;
+}
+
+QComboBox QAbstractItemView::item:hover {
+    background-color: #2e75af;
+    color: #000000;
+    border: 0px;
+    min-width: 120px;
+    font-size: 18px;
+}
+
+QComboBox#READ_ONLY,
+QComboBox#LOCKED {
+    background-color: #B0B0B0;
+}
+
+QComboBox::drop-down#READ_ONLY,
+QComboBox::drop-down#LOCKED {
+    background-color: #2c2c2c;
+}
+
+QComboBox:hover {
+    background-color: #528ab8;
+}
+
+QComboBox::drop-down {
+    background-color: #213f8B;
+    border-bottom-right-radius: 2px;
+    border-top-right-radius: 2px;
+    width: 20px;
+    padding: 0px;
+}
+
+QComboBox::drop-down:hover {
+    background-color: #2e75af;
+}
+
+QComboBox::down-arrow:hover {
+    image: none;
+    border-top: 2px solid #ffffff;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 2px solid transparent;
+    border-right: 2px solid transparent;
+    border-top: 2px solid #2e75af;
+    width: 0px;
+    height: 0px;
+}
+
+/* Program Name Styling */
+QLabel#program_name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000000;
+}
+
+QLabel#revision_label {
+    font-size: 12px;
+    color: #B0B0B0;
+    font-style: italic;
+}
+
+QTabWidget QStackedWidget QLineEdit {
+    background-color: #DCE1DE;
+    border: 0px;
+    color: #000000;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+QTabWidget QStackedWidget QLineEdit:hover,
+QTabWidget QStackedWidget QLineEdit:focus {
+    background-color: #528ab8;
+}
+
+QWidget QLineEdit#READ_ONLY {
+    background-color: #B0B0B0;
+}
+
+/* Large button style */
+QPushButton#large_btn {
+    max-height: 76px;
+    max-width: 129px;
+    min-height: 76px;
+    min-width: 129px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    background-color: #691601;
+}
+
+QPushButton#large_btn:hover {
+    background-color: #963835;
+}
+
+QPushButton#large_btn:pressed {
+    background-color: #DCE1DE;
+}
+
+/* Large button style */
+QPushButton#crit_large_btn {
+    background-color: #691601;
+    max-height: 64px;
+    max-width: 129px;
+    min-height: 64px;
+    min-width: 129px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QPushButton#crit_large_btn:hover{
+    background-color: #963835;
+}
+
+QPushButton#crit_large_btn:pressed {
+    background-color: #DCE1DE;
+}
+
+/* Status Section */
+QWidget#status_container {
+    background-color: #686969;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+/*Entry QSS : admin_settings->rates*/
+QWidget#entry_body {
+    background-color: #686969;
+    border: 3px solid #686969;
+    border-radius: 4px;
+}
+
+QWidget#entry_body:hover,
+QWidget#entry_body[state="READ_WRITE"]{
+    background-color: #2e75af;
+    border: 3px solid transparent;
+}
+
+/*Default entry Style: all entry field objects fall back to here for missing properties/invalid states*/
+QLineEdit#entry_field{
+    background-color: #DCE1DE;
+    border: 1px solid #000000;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+
+/*State 01: Read-Only -> we change the background of the field and then fall back to the default style for the rest*/
+QLineEdit#entry_field[state="READ_ONLY"] {
+    background-color: #B0B0B0;
+}
+
+/* Radio Button Colors */
+QRadioButton::indicator {
+    border: 2px solid #000000;
+    border-radius: 7px;
+    width: 12px;
+    height: 12px;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #000000;
+    border-radius: 7px;
+}
