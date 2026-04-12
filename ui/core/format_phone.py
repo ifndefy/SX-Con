@@ -22,7 +22,6 @@ class PhoneNumField(QLineEdit):
     def __placeholder_manager(self, string):
         """
             :purpose: Private Function for handling input mask state, placeholder text is displayed if input is empty otherwise phone number format is enforced.\n
-            :args: string: the current text content of the field, passed by textEdited signal handler
             
             :return: None
             :author: Maksym Komarov
