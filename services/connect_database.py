@@ -1,4 +1,5 @@
 import configparser as cparser
+import sys
 
 from azure.cosmos import CosmosClient
 from pathlib import Path
@@ -11,7 +12,7 @@ class DatabaseConnection:
 
     def __init__(self):
         config = cparser.ConfigParser()
-        current_dir = Path(__file__).parent
+        current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent
         config_path = current_dir / 'config.ini'
         config.read(config_path)
         self.endpoint = config.get('Cosmos Connection Parameters', 'endpoint')

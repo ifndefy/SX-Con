@@ -1,4 +1,5 @@
 import logging as log
+import sys
 from pathlib import Path
 from datetime import datetime
 
@@ -20,7 +21,8 @@ class ForwardHandler(log.Handler):
             pass
 
 __timestamp = datetime.now().strftime("%Y-%m-%d")
-__log_location = Path(__file__).parent / "logs" / f"{__timestamp}.log"
+__resolved_path = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent
+__log_location = __resolved_path / "logs" / f"{__timestamp}.log"
 __log_location.parent.mkdir(parents=True, exist_ok=True)
 
 __app_logger = log.getLogger('base_logger')
