@@ -4,9 +4,10 @@ import pandas as pd
 
 def get_latest_price(product_id):
     """
-    :Gets the latest item price from a list containing all price data for a product
-    :args- price_data = list of dicts that contain the previous sales info 
-    :returns latest price as float on success, -1 on fail
+    :purpose: Gets the latest item price from a list containing all price data for a product
+    
+    :return: latest price as float on success, 0 on fail
+    :authors: Maksym Komarov, Joe Lee
     """
     price_data = _fetch_price_history(product_id)
 
