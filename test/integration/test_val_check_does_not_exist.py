@@ -7,6 +7,7 @@ from validate.val_check_does_not_exist import val_check_does_not_exists
 
 def test_val_check_does_not_exist() -> bool:
     """
+    Purpose: tests method val_check_does_not_exist
     Author(s): Colin Henderson
     """
 
