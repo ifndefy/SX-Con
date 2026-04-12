@@ -28,7 +28,7 @@ jobs:
         (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python - --version 2.2.1
         echo "$env:APPDATA\Python\Scripts" | Out-File -Append -FilePath $env:GITHUB_PATH
     
-    - name: Install dependencies
+    - name: Install dependencies (application)
       shell: powershell
       env:
         POETRY_VIRTUALENVS_CREATE: "false"
@@ -37,7 +37,7 @@ jobs:
         pip install flake8 pytest PyQt6 pytest-qt
         poetry install
 
-    - name: Install dependencies
+    - name: Install dependencies (pyinstaller)
       shell: powershell
       env:
         POETRY_VIRTUALENVS_CREATE: "false"
@@ -63,7 +63,8 @@ jobs:
     - name: Compress to single folder
       shell: powershell
       run: | 
-        Compress-Archive -Path "./dist/SXC" -DestinationPath "./dist/SXC_win_x64.zip"
+        $tag = "${{ github.event.release.tag_name }}"
+        Compress-Archive -Path "./dist/SXC" -DestinationPath "./dist/SXC_$tag_win_x64.zip"
 
     - name: Build Release
       uses: ncipollo/release-action@v1
