@@ -1,12 +1,12 @@
-name: Run Tests
-
 name: Windows Tests
 
 on:
-  push:
-    branches: [ integration ]
-  pull_request:
-    branches: [ integration ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Test environment'
+        required: false
+        default: 'test'
 
 jobs:
   test:
