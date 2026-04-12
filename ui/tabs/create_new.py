@@ -521,11 +521,23 @@ class CreateNewTab(BaseTab):
         status_bar_instance.send_message(f"Added product line. Total: {len(self.product_sections)}")
 
     def _make_type_changed_handler(self, sec):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Colin Heinselman, Colin Henderson
+        """
         def handler(_txt):
+            """
+            :Purpose: Handles product type event
+            :Author(s): Colin Heinselman, Colin Henderson
+            """
             self._on_product_type_changed(sec)
         return handler
 
     def handle_total(self):
+        """
+        :Purpose: Handles price total calculation event
+        :Author(s): Joe Lee
+        """
         widget = self.sender()
         if not widget:
             return
@@ -535,12 +547,20 @@ class CreateNewTab(BaseTab):
             self.on_price_qty_changed(section)
 
     def get_sending_widget(self, widget):
+        """
+        :Purpose: Returns the sending widget if it exists
+        :Author(s): Joe Lee
+        """
         for section in self.product_sections:
             if (section['price'] is widget or section['quantity'] is widget or section['rate'] is widget):
                 return section
         return None
 
     def on_price_qty_changed(self, section):
+        """
+        :Purpose: Handles price change event
+        :Author(s): Joe Lee
+        """
         price_text = section['price'].text().strip()
         qty_text = section['quantity'].text().strip()
         rate_text = section['rate'].text().strip().replace('%', '')
@@ -565,6 +585,10 @@ class CreateNewTab(BaseTab):
         section['total'].setText(f"${total:.2f}")
 
     def _on_product_type_changed(self, product_section: dict):
+        """
+        :Purpose: Handles product type change event
+        :Author(s): Colin Heinselman, Colin Henderson
+        """
         try:
             #update any admin changes to table
             self.rates_container = fetch_consignment_data()
@@ -579,6 +603,10 @@ class CreateNewTab(BaseTab):
             log.error(f"Failed to auto-set rate: {e}")
 
     def create_removal_handler(self, widget, product_section):
+        """
+        :Purpose: Handles product line removal
+        :Author(s): Joe Lee
+        """
         def removal_handler():
             if self.show_remove_product_warning(product_section):
                 self.remove_product_line(widget, product_section)
@@ -602,6 +630,10 @@ class CreateNewTab(BaseTab):
         status_bar_instance.send_message(f"Removed product line. Total: {len(self.product_sections)}")
 
     def show_remove_product_warning(self, product_section):
+        """
+        :Purpose: Displays a warning pop up to confirm the user wants to remove the product line
+        :Author(s): Joe Lee
+        """
         product_id = product_section['product_id'].text().strip()
         product_name = product_section['product_name'].text().strip()
 
@@ -616,12 +648,10 @@ class CreateNewTab(BaseTab):
         return msg_box.clickedButton() == confirm_btn
 
     def gather_record(self):
-        ''' 
-        :purpose: Gathers data from the create_new tab to fill an excel table
-        
-        :return: Dictionary containing data to export to excel. Keys correspond to column names in the table
-        :author: Maksym Komarov
-        '''
+        """
+        :Purpose: Gathers consignment data from the tab
+        :Author(s): Maksym Komarov
+        """
         vendor_info = self._gather_vendor_data()
         product_info = self._gather_products_data()
         revenue_data = self._gather_revenue_data()
@@ -634,6 +664,10 @@ class CreateNewTab(BaseTab):
         }
 
     def handle_excel_btn(self):
+        """
+        :Purpose: Handles excel button via a sequence of events
+        :Author(s): Maksym Komarov
+        """
         self.handle_calc_btn()
         data = self.gather_record()
         xls_gen.generate_excel(data)
@@ -656,6 +690,10 @@ class CreateNewTab(BaseTab):
         self.print_btn.clicked.connect(self.on_print_clicked)
 
     def on_print_clicked(self):
+        """
+        :Purpose: Handles print button via a sequence of events
+        :Author(s): Joe Lee
+        """
         ticket = self.ticket_input.text().strip()
 
         if not self.on_pdf_clicked():
@@ -669,6 +707,10 @@ class CreateNewTab(BaseTab):
             QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket}:\n\n{e}")
 
     def on_pdf_clicked(self):
+        """
+        :Purpose: Handles pdf button via a sequence of events
+        :Author(s): Joe Lee
+        """
         vendor_data = self._gather_vendor_data()
         if vendor_data is None:
             log.warning("PDF generation skipped: No Vendor data found")
@@ -697,6 +739,10 @@ class CreateNewTab(BaseTab):
             return False
 
     def _gather_ticket_number(self):
+        """
+        :Purpose: Gets the ticket number
+        :Author(s): Joe Lee
+        """
         raw_ticket = self.ticket_input.text().strip()
         ticket_number = int(raw_ticket) if raw_ticket else None
         if not ticket_number:
@@ -705,6 +751,10 @@ class CreateNewTab(BaseTab):
         return ticket_number
 
     def _gather_vendor_data(self):
+        """
+        :Purpose: Gathers the input data for vendor
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         raw_vendor_id = self.vendor_id_input.text().strip()
         vendor_id = int(raw_vendor_id) if raw_vendor_id else None
 
@@ -810,6 +860,10 @@ class CreateNewTab(BaseTab):
         }
 
     def _gather_revenue_data(self):
+        """
+        :Purpose: Gathers revenue data
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         return {
             'shared': self.revenue_generation.get_revenue_data(),
             'grouped': self.rev_by_prod.get_revenue_data(),
@@ -817,6 +871,10 @@ class CreateNewTab(BaseTab):
         }
 
     def _gather_products_data(self):
+        """
+        :Purpose: Gathers products data
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         products = []
         has_valid_product = False
         for section in self.product_sections:
@@ -907,6 +965,10 @@ class CreateNewTab(BaseTab):
         return products
 
     def _gather_consignment_data(self, vendor_data, products_data, revenue_data):
+        """
+        :Purpose: Gathers all consignment data
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         raw_ticket = self.ticket_input.text().strip()
         if not raw_ticket:
             log.error("Ticket number is required")
@@ -924,6 +986,10 @@ class CreateNewTab(BaseTab):
         }
 
     def _post_to_database(self, vendor_data, products_data, revenue_data):
+        """
+        :Purpose: Uploads gathered data to database
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         try:
             if val_check_does_not_exists("Entities", "vendor", "vendor_id", vendor_data['vendor_id']):
                 if insert_item("Entities", "vendor", vendor_data) == -1:
@@ -1198,7 +1264,13 @@ class CreateNewTab(BaseTab):
         self.update_ticket_number()
 
     def _parse_money(self, s: str) -> float:
-        """Parse '$1,234.56' / '1234.56' / '' -> float (empty -> 0.0). Raises ValueError if bad."""
+        """
+        Parse '$1,234.56' / '1234.56' / '' -> float (empty -> 0.0). Raises ValueError if bad.
+        Purpose: Parse strings to make sure valid integer or float
+        Return: float/int and True when checking for valid inputs, None/0 for error and False for invalid inputs
+        Author: Kyle Valdez
+
+        """
         if s is None:
             log.error(f"Invalid price: {s} is None")
             return None
@@ -1209,7 +1281,10 @@ class CreateNewTab(BaseTab):
         return float(cleaned)
 
     def _parse_int(self, s: str) -> int:
-        """Parse integer quantity (empty -> 0). Raises ValueError if bad."""
+        """
+        :Purpose: Parse integer quantity (empty -> 0). Raises ValueError if bad
+        :Author(s): Kyle Valdez
+        """
         if s is None:
             return 0
         cleaned = s.strip()
@@ -1218,7 +1293,10 @@ class CreateNewTab(BaseTab):
         return int(cleaned)
 
     def _valid_revenue_result(self, res: dict) -> bool:
-        """Ensure SXC-22 output has required numeric fields."""
+        """
+        :Purpose: Checks if the revenue is valid
+        :Author(s): Kyle Valdez
+        """
         try:
             return (
                     isinstance(res, dict)
@@ -1229,6 +1307,10 @@ class CreateNewTab(BaseTab):
             return False
 
     def handle_calc_btn(self):
+        """
+        :Purpose: Handles the calculate event via a sequence of events
+        :Author(s): Joe Lee
+        """
         if not self.val_prod_sections():
             return
         self.handle_total()
@@ -1236,6 +1318,10 @@ class CreateNewTab(BaseTab):
         self.rev_by_prod.handle_updating(self.product_sections)
 
     def check_empty_prod_section(self, prod_section):
+        """
+        :Purpose: Checks if the prod_section is empty to skip
+        :Author(s): Joe Lee
+        """
         empty = (prod_section['product_id'].text().strip() == ''
                  and prod_section['product_name'].text().strip() == ''
                  and prod_section['product_type'].currentIndex() == -1
@@ -1245,6 +1331,10 @@ class CreateNewTab(BaseTab):
         return empty
 
     def val_prod_sections(self):
+        """
+        :Purpose: Validates a product section is populated correctly
+        :Author(s): Joe Lee
+        """
         has_valid = False
         for prod in self.product_sections:
             if self.check_empty_prod_section(prod):
@@ -1283,10 +1373,9 @@ class CreateNewTab(BaseTab):
 
     def update_revenue_fields(self) -> int:
         """
-        - Compute subtotal = sum(price * quantity) across product lines
-        - For each row (25/50/75/100%), call RevenueGeneration.calculate_revenues
-        - Validate outputs and populate the revenue widget fields
-        - Update status; return -1 on any error, 0 on success
+        Purpose: Compute subtotal = sum(price * quantity) across product lines and validate outputs and populate the revenue widget fields
+        Return: -1 on any error, 0 on success
+        Author: Kyle Valdez
         """
         try:
             records = getattr(self.revenue_generation, "revenue_records", None)
@@ -1419,6 +1508,10 @@ class CreateNewTab(BaseTab):
             log.error(f"Failed to fetch record: {e}")
 
     def auto_pop_prod_by_name(self):
+        """
+        :Purpose: Autopopulates a product section using the input product name
+        :Author(s): Joe Lee
+        """
         if SPOT.OFFLINE:
             log.error(f"Unable to autopopulate product fields using product name. Not connected to the database.")
         try:
@@ -1479,6 +1572,10 @@ class CreateNewTab(BaseTab):
             log.error(f"Failed to fetch record by name: {e}")
 
     def auto_pop_vend_by_field(self):
+        """
+        :Purpose: Autopopulates the vendor section via the vendor id input
+        :Author(s): Joe Lee
+        """
         if SPOT.OFFLINE:
             log.error("Unable to autopopulate vendor fields. Not connected to the database.")
             return
@@ -1560,6 +1657,10 @@ class CreateNewTab(BaseTab):
             log.error(f"Failed to fetch vendor by {db_field}: {e}")
 
     def prompt_vendor_selection(self, vendors):
+        """
+        :Purpose: Opens a dialog when multiple vendors are found with the same input value
+        :Author(s): Joe Lee
+        """
         dialog = QDialog(self)
         dialog.setWindowTitle("Multiple Vendors Found")
         dialog.setModal(True)
@@ -1600,6 +1701,10 @@ class CreateNewTab(BaseTab):
         selected = [None]
 
         def on_confirm():
+            """
+            :Purpose: Handles the confirmation button in the vendor dialog
+            :Author(s): Joe Lee
+            """
             for i, rb in enumerate(radio_buttons):
                 if rb.isChecked():
                     selected[0] = vendors[i]

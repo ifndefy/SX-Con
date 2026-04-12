@@ -4,6 +4,11 @@ import utils.logger.logger as log
 
 
 def hash_password(password: str) -> str:
+    """
+    Purpose: hashes password to ensure secure storage
+    Return: String
+    Author(s): Colin Henderson
+    """
     try:
         if not isinstance(password, str) or not password:
             log.error("Password cannot be empty")

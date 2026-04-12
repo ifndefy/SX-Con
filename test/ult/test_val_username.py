@@ -3,7 +3,7 @@ from validate.val_username import val_username
 def test_val_username() -> bool:
     """
     :purpose: Tests the val_username() validation function
-    :returns: 0 on success, -1 on failure
+    :return: None
     :author(s): Colin Heinselman
     """
 

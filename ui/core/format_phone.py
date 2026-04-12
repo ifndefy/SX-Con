@@ -45,12 +45,20 @@ class PhoneNumField(QLineEdit):
             self.masked = False
 
     def keyPressEvent(self, event):
+        """
+        :Purpose: Enables return key press events for the button
+        :Author(s): Joe Lee
+        """
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             super().keyPressEvent(event)
         else:
             super().keyPressEvent(event)
 
     def clear_phone(self):
+        """
+        :Purpose: Clears the phone number field of its value and mask
+        :Author(s): Joe Lee
+        """
         self.setInputMask("")
         self.setText("")
         self.setObjectName("DEFAULT")

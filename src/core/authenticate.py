@@ -3,6 +3,10 @@ import bcrypt
 import utils.logger.logger as log
 
 def authenticate_password(password: str, stored_hash: str) -> str:
+    """
+    Purpose: Authenticates if the password input is hashed into the stored DB value
+    Author(s): Colin Heinselman, Colin Henderson
+    """
     try:
         if not isinstance(password, str) or not isinstance(stored_hash, str):
             log.error(f"Password and stored hash must be of type str")

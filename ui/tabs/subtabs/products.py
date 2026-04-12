@@ -574,7 +574,15 @@ class ProductsTab(BaseTab):
         self.create_btn.clicked.connect(self.create_new_product_prompt)
 
     def check_product_id_input(self, dialog):
+        """
+        :purpose: Instance handler for classless dialog
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Validates the product ID input
+            :Author(s): Joe Lee
+            """
             product_id_input = dialog.findChild(QLineEdit, "product_id_input")
             product_id = product_id_input.text().strip()
 
@@ -590,7 +598,15 @@ class ProductsTab(BaseTab):
         return handler
 
     def check_product_name_input(self, dialog):
+        """
+        :purpose: Instance handler for classless dialog
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Validates the product name input
+            :Author(s): Joe Lee
+            """
             product_name_input = dialog.findChild(QLineEdit, "product_name_input")
             product_name = product_name_input.text().strip()
 
@@ -655,6 +671,10 @@ class ProductsTab(BaseTab):
         return raw_product_data
 
     def validate_product_data(self, dialog):
+        """
+        :Purpose: Validates the product data
+        :Author(s): Joe Lee
+        """
         p_id = dialog.findChild(QLineEdit, "product_id_input").text()
         if not val_check_does_not_exists("Entities", "product", "product_id", p_id):
             return False
@@ -667,6 +687,10 @@ class ProductsTab(BaseTab):
         return True
 
     def on_edit_clicked(self):
+        """
+        :Purpose: Handles the edit button via a sequence of events
+        :Author(s): Joe Lee
+        """
         btn = self.sender()
         section_widget = btn.parent()
 
@@ -692,6 +716,10 @@ class ProductsTab(BaseTab):
         btn.clicked.connect(self.on_save_clicked)
 
     def on_save_clicked(self):
+        """
+        :Purpose: Handles the save button via a sequence of events
+        :Author(s): Joe Lee
+        """
         btn = self.sender()
         section_widget = btn.parent()
 

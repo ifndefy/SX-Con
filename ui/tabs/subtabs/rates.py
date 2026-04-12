@@ -80,12 +80,10 @@ class CRTab(BaseTab):
 
     #Retrieve tha table from SPOT_CR.csv and turn it into entries in our widget's section
     def populate_rate_settings(self):
-        '''
-        :purpose: Fetch the types and rates from the csv file and call the private constructor to populate the main section 
-    
-        :return: None
-        :author: Maksym Komarov
-        '''
+        """
+        :Purpose: populates the admin rates field with values from the external local csv file
+        :Author(s): Maksym Komarov
+        """
         self.entry_list = c_table.fetch_consignment_data()
         log.debug(f"Retrieved consignment rates: {self.entry_list}")
         for key, value in self.entry_list.items():
@@ -179,13 +177,25 @@ class _CREntry(QWidget):
 
     #Getters for the infividual field values
     def get_rate(self):
+        """
+        :Purpose: returns the product rate
+        :Author(s): Maksym Komarov
+        """
         return self.product_rate_input.text().strip() or None
 
     def get_type(self):
+        """
+        :Purpose: returns the product type
+        :Author(s): Maksym Komarov
+        """
         return self.product_type_input.text().strip() or None
 
     #retrieves the values of the QlineEdit fields, returns a dict
     def fetch_field_values(self):
+        """
+        :Purpose: returns the dictionary of the rate entry
+        :Author(s): Maksym Komarov
+        """
         return {
             "type" : self.get_type(),
             "rate" : self.get_rate()
@@ -193,6 +203,10 @@ class _CREntry(QWidget):
 
     #Save current values for roll back, unlock fields and swap to other button set
     def edit_btn_handler(self):
+        """
+        :Purpose: Handles the edit button via a sequence of events
+        :Author(s): Maksym Komarov
+        """
         self.old_type = self.get_type()
         self.old_rate = self.get_rate()
         log.info(f"Editing {self.old_type} entry, current value: {self.old_rate}")
@@ -215,7 +229,10 @@ class _CREntry(QWidget):
 
     # lock fields, restore old values to fields and swap to other button set
     def cancel_btn_handler(self):
-
+        """
+        :Purpose: Handles the cancel button via a sequence of events
+        :Author(s): Maksym Komarov
+        """
         log.info(f"Edit Aborted, resetting values {self.get_rate()} -> {self.old_rate}")
         self.product_rate_input.setReadOnly(True)
         self.product_rate_input.setProperty("state", "READ_ONLY")
@@ -238,6 +255,10 @@ class _CREntry(QWidget):
 
     #Validate the info and push it to the csv, then move to appropriate button + field state
     def save_btn_handler(self):
+        """
+        :Purpose: Handles the save button via a sequence of events
+        :Author(s): Maksym Komarov
+        """
         field_data = self.fetch_field_values()
 
         if field_data["type"] is None or field_data["rate"] is None:
@@ -265,6 +286,10 @@ class _CREntry(QWidget):
 
 #might be worth moving this, but ideally this remains private to rates.py since it should be the only one writing to SPOT
 def _write_to_spot_csv(data):
+    """
+    :Purpose: Writes the data to a csv file
+    :Author(s): Maksym Komarov
+    """
     dataframe = pd.read_csv("./src/SPOT_CR.csv")
     dataframe = dataframe.set_index("Type")
     dataframe.loc[data["type"], "Rate"] = int(data["rate"])

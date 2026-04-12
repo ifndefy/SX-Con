@@ -11,8 +11,7 @@ def val_product_id(prod_id: int) -> bool:
         - already exists in DB
 
     else returns True
-    Author(s):
-    Colin Henderson
+    Author(s): Colin Henderson
     """
 
     if prod_id is None:

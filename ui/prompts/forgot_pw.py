@@ -57,6 +57,10 @@ class ForgotPasswordScreen(QDialog):
         self.setLayout(layout)
 
     def on_request_clicked(self):
+        """
+        :Purpose: Handles request button clicked via a sequence of events
+        :Author(s): Joe Lee
+        """
         un = self.username_input.text().strip()
         if un is None or un == "":
             QMessageBox.critical(self, "Error", "Please enter a username")
@@ -84,6 +88,10 @@ class ForgotPasswordScreen(QDialog):
             self.unsetCursor()
 
     def _on_found_username(self, username):
+        """
+        :Purpose: Bridges dialogs when a username from on_request_clicked in valid
+        :Author(s): Joe Lee
+        """
         self.req_btn.setText(f"Found username: {username}")
         user_item = get_item_by_property("Entities", "user", "username", username)
         self.user_id = user_item.get("user_id", '')
@@ -148,6 +156,10 @@ class ForgotPasswordScreen(QDialog):
             log.error(f"Password update exception: {e}")
 
     def get_sec_questions(self, user_id):
+        """
+        :Purpose: Finds the matching plain text questions from the cipher text stored in the database
+        :Author(s): Joe Lee
+        """
         q_list = SPOT.QUESTIONS_LIST
         wanted_qs = []
         for q in q_list:

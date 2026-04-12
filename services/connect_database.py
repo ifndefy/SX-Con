@@ -23,7 +23,6 @@ class DatabaseConnection:
             self.database = self.client.get_database_client(self.database_name)
             SPOT.OFFLINE = False
         except Exception as e:
-            # add status bar update that program is starting in offline mode
             SPOT.OFFLINE = True
             self.client = None
             self.database = None

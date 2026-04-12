@@ -92,6 +92,10 @@ class LoginScreen(QDialog):
         forgot_pw_screen.exec()
 
     def attempt_login(self):
+        """
+        :Purpose: Attempts to log into the program from the login screen using the user's input credentials
+        :Author(s): Joe Lee
+        """
         username = self.username_input.text().strip()
         password = self.password_input.text()
 
