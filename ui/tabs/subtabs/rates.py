@@ -17,8 +17,13 @@ import utils.logger.logger as log
 
 from utils import parse_consignment_table as c_table
 
-
 class CRTab(BaseTab):
+    '''
+    :purpose: Custom tab class for handling the consignment rates in the program
+    
+    :return: None
+    :author: Maksym Komarov
+    '''
     def __init__(self, api_handler):
         super().__init__(api_handler, "consignment_rates")
         self.entry_list = None
@@ -75,6 +80,12 @@ class CRTab(BaseTab):
 
     #Retrieve tha table from SPOT_CR.csv and turn it into entries in our widget's section
     def populate_rate_settings(self):
+        '''
+        :purpose: Fetch the types and rates from the csv file and call the private constructor to populate the main section 
+    
+        :return: None
+        :author: Maksym Komarov
+        '''
         self.entry_list = c_table.fetch_consignment_data()
         log.debug(f"Retrieved consignment rates: {self.entry_list}")
         for key, value in self.entry_list.items():
@@ -82,6 +93,13 @@ class CRTab(BaseTab):
         self.consignments_section_layout.addStretch()
 
 class _CREntry(QWidget):
+    '''
+    :purpose: Private Consignment Rate entry object for use in this subtab
+    
+    :return: None
+    :author: Maksym Komarov
+    '''
+    #On __init__, build the widget's internal structure so it can be added to the form easily
     def __init__(self, product_type = None, rate = None):
         super().__init__()
         #Store constructor data
@@ -159,6 +177,7 @@ class _CREntry(QWidget):
         self.edit_save_btn.clicked.connect(self.save_btn_handler)
         self.edit_cancel_btn.clicked.connect(self.cancel_btn_handler)
 
+    #Getters for the infividual field values
     def get_rate(self):
         return self.product_rate_input.text().strip() or None
 
@@ -217,6 +236,7 @@ class _CREntry(QWidget):
         self.edit_save_btn.hide()
         self.entry_edit_btn.show()
 
+    #Validate the info and push it to the csv, then move to appropriate button + field state
     def save_btn_handler(self):
         field_data = self.fetch_field_values()
 
