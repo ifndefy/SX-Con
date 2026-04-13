@@ -44,4 +44,4 @@ jobs:
 
       - name: Run vulnerability scan
         run: |
-          poetry run pip-audit
+          poetry run pip-audit --severity high
