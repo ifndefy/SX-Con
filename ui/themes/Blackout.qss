@@ -1,0 +1,355 @@
+/* BASE STYLING */
+QWidget {
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+QWidget#view_bg {
+    background-color: #2A2A2A;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    color: #FFFFFF;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+/* TAB WIDGET */
+QTabWidget::pane {
+    border: 1px solid #444444;
+    top: -1px;
+}
+
+QTabWidget QStackedWidget {
+    background-color: #2A2A2A;
+}
+
+
+QTabBar::tab {
+    background-color: #0862C8;
+    color: #FFFFFF;
+    border: 1px solid #000000;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding: 8px 16px;
+    margin: 0px;
+    min-width: 80px;
+}
+
+QTabWidget#main_tabs QTabBar::tab:last {
+    background-color: #8C2A15;
+}
+
+QTabWidget#main_tabs QTabBar::tab:last:selected {
+    background-color: #008000;
+    color: #FFFFFF;
+    border-color: #5C4033;
+    margin-bottom: -1px;
+    font-weight: bold;
+}
+
+QTabWidget#subtabs QTabBar::tab {
+    background-color: #8C2A15;
+}
+
+QTabWidget#subtabs QTabBar::tab:selected {
+    background-color: #008000;
+}
+
+QTabBar::tab:selected {
+    background-color: #008000;
+    color: #FFFFFF;
+    border-color: #5C4033;
+    margin-bottom: -1px;
+    font-weight: bold;
+}
+
+QTabBar::tab:!selected {
+    border-bottom: 1px solid #444444;
+}
+
+QTabBar::tab:hover {
+    background-color: #008000;
+    color: #FFFFFF;
+    border: 2px solid #FFFFFF;
+}
+
+QTabBar::tab:selected:hover {
+    border-bottom: 1px solid #FFFFFF;
+}
+
+/* BUTTON STYLING */
+QPushButton {
+    background-color: #E5C59B;
+    color: #FFFFFF;
+    border: 1px solid #5C4033;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-weight: bold;
+}
+
+QPushButton#red_btn {
+    background-color: #8C2A15;
+}
+
+QPushButton:hover {
+    background-color: #F5D8A7;
+}
+
+/* LABEL STYLING */
+QLabel {
+    background-color: transparent;
+    color: #FFFFFF;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+QLabel#post_title {
+    background-color: transparent;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* DROP DOWN MENU STYLING */
+QComboBox {
+    background-color: #333333;
+    color: #FFFFFF;
+    border: 1px solid #444444;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 120px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: transparent;
+    color: #FFFFFF;
+    padding: 4px 8px;
+    min-width: 120px;
+    font-size: 18px;
+}
+
+QComboBox QAbstractItemView:item {
+    background-color: #333333;
+    color: #FFFFFF;
+    border: 1px solid #444444;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 120px;
+    font-size: 18px;
+}
+
+QComboBox QAbstractItemView::item:hover {
+    background-color: #008000;
+    color: #FFFFFF;
+    border: 1px solid #444444;
+    min-width: 120px;
+    font-size: 18px;
+}
+
+QComboBox#READ_ONLY {
+    background-color: #555555;
+    color: #FFFFFF;
+    border: 1px solid #444444;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-width: 120px;
+}
+
+QComboBox:hover {
+    background-color: #008000;
+}
+
+QComboBox::drop-down {
+    background-color: #0862C8;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #5C4033;
+    width: 0px;
+    height: 0px;
+}
+
+/* Program Name Styling */
+QLabel#program_name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+QLabel#revision_label {
+    font-size: 12px;
+    color: #BBBBBB;
+    font-style: italic;
+}
+
+QWidget QLineEdit {
+    background-color: #333333;
+    border: 1px solid #444444;
+    border-radius: 3px;
+    padding: 4px 8px;
+    color: #FFFFFF;
+}
+
+QWidget QLineEdit#READ_ONLY {
+    background-color: #555555;
+    border: 1px solid #444444;
+    border-radius: 3px;
+    padding: 4px 8px;
+    color: #FFFFFF;
+}
+
+QWidget QPushButton {
+    background-color: #0862C8;
+    border: 1px solid #5C4033;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-weight: bold;
+}
+
+QWidget QPushButton:hover {
+    background-color: #008000;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+/* Horizontal Rule Style */
+QLabel#hr {
+    background-color: #444444;
+    min-height: 1px;
+    max-height: 1px;
+    padding: 0px;
+    margin: 0px;
+}
+
+/* Large button style */
+QPushButton#large_btn {
+    max-height: 76px;
+    max-width: 129px;
+    min-height: 76px;
+    min-width: 129px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Large button style */
+QWidget QPushButton#crit_large_btn {
+    background-color: #8C2A15;
+    max-height: 64px;
+    max-width: 129px;
+    min-height: 64px;
+    min-width: 129px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Status Section */
+QWidget#status_container {
+    background-color: #2A2A2A;
+}
+
+/* login screen styles */
+LoginScreen {
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+    font-family: "Cascadia Mono";
+    font-size: 16px;
+}
+
+LoginScreen QLabel {
+    background-color: transparent;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+LoginScreen QLabel#login_title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+LoginScreen QLabel#rev_label {
+    font-size: 12px;
+    color: #BBBBBB;
+    font-style: italic;
+}
+
+
+/* forgot_pw screen styles */
+ForgotPasswordScreen {
+    background-color: #1A1A1A;
+    color: #FFFFFF;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+ForgotPasswordScreen QLabel {
+    background-color: transparent;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLabel#title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+ForgotPasswordScreen QLabel#label {
+    background-color: transparent;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLineEdit#response_field {
+    background-color: #333333;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: normal;
+}
+
+ForgotPasswordScreen QComboBox {
+    background-color: #333333;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox::item {
+    background-color: #333333;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView {
+    background-color: #333333;
+    font-size: 16px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item {
+    background-color: #333333;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:hover {
+    background-color: #008000;
+    color: #FFFFFF;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
+    background-color: #008000;
+    color: #FFFFFF;
+}
