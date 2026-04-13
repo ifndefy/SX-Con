@@ -38,7 +38,10 @@ jobs:
         run: |
           poetry install --no-interaction --no-root
 
-      - name: Run pip-audit
+      - name: Install pip-audit in Poetry environment
         run: |
-          pip install pip-audit
+          poetry run pip install pip-audit
+
+      - name: Run vulnerability scan
+        run: |
           poetry run pip-audit
