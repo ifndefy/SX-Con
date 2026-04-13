@@ -25,6 +25,12 @@ sequence:
 
 def test_e2e_pass_change_theme(app):
 
+    """
+    purpose: implement a test for changing a user's theme where the test must pass
+    return: none
+    author: Tyler Slagboom
+    """
+
     #1 open program
 
     theme_manager = ThemeManager()

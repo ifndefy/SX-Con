@@ -16,6 +16,12 @@ Sequence:
 
 def test_e2e_fail_login(app):
 
+    """
+    purpose: implement a test for logging in where the test must fail
+    return: none
+    author: Tyler Slagboom
+    """
+
     #1 open program
     theme_manager = ThemeManager()
     login_screen = LoginScreen(theme_manager)
