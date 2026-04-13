@@ -2,6 +2,12 @@ from PyQt6.QtCore import QObject
 from PyQt6.QtCore import pyqtSignal
 
 class MessageBus(QObject):
+    '''
+    :purpose: Creates a message bus for any widget in the hierarchy to send messages to any other widget that is listening on the line without having to travel up the hierarchy
+    
+    :return: None
+    :author: Maksym Komarov
+    '''
     bus_signal = pyqtSignal(str)
 
     def __init__(self, logger = None):

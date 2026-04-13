@@ -17,8 +17,13 @@ import utils.logger.logger as log
 
 from utils import parse_consignment_table as c_table
 
-
 class CRTab(BaseTab):
+    '''
+    :purpose: Custom tab class for handling the consignment rates in the program
+    
+    :return: None
+    :author: Maksym Komarov
+    '''
     def __init__(self, api_handler):
         super().__init__(api_handler, "consignment_rates")
         self.entry_list = None
@@ -86,6 +91,13 @@ class CRTab(BaseTab):
         self.consignments_section_layout.addStretch()
 
 class _CREntry(QWidget):
+    '''
+    :purpose: Private Consignment Rate entry object for use in this subtab
+    
+    :return: None
+    :author: Maksym Komarov
+    '''
+    #On __init__, build the widget's internal structure so it can be added to the form easily
     def __init__(self, product_type = None, rate = None):
         super().__init__()
         #Store constructor data
@@ -163,6 +175,7 @@ class _CREntry(QWidget):
         self.edit_save_btn.clicked.connect(self.save_btn_handler)
         self.edit_cancel_btn.clicked.connect(self.cancel_btn_handler)
 
+    #Getters for the infividual field values
     def get_rate(self):
         """
         :Purpose: returns the product rate
@@ -240,6 +253,7 @@ class _CREntry(QWidget):
         self.edit_save_btn.hide()
         self.entry_edit_btn.show()
 
+    #Validate the info and push it to the csv, then move to appropriate button + field state
     def save_btn_handler(self):
         """
         :Purpose: Handles the save button via a sequence of events
