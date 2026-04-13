@@ -4,9 +4,10 @@ import pandas as pd
 
 def get_latest_price(product_id):
     """
-    :Gets the latest item price from a list containing all price data for a product
-    :args- price_data = list of dicts that contain the previous sales info 
-    :returns latest price as float on success, -1 on fail
+    :purpose: Gets the latest item price from a list containing all price data for a product
+    
+    :return: latest price as float on success, 0 on fail
+    :authors: Maksym Komarov, Joe Lee
     """
     price_data = _fetch_price_history(product_id)
 
@@ -29,7 +30,7 @@ def get_latest_price(product_id):
     dataframe['price'] = pd.to_numeric(dataframe['price'], errors='coerce')
 
     #convert string date to datetime, sort by date
-    dataframe['datetime'] = pd.to_datetime(dataframe['datetime'], format = "%m/%d/%y -- %H:%M")
+    dataframe['datetime'] = pd.to_datetime(dataframe['datetime'], format = "%m/%d/%y -- %I:%M %p")
     dataframe = dataframe.sort_values(by = 'datetime', ascending = False)
 
     return dataframe.iloc[0, dataframe.columns.get_loc('price')]

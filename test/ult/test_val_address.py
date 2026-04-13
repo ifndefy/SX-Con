@@ -3,6 +3,7 @@ from validate.val_address import val_address
 def test_val_address():
     """
         :purpose: Unit tests for the val_address() function, tested against None and special character requirements
+        :return: None
         :author(s): Colin Heinselman
         """
     if val_address(None) == True:

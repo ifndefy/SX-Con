@@ -3,7 +3,7 @@ from validate.val_password import val_password
 def test_val_password() -> int:
     """
     :purpose: Tests the val_password function against the current max and min length requirements
-    :return: 0 if valid, -1 if invalid.
+    :return: None
     :author(s): Colin Heinselman
     """
 

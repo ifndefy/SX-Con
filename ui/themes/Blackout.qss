@@ -1,88 +1,88 @@
 /* BASE STYLING */
 QWidget {
-    background-color: #B88E6D;
-    color: #000000;
+    background-color: #1A1A1A;
+    color: #FFFFFF;
     font-family: "Cascadia Mono";
     font-size: 14px;
 }
 
 QWidget#view_bg {
-    background-color: #8A6A52;
+    background-color: #2A2A2A;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    color: #000000;
+    color: #FFFFFF;
     font-family: "Cascadia Mono";
     font-size: 14px;
 }
 
-QWidget#transparent {
-    background-color: transparent;
-}
-
 /* TAB WIDGET */
 QTabWidget::pane {
-    border: 1px solid #5C4033;
+    border: 1px solid #444444;
     top: -1px;
 }
 
 QTabWidget QStackedWidget {
-    background-color: #8A6A52;
+    background-color: #2A2A2A;
 }
 
-QTabBar{
-    background-color: transparent;
-}
 
 QTabBar::tab {
     background-color: #0862C8;
-    color: #000000;
+    color: #FFFFFF;
     border: 1px solid #000000;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     padding: 8px 16px;
     margin: 0px;
-    width: 120px;
+    min-width: 80px;
+}
+
+QTabWidget#main_tabs QTabBar::tab:last {
+    background-color: #8C2A15;
+}
+
+QTabWidget#main_tabs QTabBar::tab:last:selected {
+    background-color: #008000;
+    color: #FFFFFF;
+    border-color: #5C4033;
+    margin-bottom: -1px;
+    font-weight: bold;
 }
 
 QTabWidget#subtabs QTabBar::tab {
-    background-color: #691601;
-    width: 120px;
+    background-color: #8C2A15;
 }
 
 QTabWidget#subtabs QTabBar::tab:selected {
     background-color: #008000;
-    width: 120px;
 }
 
 QTabBar::tab:selected {
     background-color: #008000;
-    color: #ffffff;
+    color: #FFFFFF;
     border-color: #5C4033;
+    margin-bottom: -1px;
     font-weight: bold;
-    width: 120px;
 }
 
 QTabBar::tab:!selected {
-    border-bottom: 1px solid #000000;
-    width: 120px;
+    border-bottom: 1px solid #444444;
 }
 
 QTabBar::tab:hover {
     background-color: #008000;
-    color: #ffffff;
-    border: 1px solid #ffffff;
-    width: 120px;
+    color: #FFFFFF;
+    border: 2px solid #FFFFFF;
 }
 
 QTabBar::tab:selected:hover {
-    border-bottom: 1px solid #ffffff;
-    width: 120px;
+    border-bottom: 1px solid #FFFFFF;
 }
 
 /* BUTTON STYLING */
 QPushButton {
     background-color: #E5C59B;
-    color: #000000;
+    color: #FFFFFF;
     border: 1px solid #5C4033;
     border-radius: 5px;
     padding: 6px 12px;
@@ -90,15 +90,7 @@ QPushButton {
 }
 
 QPushButton#red_btn {
-    background-color: #691601;
-}
-
-QPushButton#green_btn {
-    background-color: #008000;
-}
-
-QPushButton#LOCKED {
-    background-color: #A1A1A1;
+    background-color: #8C2A15;
 }
 
 QPushButton:hover {
@@ -108,6 +100,7 @@ QPushButton:hover {
 /* LABEL STYLING */
 QLabel {
     background-color: transparent;
+    color: #FFFFFF;
     font-size: 15px;
     font-weight: bold;
 }
@@ -120,9 +113,9 @@ QLabel#post_title {
 
 /* DROP DOWN MENU STYLING */
 QComboBox {
-    background-color: #E5C59B;
-    color: #000000;
-    border: 1px solid #5C4033;
+    background-color: #333333;
+    color: #FFFFFF;
+    border: 1px solid #444444;
     border-radius: 3px;
     padding: 4px 8px;
     min-width: 120px;
@@ -130,16 +123,16 @@ QComboBox {
 
 QComboBox QAbstractItemView {
     background-color: transparent;
-    color: #000000;
+    color: #FFFFFF;
     padding: 4px 8px;
     min-width: 120px;
     font-size: 18px;
 }
 
 QComboBox QAbstractItemView:item {
-    background-color: #E5C59B;
-    color: #000000;
-    border: 1px solid #5C4033;
+    background-color: #333333;
+    color: #FFFFFF;
+    border: 1px solid #444444;
     border-radius: 3px;
     padding: 4px 8px;
     min-width: 120px;
@@ -148,17 +141,16 @@ QComboBox QAbstractItemView:item {
 
 QComboBox QAbstractItemView::item:hover {
     background-color: #008000;
-    color: #000000;
-    border: 1px solid #5C4033;
+    color: #FFFFFF;
+    border: 1px solid #444444;
     min-width: 120px;
     font-size: 18px;
 }
 
-QComboBox#READ_ONLY,
-QComboBox#LOCKED {
-    background-color: #B0B0B0;
-    color: #000000;
-    border: 1px solid #5C4033;
+QComboBox#READ_ONLY {
+    background-color: #555555;
+    color: #FFFFFF;
+    border: 1px solid #444444;
     border-radius: 3px;
     padding: 4px 8px;
     min-width: 120px;
@@ -186,28 +178,29 @@ QComboBox::down-arrow {
 QLabel#program_name {
     font-size: 20px;
     font-weight: bold;
-    color: #000000;
+    color: #FFFFFF;
 }
 
 QLabel#revision_label {
     font-size: 12px;
-    color: #666666;
+    color: #BBBBBB;
     font-style: italic;
 }
 
 QWidget QLineEdit {
-    background-color: #E5C59B;
-    border: 1px solid #5C4033;
+    background-color: #333333;
+    border: 1px solid #444444;
     border-radius: 3px;
     padding: 4px 8px;
+    color: #FFFFFF;
 }
 
-QWidget QLineEdit#READ_ONLY,
-QWidget QLineEdit#LOCKED {
-    background-color: #B0B0B0;
-    border: 1px solid #5C4033;
+QWidget QLineEdit#READ_ONLY {
+    background-color: #555555;
+    border: 1px solid #444444;
     border-radius: 3px;
     padding: 4px 8px;
+    color: #FFFFFF;
 }
 
 QWidget QPushButton {
@@ -220,13 +213,13 @@ QWidget QPushButton {
 
 QWidget QPushButton:hover {
     background-color: #008000;
-    color: #ffffff;
+    color: #FFFFFF;
     font-weight: bold;
 }
 
 /* Horizontal Rule Style */
 QLabel#hr {
-    background-color: #5C4033;
+    background-color: #444444;
     min-height: 1px;
     max-height: 1px;
     padding: 0px;
@@ -246,7 +239,7 @@ QPushButton#large_btn {
 
 /* Large button style */
 QWidget QPushButton#crit_large_btn {
-    background-color: #691601;
+    background-color: #8C2A15;
     max-height: 64px;
     max-width: 129px;
     min-height: 64px;
@@ -258,26 +251,20 @@ QWidget QPushButton#crit_large_btn {
 
 /* Status Section */
 QWidget#status_container {
-    background-color: #E5C59B;
-    border: 1px solid #000000;
-}
-
-QWidget#status_container::error {
-    background-color: #691601;
-    border: 1px solid #000000;
+    background-color: #2A2A2A;
 }
 
 /* login screen styles */
 LoginScreen {
-    background-color: #B88E6D;
-    color: #000000;
+    background-color: #1A1A1A;
+    color: #FFFFFF;
     font-family: "Cascadia Mono";
     font-size: 16px;
 }
 
 LoginScreen QLabel {
     background-color: transparent;
-    color: #000000;
+    color: #FFFFFF;
     font-size: 16px;
     font-weight: bold;
 }
@@ -285,27 +272,27 @@ LoginScreen QLabel {
 LoginScreen QLabel#login_title {
     font-size: 20px;
     font-weight: bold;
-    color: #000000;
+    color: #FFFFFF;
 }
 
 LoginScreen QLabel#rev_label {
     font-size: 12px;
-    color: #5C4033;
+    color: #BBBBBB;
     font-style: italic;
 }
 
 
 /* forgot_pw screen styles */
 ForgotPasswordScreen {
-    background-color: #B88E6D;
-    color: #000000;
+    background-color: #1A1A1A;
+    color: #FFFFFF;
     font-family: "Cascadia Mono";
     font-size: 14px;
 }
 
 ForgotPasswordScreen QLabel {
     background-color: transparent;
-    color: #000000;
+    color: #FFFFFF;
     font-size: 14px;
     font-weight: bold;
 }
@@ -313,94 +300,56 @@ ForgotPasswordScreen QLabel {
 ForgotPasswordScreen QLabel#title {
     font-size: 20px;
     font-weight: bold;
-    color: #000000;
+    color: #FFFFFF;
 }
 
 ForgotPasswordScreen QLabel#label {
     background-color: transparent;
-    color: #000000;
+    color: #FFFFFF;
     font-size: 16px;
     font-weight: bold;
 }
 
 ForgotPasswordScreen QLineEdit#response_field {
-    background-color: #E5C59B;
-    color: #000000;
+    background-color: #333333;
+    color: #FFFFFF;
     font-size: 16px;
     font-weight: normal;
 }
 
 ForgotPasswordScreen QComboBox {
-    background-color: #5C4033;
-    color: #ffffff;
+    background-color: #333333;
+    color: #FFFFFF;
     font-size: 16px;
     font-weight: bold;
 }
 
 ForgotPasswordScreen QComboBox::item {
-    background-color: #5C4033;
-    color: #ffffff;
+    background-color: #333333;
+    color: #FFFFFF;
     font-size: 16px;
     font-weight: bold;
 }
 
 ForgotPasswordScreen QComboBox QAbstractItemView {
-    background-color: #5C4033;
+    background-color: #333333;
     font-size: 16px;
 }
 
 ForgotPasswordScreen QComboBox QAbstractItemView::item {
-    background-color: #5C4033;
-    color: #ffffff;
+    background-color: #333333;
+    color: #FFFFFF;
     font-size: 16px;
     font-weight: bold;
     padding: 5px;
 }
 
 ForgotPasswordScreen QComboBox QAbstractItemView::item:hover {
-    background-color: #E5C59B;
-    color: #000000;
+    background-color: #008000;
+    color: #FFFFFF;
 }
 
 ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
-    background-color: #E5C59B;
-    color: #000000;
-}
-
-/*Entry QSS : admin_settings->rates*/
-QWidget#entry_body {
-    background-color: #8A6A52;
-    border: 1px solid #5C4033;
-}
-
-QWidget#entry_body:hover,
-QWidget#entry_body[state="READ_WRITE"]{
-    background-color: #E5C59B;
-    border: 0 px solid #5C4033;
-}
-
-/*Default entry Style: all entry field objects fall back to here for missing properties/invalid states*/
-QLineEdit#entry_field{
-    background-color: #E5C59B;
-    border: 1px solid #5C4033;
-    border-radius: 3px;
-    padding: 4px 8px;
-}
-
-/*State 01: Read-Only -> we change the background of the field and then fall back to the default style for the rest*/
-QLineEdit#entry_field[state="READ_ONLY"] {
-    background-color: #B0B0B0;
-}
-
-/* Radio Button Colors */
-QRadioButton::indicator {
-    border: 2px solid #000000;
-    border-radius: 7px;
-    width: 12px;
-    height: 12px;
-}
-
-QRadioButton::indicator:checked {
-    background-color: #000000;
-    border-radius: 7px;
+    background-color: #008000;
+    color: #FFFFFF;
 }

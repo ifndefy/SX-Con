@@ -100,7 +100,7 @@ class RecordsTab(BaseTab):
         search_section_row_2.addWidget(QLabel("Vendor ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setPlaceholderText("V ID")
-        self.vendor_id_input.setFixedWidth(80)
+        self.vendor_id_input.setFixedWidth(55)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
         self.vendor_id_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.vendor_id_input)
@@ -330,7 +330,7 @@ class RecordsTab(BaseTab):
         datetime_input = QLineEdit()
         datetime_input.setObjectName("READ_ONLY")
         datetime_input.setReadOnly(True)
-        datetime_input.setFixedWidth(160)
+        datetime_input.setFixedWidth(195)
         line1_layout.addWidget(datetime_input)
         rec_section['datetime'] = datetime_input
 
@@ -348,7 +348,7 @@ class RecordsTab(BaseTab):
         vendor_id_input = QLineEdit()
         vendor_id_input.setObjectName("READ_ONLY")
         vendor_id_input.setReadOnly(True)
-        vendor_id_input.setFixedWidth(80)
+        vendor_id_input.setFixedWidth(55)
         line1_layout.addWidget(vendor_id_input)
         rec_section['vendor_id'] = vendor_id_input
 
@@ -430,7 +430,15 @@ class RecordsTab(BaseTab):
         self.records_section.append(rec_section)
 
     def handle_open_close_btns(self, ticket_index, action):
+        """
+        :Purpose: Instance handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the open and close buttons via a sequence of events
+            :Author(s): Joe Lee
+            """
             ticket_number = self.records_section[ticket_index]['ticket_num'].text().strip()
             try:
                 def restyle(widget, obj_name):
@@ -488,7 +496,15 @@ class RecordsTab(BaseTab):
         return handler
 
     def make_print_handler(self, ticket_index):
+        """
+        :Purpose: Instance handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the print button via a sequence of events
+            :Author(s): Joe Lee
+            """
             ticket_number = self.records_section[ticket_index]['ticket_num'].text().strip()
             try:
                 handler_db_pdf(int(ticket_number))
@@ -506,7 +522,15 @@ class RecordsTab(BaseTab):
         return handler
 
     def make_form_handler(self, ticket_index):
+        """
+        :Purpose: Instance handler
+        :Author(s): Maksym Komarov
+        """
         def gather_ticket():
+            """
+            :Purpose: Gather ticket data
+            :Author(s): Maksym Komarov
+            """
             ticket = self.records_section[ticket_index]
             ticket_number = ticket['ticket_num'].text().strip()
             ticket_details = self.view(ticket_number)
@@ -530,11 +554,23 @@ class RecordsTab(BaseTab):
         return gather_ticket
 
     def make_pdf_handler(self, ticket_index):
+        """
+        :Purpose: Instance handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the pdf generation via a sequence of events
+            :Author(s): Joe Lee
+            """
             self.handle_pdf_btn_clicked(ticket_index)
         return handler
 
     def handle_pdf_btn_clicked(self, ticket_index):
+        """
+        :Purpose: Handles the pdf generation via a sequence of events
+        :Author(s): Joe Lee
+        """
         ticket_number = self.records_section[ticket_index]['ticket_num'].text().strip()
         try:
             handler_db_pdf(int(ticket_number))
@@ -545,7 +581,15 @@ class RecordsTab(BaseTab):
             QMessageBox.information(self, "PDF Generation Failed", f"Ticket {ticket_number} failed to generate a PDF")
 
     def make_view_handler(self, ticket_index):
+        """
+        :Purpose: Instance handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the view button via a sequence of events
+            :Author(s): Joe Lee
+            """
             self.on_view_clicked(ticket_index)
             pass
         return handler
@@ -570,6 +614,10 @@ class RecordsTab(BaseTab):
         status_bar_instance.send_message("All tickets cleared")
 
     def on_view_clicked(self, ticket_index):
+        """
+        :Purpose: Handles the view button via a sequence of events
+        :Author(s): Joe Lee
+        """
         try:
             records_section = self.records_section[ticket_index]
             ticket_number = records_section['ticket_num'].text().strip()

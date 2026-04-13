@@ -63,7 +63,7 @@ class SearchTicketsTab(BaseTab):
         search_section_row_1.addWidget(QLabel("Ticket Number:"))
         self.ticket_number_input = QLineEdit()
         self.ticket_number_input.setPlaceholderText("T Num")
-        self.ticket_number_input.setFixedWidth(73)
+        self.ticket_number_input.setFixedWidth(100)
         self.ticket_number_input.setValidator(QIntValidator(0, 2147483647, self))
         self.ticket_number_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.ticket_number_input)
@@ -72,7 +72,7 @@ class SearchTicketsTab(BaseTab):
         self.datetime_input = QLineEdit()
         self.datetime_input.setPlaceholderText("Datetime")
         self.datetime_input.setMaxLength(30)
-        self.datetime_input.setFixedWidth(160)
+        self.datetime_input.setFixedWidth(195)
         self.datetime_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.datetime_input)
 
@@ -269,16 +269,16 @@ class SearchTicketsTab(BaseTab):
         ticket_number_input = QLineEdit()
         ticket_number_input.setObjectName("READ_ONLY")
         ticket_number_input.setReadOnly(True)
-        ticket_number_input.setFixedWidth(73)
+        ticket_number_input.setFixedWidth(100)
         line1_layout.addWidget(ticket_number_input)
         tickets_section['ticket_num'] = ticket_number_input
 
         # datetime
-        line1_layout.addWidget(QLabel("Date and Time:"))
+        line1_layout.addWidget(QLabel("Datetime:"))
         datetime_input = QLineEdit()
         datetime_input.setObjectName("READ_ONLY")
         datetime_input.setReadOnly(True)
-        datetime_input.setFixedWidth(160)
+        datetime_input.setFixedWidth(195)
         line1_layout.addWidget(datetime_input)
         tickets_section['datetime'] = datetime_input
 
@@ -362,7 +362,15 @@ class SearchTicketsTab(BaseTab):
         self.tickets_section.append(tickets_section)
 
     def handle_open_close_btns(self, ticket_index, action):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the open and close button via a sequence of events
+            :Author(s): Joe Lee
+            """
             try:
                 ticket_number = self.tickets_section[ticket_index]['ticket_num'].text().strip()
 
@@ -421,7 +429,15 @@ class SearchTicketsTab(BaseTab):
         return handler
 
     def make_print_handler(self, ticket_number_input):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the print sequence
+            :Author(s): Joe Lee
+            """
             ticket_number = ticket_number_input.text().strip()
             try:
                 handler_db_pdf(int(ticket_number))
@@ -439,7 +455,19 @@ class SearchTicketsTab(BaseTab):
         return handler
 
     def make_form_handler(self, ticket_index):
+        ''' 
+        :purpose: Defines function closure for the current ticket to gather data from the fields to fill an excel table
+        
+        :return: Function reference for the specific ticket.
+        :author: Maksym Komarov
+        '''
         def gather_ticket():
+            ''' 
+            :purpose: Gathers data to fill an excel table
+            
+            :return: Dictionary containing data to export to excel.
+            :author: Maksym Komarov
+            '''
             ticket = self.tickets_section[ticket_index]
             ticket_number = ticket['ticket_num'].text().strip()
             ticket_details = self.view(ticket_number)
@@ -463,12 +491,24 @@ class SearchTicketsTab(BaseTab):
         return gather_ticket
 
     def make_pdf_handler(self, ticket_number_input):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the PDF generation
+            :Author(s): Joe Lee
+            """
             ticket_number = int(ticket_number_input.text().strip())
             self.handle_pdf_btn_clicked(ticket_number)
         return handler
 
     def handle_pdf_btn_clicked(self, ticket_number):
+        """
+        :Purpose: Handles the PDF generation
+        :Author(s): Joe Lee
+        """
         try:
             handler_db_pdf(ticket_number)
             log.info(f"PDF generated for ticket {ticket_number}")
@@ -478,7 +518,15 @@ class SearchTicketsTab(BaseTab):
             QMessageBox.information(self, "PDF Generation Failed", f"Ticket {ticket_number} failed to generate a PDF")
 
     def make_view_handler(self, ticket_index):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Handles the view generation
+            :Author(s): Joe Lee
+            """
             self.on_view_clicked(ticket_index)
         return handler
 
@@ -502,6 +550,10 @@ class SearchTicketsTab(BaseTab):
         status_bar_instance.send_message("All tickets cleared")
 
     def on_view_clicked(self, ticket_index):
+        """
+        :Purpose: Handles view button via a sequence of events
+        :Author(s): Joe Lee
+        """
         try:
             ticket_section = self.tickets_section[ticket_index]
             ticket_number = ticket_section['ticket_num'].text().strip()

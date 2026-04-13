@@ -1,4 +1,6 @@
+import sys
 import os
+from pathlib import Path
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -11,10 +13,9 @@ from services.get_item_by_property import get_item_by_property
 class PDF:
     def __init__(self, ticket_num):
         self.project_root = None
-        self.current_file = __file__
-        self.project_root = os.path.dirname(os.path.dirname(os.path.dirname(self.current_file)))
-        self.tickets_dir = os.path.join(self.project_root, "utils", "tickets")
-        os.makedirs(self.tickets_dir, exist_ok=True)
+        self.current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent.parent
+        self.tickets_dir = self.current_dir / "tickets"
+        self.tickets_dir.mkdir(parents= True, exist_ok=True)
 
         self.width, self.height = letter
         self.y = self.height - 30
@@ -42,21 +43,41 @@ class PDF:
                         break
 
     def set_ticket_data(self):
+        """
+        :Purpose: Retrieves ticket data from DB
+        :Author(s): Joe Lee
+        """
         self.ticket_data = get_item_by_property("Consignments", "consignment", "consignment_id", self.ticket_num)
 
-    def set_vendor_num(self, ):
+    def set_vendor_num(self):
+        """
+        :Purpose: Sets vendor id from ticket data
+        :Author(s): Joe Lee
+        """
         self.vendor_id = self.ticket_data["vendor_id"]
 
     def set_vendor_data(self):
+        """
+        :Purpose: Retrieves vendor data from DB
+        :Author(s): Joe Lee
+        """
         self.vendor_data = get_item_by_property("Entities", "vendor", "vendor_id", self.vendor_id)
 
     def set_pdf_filename(self, payout_number=None):
+        """
+        :Purpose: Sets PDF file name
+        :Author(s): Joe Lee
+        """
         if payout_number is not None:
             self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}_payout_{payout_number}.pdf")
         else:
             self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
 
     def set_cursor(self, f_name):
+        """
+        :Purpose: Creates Cursor for f_name file
+        :Author(s): Joe Lee
+        """
         if f_name:
             self.pdf_filename = f_name
         if self.pdf_filename is None:
@@ -64,6 +85,10 @@ class PDF:
         self.cursor = canvas.Canvas(self.pdf_filename, pagesize=letter)
 
     def create_supermarket_ticket(self):
+        """
+        :Purpose: Creates the consignment ticket in PDF form
+        :Author(s): Joe Lee
+        """
         valid_products = []
         for p in self.ticket_data["products"]:
             if self._is_valid_product(p):
@@ -88,6 +113,10 @@ class PDF:
         self.cursor.save()
 
     def _draw_pages(self, products, header_content, header_content_footer, rows_with_footer):
+        """
+        :Purpose: Populates the PDF file with the consignment details
+        :Author(s): Joe Lee
+        """
         num_rows = len(products)
 
         if num_rows <= header_content_footer:
@@ -121,6 +150,10 @@ class PDF:
             self.cursor.showPage()
 
     def draw_2_in_one(self):
+        """
+        :Purpose: Draws two copies of the consignment ticket on one page
+        :Author(s): Joe Lee
+        """
         self.draw_header(self.cursor, self.y)
         self.draw_ticket_content(self.cursor, self.y)
         self.draw_footer(self.cursor, self.y)
@@ -131,6 +164,10 @@ class PDF:
         self.draw_footer(self.cursor, self.y)
 
     def draw_header(self, cursor, y_axis):
+        """
+        :Purpose: Draws the header of the ticket
+        :Author(s): Joe Lee
+        """
         y = y_axis
         c = cursor
 
@@ -179,6 +216,10 @@ class PDF:
 
     def draw_ticket_content(self, cursor, y_axis, products=None,
                             page_num=None, total_pages=None):
+        """
+        :Purpose: Draws the ticket product details
+        :Author(s): Joe Lee
+        """
         y_prod = y_axis
         c = cursor
 
@@ -240,6 +281,10 @@ class PDF:
         self.y = y_prod
 
     def draw_footer(self, cursor, y_axis):
+        """
+        :Purpose: Draws the consignment footer
+        :Author(s): Joe Lee
+        """
         c = cursor
         y = y_axis
         c.line(30, y, self.width - 30, y)

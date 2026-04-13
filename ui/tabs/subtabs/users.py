@@ -517,6 +517,7 @@ class UsersTab(BaseTab):
     def create_new_user_prompt(self):
         '''
         :purpose: Sets up the UI and uses helper methods to create a user and insert it into the db
+        :return: None
         :author(s): Colin Heinselman
         '''
         dialog = QDialog(self)
@@ -631,7 +632,15 @@ class UsersTab(BaseTab):
         self.create_btn.clicked.connect(self.create_new_user_prompt)
 
     def check_username(self, dialog):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Validates the username input
+            :Author(s): Joe Lee
+            """
             username_input = dialog.findChild(QLineEdit, "username_input")
             username = username_input.text().strip()
 
@@ -658,6 +667,10 @@ class UsersTab(BaseTab):
         :Author(s): Joe Lee
         """
         def handler():
+            """
+            :Purpose: Validates user input data for user creation
+            :Author(s): Joe Lee
+            """
             if self.validate_user_data(dialog):
                 dialog.accept()
         return handler
@@ -665,6 +678,7 @@ class UsersTab(BaseTab):
     def validate_user_data(self, dialog):
         """
         :Purpose: execute a series of validations on user data
+        :return: bool
         :Author(s): Colin Heinselman, Joe Lee
         """
         username = dialog.findChild(QLineEdit, "username_input").text()
@@ -743,6 +757,7 @@ class UsersTab(BaseTab):
     def hash_security_q_and_a(self):
         """
         :Purpose: hashes user_data's security properties
+        :return: None
         :Author(s): Colin Heinselman, Joe Lee
         """
         # Hash security questions and answers
@@ -762,7 +777,8 @@ class UsersTab(BaseTab):
     def validate_security_questions(self, dialog):
         """
         :Purpose: validates security questions and responses within the dialog
-        Author(s): Colin Heinselman
+        :Author(s): Colin Heinselman
+        :Return: True if Valid, False otherwise
         """
         # Validate that both security questions are selected
         q1_q = dialog.findChild(QComboBox, "question1")
@@ -859,6 +875,10 @@ class UsersTab(BaseTab):
                 log.error(f"Password reset failed for user_id: {user_id}")
 
     def on_edit_clicked(self):
+        """
+        :Purpose: Handles edit button via a sequence of events
+        :Author(s): Joe Lee
+        """
         btn = self.sender()
         section_widget = btn.parent()
 
@@ -884,6 +904,10 @@ class UsersTab(BaseTab):
         btn.clicked.connect(self.on_save_clicked)
 
     def on_save_clicked(self):
+        """
+        :Purpose: Handles save button via a sequence of events
+        :Author(s): Joe Lee
+        """
         btn = self.sender()
         section_widget = btn.parent()
 
