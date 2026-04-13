@@ -1,10 +1,6 @@
 name: Lint
 
 on:
-  pull_request:
-    branches:
-      - integration
-
   workflow_dispatch:
     inputs:
       environment:
