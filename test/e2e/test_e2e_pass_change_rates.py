@@ -2,8 +2,6 @@ import pandas as pd
 
 from unittest.mock import patch
 
-from PyQt6.QtWidgets import QMessageBox
-
 from src.user import current_user
 from ui.core.theme_manager import ThemeManager
 from ui.main_window import MainWindow
@@ -178,4 +176,3 @@ def test_e2e_pass_change_rates(app):
         elif key == 'Produce':
             df.loc[key, 'Rate'] = old_value[key]
     df.to_csv('./src/SPOT_CR.csv')
-    #TODO: don't forget to change it back to its original
