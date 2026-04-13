@@ -288,6 +288,106 @@ QWidget#status_container::error {
     border: 1px solid #000000;
 }
 
+/* login screen styles */
+LoginScreen {
+    background-color: #B88E6D;
+    color: #000000;
+    font-family: "Cascadia Mono";
+    font-size: 16px;
+}
+
+LoginScreen QLabel {
+    background-color: transparent;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+LoginScreen QLabel#login_title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000000;
+}
+
+LoginScreen QLabel#rev_label {
+    font-size: 12px;
+    color: #5C4033;
+    font-style: italic;
+}
+
+
+/* forgot_pw screen styles */
+ForgotPasswordScreen {
+    background-color: #B88E6D;
+    color: #000000;
+    font-family: "Cascadia Mono";
+    font-size: 14px;
+}
+
+ForgotPasswordScreen QLabel {
+    background-color: transparent;
+    color: #000000;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLabel#title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000000;
+}
+
+ForgotPasswordScreen QLabel#label {
+    background-color: transparent;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QLineEdit#response_field {
+    background-color: #E5C59B;
+    color: #000000;
+    font-size: 16px;
+    font-weight: normal;
+}
+
+ForgotPasswordScreen QComboBox {
+    background-color: #5C4033;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox::item {
+    background-color: #5C4033;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView {
+    background-color: #5C4033;
+    font-size: 16px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item {
+    background-color: #5C4033;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:hover {
+    background-color: #E5C59B;
+    color: #000000;
+}
+
+ForgotPasswordScreen QComboBox QAbstractItemView::item:selected {
+    background-color: #E5C59B;
+    color: #000000;
+}
+
 /*Entry QSS : admin_settings->rates*/
 QWidget#entry_body {
     background-color: #242121;
