@@ -42,3 +42,19 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: Lint with ruff
+      run: |
+        ruff check --select=E9,F63,F7,F82 .
+
+    - name: Type check with mypy
+      run: |
+        mypy . --ignore-missing-imports
+
+    - name: Type check with pyright
+      run: |
+        pyright .
+
+    - name: Security check with bandit
+      run: |
+        bandit -r . -ll
