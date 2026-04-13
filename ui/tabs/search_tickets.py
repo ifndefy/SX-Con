@@ -63,7 +63,7 @@ class SearchTicketsTab(BaseTab):
         search_section_row_1.addWidget(QLabel("Ticket Number:"))
         self.ticket_number_input = QLineEdit()
         self.ticket_number_input.setPlaceholderText("T Num")
-        self.ticket_number_input.setFixedWidth(73)
+        self.ticket_number_input.setFixedWidth(100)
         self.ticket_number_input.setValidator(QIntValidator(0, 2147483647, self))
         self.ticket_number_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.ticket_number_input)
@@ -72,7 +72,7 @@ class SearchTicketsTab(BaseTab):
         self.datetime_input = QLineEdit()
         self.datetime_input.setPlaceholderText("Datetime")
         self.datetime_input.setMaxLength(30)
-        self.datetime_input.setFixedWidth(160)
+        self.datetime_input.setFixedWidth(195)
         self.datetime_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.datetime_input)
 
@@ -269,16 +269,16 @@ class SearchTicketsTab(BaseTab):
         ticket_number_input = QLineEdit()
         ticket_number_input.setObjectName("READ_ONLY")
         ticket_number_input.setReadOnly(True)
-        ticket_number_input.setFixedWidth(73)
+        ticket_number_input.setFixedWidth(100)
         line1_layout.addWidget(ticket_number_input)
         tickets_section['ticket_num'] = ticket_number_input
 
         # datetime
-        line1_layout.addWidget(QLabel("Date and Time:"))
+        line1_layout.addWidget(QLabel("Datetime:"))
         datetime_input = QLineEdit()
         datetime_input.setObjectName("READ_ONLY")
         datetime_input.setReadOnly(True)
-        datetime_input.setFixedWidth(160)
+        datetime_input.setFixedWidth(195)
         line1_layout.addWidget(datetime_input)
         tickets_section['datetime'] = datetime_input
 

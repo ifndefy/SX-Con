@@ -20,5 +20,8 @@ def test_val_datetime():
     if val_datetime('wrong -- 12:12'):
         assert False, 'Unexpected date wrong string passed in method'
 
-    if not val_datetime('12/12/12 -- 12:12'):
+    if not val_datetime('12/12/12 -- 00:12 AM'):
+        assert False, 'Unexpected correct date and time failed in method'
+
+    if not val_datetime('12/12/12 -- 12:12 PM'):
         assert False, 'Unexpected correct date and time failed in method'
