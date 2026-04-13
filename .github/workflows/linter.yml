@@ -49,11 +49,6 @@ jobs:
       run: |
         python -m ruff check --select=E9,F63,F7,F82 .
 
-    - name: Type check with mypy
-      shell: powershell
-      run: |
-        python -m mypy . --ignore-missing-imports
-
     - name: Type check with pyright
       shell: powershell
       run: |
