@@ -15,7 +15,7 @@ def val_datetime(stat: str) -> bool:
     if regex.match(r'^\d\d/\d\d/\d\d$', temp[0]) is None:
         log.error(f"Invalid date time: {stat}")
         return False
-    if regex.match(r'^\d\d:\d\d$', temp[1]) is None:
+    if regex.match(r'^\d\d:\d\d(:\d\d)? (AM|PM)$', temp[1]) is None:
         log.error(f"Invalid date time: {stat}")
         return False
     return True

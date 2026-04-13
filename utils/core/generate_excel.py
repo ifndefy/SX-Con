@@ -1,5 +1,6 @@
 import pandas as pd
 import openpyxl
+from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table
 from openpyxl.worksheet.table import TableStyleInfo
@@ -14,7 +15,7 @@ def generate_excel(data):
     """
     try:
         log.info("Creating Save File Dialog")
-        file_path = QFileDialog.getSaveFileName(None, "Save Excel File", "./")
+        file_path = QFileDialog.getSaveFileName(None, "Save Excel File", "./", "Excel File (*.xlsx)", "Excel File (*.xls)")
     except Exception as e:
         log.error(f"File Dialog Window Error: {e}")
         return
@@ -51,6 +52,7 @@ def generate_excel(data):
         with pd.ExcelWriter(file_path[0], engine="openpyxl") as excel_writer:
             current_row = 0
             for name, df in dataframes:
+                current_row += 1
                 df.to_excel(excel_writer, sheet_name=sheet_name, startrow=current_row, index=False)
                 current_row += len(df) + 1 + vpadding
 
@@ -61,6 +63,11 @@ def generate_excel(data):
         current_row = 1
         table_id = 1
         for name, df in dataframes:
+            table_name = excel_sheet.cell(row=current_row, column=1)
+            table_name.value = name.title().replace('_', ' ')
+            table_name.font = Font(bold=True)
+            current_row += 1
+
             if df.empty:
                 current_row += 1 + vpadding
                 continue

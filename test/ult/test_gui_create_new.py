@@ -26,7 +26,7 @@ def test_datetime_input(create_new_tab):
     tab = create_new_tab
     assert tab.datetime_input is not None, 'Expected Date Input to exist'
     now = datetime.now()
-    format = "%m/%d/%y -- %H:%M"
+    format = "%m/%d/%y -- %I:%M %p"
     now = now.strftime(format)
     assert tab.datetime_input.text().strip() == now, f'Expected datetime text to be current date and time {now}'
 

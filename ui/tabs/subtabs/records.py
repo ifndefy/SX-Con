@@ -100,7 +100,7 @@ class RecordsTab(BaseTab):
         search_section_row_2.addWidget(QLabel("Vendor ID:"))
         self.vendor_id_input = QLineEdit()
         self.vendor_id_input.setPlaceholderText("V ID")
-        self.vendor_id_input.setFixedWidth(80)
+        self.vendor_id_input.setFixedWidth(55)
         self.vendor_id_input.setValidator(QIntValidator(0, 9999, self))
         self.vendor_id_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_2.addWidget(self.vendor_id_input)
@@ -330,7 +330,7 @@ class RecordsTab(BaseTab):
         datetime_input = QLineEdit()
         datetime_input.setObjectName("READ_ONLY")
         datetime_input.setReadOnly(True)
-        datetime_input.setFixedWidth(160)
+        datetime_input.setFixedWidth(195)
         line1_layout.addWidget(datetime_input)
         rec_section['datetime'] = datetime_input
 
@@ -348,7 +348,7 @@ class RecordsTab(BaseTab):
         vendor_id_input = QLineEdit()
         vendor_id_input.setObjectName("READ_ONLY")
         vendor_id_input.setReadOnly(True)
-        vendor_id_input.setFixedWidth(80)
+        vendor_id_input.setFixedWidth(55)
         line1_layout.addWidget(vendor_id_input)
         rec_section['vendor_id'] = vendor_id_input
 
