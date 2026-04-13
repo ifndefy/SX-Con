@@ -1,0 +1,21 @@
+name: test_k.yml
+on:
+  pull_request:
+    branches:
+      - integration
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: node:20
+    steps:
+      - uses: actions/checkout
+        with:
+          node-version: 20
+      - run: ci
+      - run: npm test
+      - run: npm build
+
+
+
