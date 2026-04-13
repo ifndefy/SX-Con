@@ -44,4 +44,4 @@ jobs:
 
       - name: Run vulnerability scan
         run: |
-          poetry run pip-audit --requirement pyproject.toml
+          poetry run pip-audit
