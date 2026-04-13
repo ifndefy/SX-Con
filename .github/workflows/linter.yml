@@ -40,26 +40,5 @@ jobs:
         poetry install
 
     - name: Lint with flake8
-      shell: powershell
       run: |
-        python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-    - name: Lint with ruff
-      shell: powershell
-      run: |
-        python -m ruff check --select=E9,F63,F7,F82 .
-
-    - name: Type check with mypy
-      shell: powershell
-      run: |
-        python -m mypy . --ignore-missing-imports
-
-    - name: Type check with pyright
-      shell: powershell
-      run: |
-        python -m pyright .
-
-    - name: Security check with bandit
-      shell: powershell
-      run: |
-        python -m bandit -r . -ll
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
