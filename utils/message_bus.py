@@ -9,6 +9,7 @@ class MessageBus(QObject):
     :author: Maksym Komarov
     '''
     bus_signal = pyqtSignal(str)
+    error_signal = pyqtSignal(str)
 
     def __init__(self, logger = None):
         super().__init__()

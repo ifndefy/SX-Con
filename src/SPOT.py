@@ -2,7 +2,7 @@
 # This file holds constants that is used throughout the repo
 # NOTE: SORT ALPHABETICALLY
 
-APP_VERSION = "rev0.0.6"
+APP_VERSION = "rev0.0.7"
 OFFLINE = False
 QUESTIONS_LIST = [
         "What was your first pet's name?",

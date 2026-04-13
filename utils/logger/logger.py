@@ -15,10 +15,10 @@ class ForwardHandler(log.Handler):
     def emit(self, record):
         if status_bar_instance is None:
             return
-        try:
-            status_bar_instance.bus_signal.emit(record.getMessage())
-        except Exception:
-            pass
+        msg = record.getMessage()
+        status_bar_instance.bus_signal.emit(msg)
+        if record.levelno >= log.ERROR:
+            status_bar_instance.error_signal.emit(msg)
 
 __timestamp = datetime.now().strftime("%Y-%m-%d")
 __resolved_path = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent

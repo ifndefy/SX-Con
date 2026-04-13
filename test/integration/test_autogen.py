@@ -10,7 +10,7 @@ def test_autogen_date():
     author: Tyler Slagboom
     """
     now = datetime.now()
-    format = "%m/%d/%y -- %H:%M:%S"
+    format = "%m/%d/%y -- %I:%M:%S %p"
     now = now.strftime(format)
     auto_time = generate_host_datetime(include_seconds=True)
 

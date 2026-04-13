@@ -89,7 +89,7 @@ def test_e2e_pass_get_latest_price(app, monkeypatch, tmp_path):
 
     current_subtab.product_id_input.setText("999")
     ###Click the button to force build and search
-    current_subtab.search_btn.clicked.emit()
+    current_subtab.search_btn.click()
 
     assert current_subtab.products_layout.count() != 0, "Products section should not be empty"
 
@@ -111,7 +111,7 @@ def test_e2e_pass_get_latest_price(app, monkeypatch, tmp_path):
 
     ###Convert the string value to a usable float for comarison
     ticket_latest_price = float(re.sub(r'[^\d.]', '', ticket_latest_price))
-    log.info(ticket_latest_price)
+    # log.info(ticket_latest_price)
 
     assert ticket_ID == "999", "Products subtab did not retrieve the correct value for the search"
     assert ticket_latest_price == float(latest_price), "Latest price field does not match latest entry"
