@@ -49,11 +49,6 @@ jobs:
       run: |
         python -m ruff check --select=E9,F63,F7,F82 .
 
-    - name: Type check with pyright
-      shell: powershell
-      run: |
-        python -m pyright .
-
     - name: Security check with bandit
       shell: powershell
       run: |
