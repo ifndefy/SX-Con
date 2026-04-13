@@ -1,14 +1,12 @@
 import pandas as pd
+from pathlib import Path
+import sys
 
 def fetch_consignment_data():
-    '''
-    :purpose: Read consignment data from SPOT.csv and return as dict, separate file to be importable by anyone in the programC
-    
-    :return: Dictionary containing csv data in (Type : Rate) format
-    :author: Maksym Komarov
-    '''
-    #
-    dataframe = pd.read_csv("./src/SPOT_CR.csv")
+    #Read consignment data from SPOT.csv and return as dict, separate file to be importable by anyone in the program
+    __csv_location = Path(__file__).parent.parent / "src" / f"SPOT_CR.csv"
+
+    dataframe = pd.read_csv(__csv_location)
     #Convert the dataframe into a series indexed by type and convert to dictionary
     data_as_dict = dataframe.set_index("Type")["Rate"].to_dict()
 

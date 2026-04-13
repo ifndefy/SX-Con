@@ -1,4 +1,5 @@
 import configparser as cparser
+import sys
 
 from azure.cosmos import CosmosClient
 from pathlib import Path
@@ -11,14 +12,15 @@ class DatabaseConnection:
 
     def __init__(self):
         config = cparser.ConfigParser()
-        current_dir = Path(__file__).parent
+        current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent
         config_path = current_dir / 'config.ini'
-        config.read(config_path)
-        self.endpoint = config.get('Cosmos Connection Parameters', 'endpoint')
-        self.database_name = config.get('Cosmos Connection Parameters', 'database_name')
-        self.key = config.get('Cosmos Connection Parameters', 'key')
 
+        #Try to read the network config, on fail default to offline mode
         try:
+            config.read(config_path)
+            self.endpoint = config.get('Cosmos Connection Parameters', 'endpoint')
+            self.database_name = config.get('Cosmos Connection Parameters', 'database_name')
+            self.key = config.get('Cosmos Connection Parameters', 'key')
             self.client = CosmosClient(url=self.endpoint, credential=self.key)
             self.database = self.client.get_database_client(self.database_name)
             SPOT.OFFLINE = False
