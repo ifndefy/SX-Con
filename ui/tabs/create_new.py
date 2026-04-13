@@ -1,5 +1,8 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QRadioButton, QDialog
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QRadioButton
+from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QFrame
@@ -762,8 +765,7 @@ class CreateNewTab(BaseTab):
             validated_vendor_id = vendor_id
         else:
             validated_vendor_id = None
-            self.vendor_id_input.setFocus()
-            self.vendor_id_input.selectAll()
+            self._flag_error(self.vendor_id_input)
             log.error("Invalid Vendor ID")
             return None
 
@@ -772,8 +774,7 @@ class CreateNewTab(BaseTab):
             validated_phone_number = phone
         else:
             validated_phone_number = None
-            self.phone_input.setFocus()
-            self.phone_input.selectAll()
+            self._flag_error(self.phone_input)
             log.error("Invalid Phone Number")
             return None
 
@@ -782,8 +783,7 @@ class CreateNewTab(BaseTab):
             validated_first_name = fname
         else:
             validated_first_name = None
-            self.first_name_input.setFocus()
-            self.first_name_input.selectAll()
+            self._flag_error(self.first_name_input)
             log.error("Invalid First Name")
             return None
 
@@ -792,8 +792,7 @@ class CreateNewTab(BaseTab):
             validated_middle_name = mname
         else:
             validated_middle_name = None
-            self.middle_name_input.setFocus()
-            self.middle_name_input.selectAll()
+            self._flag_error(self.middle_name_input)
             log.error("Invalid Middle Name")
             return None
 
@@ -802,8 +801,7 @@ class CreateNewTab(BaseTab):
             validated_last_name = lname
         else:
             validated_last_name = None
-            self.last_name_input.setFocus()
-            self.last_name_input.selectAll()
+            self._flag_error(self.last_name_input)
             log.error("Invalid Last Name")
             return None
 
@@ -812,8 +810,7 @@ class CreateNewTab(BaseTab):
             validated_address = address
         else:
             validated_address = None
-            self.address_input.setFocus()
-            self.address_input.selectAll()
+            self._flag_error(self.address_input)
             log.error("Invalid Address")
             return None
 
@@ -822,8 +819,7 @@ class CreateNewTab(BaseTab):
             validated_city = city
         else:
             validated_city = None
-            self.city_input.setFocus()
-            self.city_input.selectAll()
+            self._flag_error(self.city_input)
             log.error("Invalid City")
             return None
 
@@ -832,8 +828,7 @@ class CreateNewTab(BaseTab):
             validated_state = state
         else:
             validated_state = None
-            self.state_input.setFocus()
-            self.state_input.selectAll()
+            self._flag_error(self.state_input)
             log.error("Invalid State")
             return None
 
@@ -842,8 +837,7 @@ class CreateNewTab(BaseTab):
             validated_zip = zip
         else:
             validated_zip = None
-            self.zip_input.setFocus()
-            self.zip_input.selectAll()
+            self._flag_error(self.zip_input)
             log.error("Invalid Zip")
             return None
 
@@ -885,8 +879,7 @@ class CreateNewTab(BaseTab):
                 validated_product_id = product_id
             else:
                 validated_product_id = None
-                section['product_id'].setFocus()
-                section['product_id'].selectAll()
+                self._flag_error(section['product_id'])
                 log.error(f"Invalid product id: {product_id}")
                 return None
 
@@ -895,7 +888,7 @@ class CreateNewTab(BaseTab):
                 validated_product_type = product_type
             else:
                 validated_product_type = None
-                section['product_type'].setFocus()
+                self._flag_error(section['product_type'])
                 section['product_type'].showPopup()
                 log.error(f"Invalid product type: {product_type}")
                 return None
@@ -905,8 +898,7 @@ class CreateNewTab(BaseTab):
                 validated_product_name = product_name
             else:
                 validated_product_name = None
-                section['product_name'].setFocus()
-                section['product_name'].selectAll()
+                self._flag_error(section['product_name'])
                 log.error(f"Invalid product name: {product_name}")
                 return None
 
@@ -917,8 +909,7 @@ class CreateNewTab(BaseTab):
                 validated_rate = rate
             else:
                 validated_rate = None
-                section['rate'].setFocus()
-                section['rate'].selectAll()
+                self._flag_error(section['rate'])
                 log.error(f"Invalid rate: {rate}")
                 return None
 
@@ -927,8 +918,7 @@ class CreateNewTab(BaseTab):
                 validated_price = price
             else:
                 validated_price = None
-                section['price'].setFocus()
-                section['price'].selectAll()
+                self._flag_error(section['price'])
                 log.error(f"Invalid price: {price}")
                 return None
 
@@ -937,8 +927,7 @@ class CreateNewTab(BaseTab):
                 validated_quantity = quantity
             else:
                 validated_quantity = None
-                section['quantity'].setFocus()
-                section['quantity'].selectAll()
+                self._flag_error(section['quantity'])
                 log.error(f"Invalid quantity: {quantity}")
                 return None
 
@@ -958,8 +947,7 @@ class CreateNewTab(BaseTab):
 
         if not has_valid_product:
             log.error("All product sections are empty")
-            self.product_sections[0]['product_id'].setFocus()
-            self.product_sections[0]['product_id'].selectAll()
+            self._flag_error(self.product_sections[0]['product_id'])
             return None
 
         return products
@@ -1342,29 +1330,25 @@ class CreateNewTab(BaseTab):
             has_valid = True
             if prod['product_id'].text().strip() == '':
                 log.error(f"Please enter a product id")
-                prod['product_id'].setFocus()
-                prod['product_id'].selectAll()
+                self._flag_error(prod['product_id'])
                 return False
             else:
                 if prod['product_type'].currentIndex() == -1:
                     log.error(f"Please enter a product type")
-                    prod['product_type'].setFocus()
+                    self._flag_error(prod['product_type'])
                     prod['product_type'].showPopup()
                     return False
                 if prod['price'].text().replace('$', '').strip() == '':
                     log.error(f"Please enter a price")
-                    prod['price'].setFocus()
-                    prod['price'].selectAll()
+                    self._flag_error(prod['price'])
                     return False
                 if prod['quantity'].text().strip() == '':
                     log.error(f"Please enter a quantity")
-                    prod['quantity'].setFocus()
-                    prod['quantity'].selectAll()
+                    self._flag_error(prod['quantity'])
                     return False
                 if prod['rate'].text().replace('%', '').strip() == '':
                     log.error(f"Error: Failed to sync rate")
-                    prod['rate'].setFocus()
-                    prod['rate'].selectAll()
+                    self._flag_error(prod['rate'])
                     return False
         if not has_valid:
             log.info(f"No products to calculate")
@@ -1395,6 +1379,8 @@ class CreateNewTab(BaseTab):
                             'super_x': d.Decimal('0.00')}
                 #iterate over every product
                 for section in self.product_sections:
+                    if self.check_empty_prod_section(section):
+                        continue
                     price = self._parse_money(section['price'].text())
                     qty = self._parse_int(section['quantity'].text())
                     #This will catch both empty values and values that don't exist in the table for some reason (i.e somehow someone tries 'Car' product type)
@@ -1718,3 +1704,26 @@ class CreateNewTab(BaseTab):
         if dialog.exec() == QDialog.DialogCode.Accepted and selected[0] is not None:
             return selected[0]
         return None
+
+    def _flag_error(self, field):
+        """
+        :Purpose: sets the calling field to red on failed validation or error call
+        :Author(s): Joe Lee
+        """
+        self._error_field = field
+        field.setStyleSheet("background-color: #691601;")
+        field.style().unpolish(field)
+        field.style().polish(field)
+        field.setFocus()
+        if hasattr(field, 'selectAll'):
+            field.selectAll()
+        QTimer.singleShot(2000, self._clear_field_error)
+
+    def _clear_field_error(self):
+        """
+        :Purpose: resets the calling field's style back to default
+        :Author(s): Joe Lee
+        """
+        self._error_field.setStyleSheet("")
+        self._error_field.style().unpolish(self._error_field)
+        self._error_field.style().polish(self._error_field)
