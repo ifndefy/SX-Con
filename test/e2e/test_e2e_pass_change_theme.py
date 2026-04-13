@@ -54,11 +54,15 @@ def test_e2e_pass_change_theme(app):
     assert isinstance(current_tab, SettingsTab), "Make sure we land on the Settings tab"
 
     #5 change theme to something else
+    default = current_tab.theme_dropdown_menu.currentIndex()
+    default_name = current_tab.theme_dropdown_menu.currentText()
+    next_in = default + 1
 
     assert current_tab.theme_dropdown_menu.isEnabled(), "Make sure we can change the theme"
-    current_tab.theme_dropdown_menu.setCurrentIndex(1)
+    current_tab.theme_dropdown_menu.setCurrentIndex(next_in)
+    next_name = current_tab.theme_dropdown_menu.currentText()
 
-    assert current_tab.theme_dropdown_menu.currentText() == "CSUS", "We should have selected CSUS theme"
+    assert current_tab.theme_dropdown_menu.currentText() == next_name, "We should have selected CSUS theme"
 
     #6 save the current theme to preferences
     with patch('ui.tabs.settings.QMessageBox.information'):
@@ -67,18 +71,18 @@ def test_e2e_pass_change_theme(app):
     #7 change the theme back to super
 
     assert current_tab.theme_dropdown_menu.isEnabled(), "Make sure we can keep changing"
-    current_tab.theme_dropdown_menu.setCurrentIndex(0)
+    current_tab.theme_dropdown_menu.setCurrentIndex(default)
     
-    assert current_tab.theme_dropdown_menu.currentText() == "Super", "We should have selected Super theme"
+    assert current_tab.theme_dropdown_menu.currentText() == default_name, "We should have selected Super theme"
 
     #8 load theme from preferences
     with patch('ui.tabs.settings.QMessageBox.information'):
         current_tab.load_btn.click()
 
-    assert current_tab.theme_dropdown_menu.currentText() == "CSUS", "Loading should have changed the theme to CSUS"
+    assert current_tab.theme_dropdown_menu.currentText() == next_name, "Loading should have changed the theme to CSUS"
 
     #9 change preferences back to default
 
-    current_tab.theme_dropdown_menu.setCurrentIndex(0)
+    current_tab.theme_dropdown_menu.setCurrentIndex(default)
     with patch('ui.tabs.settings.QMessageBox.information'):
         current_tab.save_btn.click()
