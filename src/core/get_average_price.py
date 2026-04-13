@@ -4,9 +4,10 @@ import pandas as pd
 
 def get_average_price(product_id):
     """
-    :Gets the average item price from a list containing all price data for a product
-    :args- price_data = list of dicts that contain the previous sales info 
-    :returns aggregate mean as float on success, -1 on fail
+    :purpose: Gets the average item price from a list containing all price data for a product
+    
+    :return: aggregate mean as float on success, 0 on fail
+    :authors: Maksym Komarov, Joe Lee
     """
     price_data = _fetch_price_history(product_id)
 

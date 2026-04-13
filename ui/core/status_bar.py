@@ -4,6 +4,12 @@ from utils.message_bus import status_bar_instance
 import utils.logger.logger as log
 
 class StatusBar(QWidget):
+    '''
+    :purpose: Creates a atatus bar that waits on any incoming messages from the bus and updates it's appearence to reflect thats
+    
+    :return: None
+    :author: Maksym Komarov
+    '''
     event_handler = None
 
     def __init__(self, name, handler_func = None, parent = None):

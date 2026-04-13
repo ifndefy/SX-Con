@@ -455,15 +455,19 @@ class SearchTicketsTab(BaseTab):
         return handler
 
     def make_form_handler(self, ticket_index):
-        """
-        :Purpose: Instance Handler
-        :Author(s): Maksym Komarov
-        """
+        ''' 
+        :purpose: Defines function closure for the current ticket to gather data from the fields to fill an excel table
+        
+        :return: Function reference for the specific ticket.
+        :author: Maksym Komarov
+        '''
         def gather_ticket():
-            """
-            :Purpose: Gathers consignment data
-            :Author(s): Maksym Komarov
-            """
+            ''' 
+            :purpose: Gathers data to fill an excel table
+            
+            :return: Dictionary containing data to export to excel.
+            :author: Maksym Komarov
+            '''
             ticket = self.tickets_section[ticket_index]
             ticket_number = ticket['ticket_num'].text().strip()
             ticket_details = self.view(ticket_number)
