@@ -1,6 +1,10 @@
 name: Lint
 
 on:
+  pull_request:
+    branches:
+      - integration
+
   workflow_dispatch:
     inputs:
       environment:
@@ -36,9 +40,30 @@ jobs:
         POETRY_VIRTUALENVS_CREATE: "false"
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 ruff
+        pip install flake8 ruff mypy pyright bandit
         poetry install
 
     - name: Lint with flake8
+      shell: powershell
       run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: Lint with ruff
+      shell: powershell
+      run: |
+        python -m ruff check --select=E9,F63,F7,F82 .
+
+    - name: Type check with mypy
+      shell: powershell
+      run: |
+        python -m mypy . --ignore-missing-imports
+
+    - name: Type check with pyright
+      shell: powershell
+      run: |
+        python -m pyright .
+
+    - name: Security check with bandit
+      shell: powershell
+      run: |
+        python -m bandit -r . -ll
