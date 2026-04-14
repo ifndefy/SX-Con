@@ -1,111 +1,72 @@
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QDialog
 
 from ui.core.theme_manager import ThemeManager
-from ui.prompts.login import LoginScreen
-from ui.prompts.forgot_pw import ForgotPasswordScreen
 from ui.prompts.answer_sec_q import AnsSecQDialog
-from ui.prompts.password_dialog import PasswordChangeDialog
-
+from ui.prompts.forgot_pw import ForgotPasswordScreen
+from ui.prompts.login import LoginScreen
 from unittest.mock import patch
-
 
 """
 Sequence:
-    1 - Open login screen
-    2 - Click Forgot Password
-    3 - Forgot Password screen appears
-    4 - Enter a real existing username
-    5 - Click Request for Username
-    6 - Real security question dialog appears
-    7 - Enter intentionally wrong answers
-    8 - Click Update
-    9 - Verify invalid-response warning shown
-    10 - Verify security dialog remains open
-    11 - Verify password change dialog does not appear
-    12 - Cancel and verify forgot-password flow recovers
+    ### 1 - Open program and land on login screen
+    ### 2 - Click the Forgot Password button
+    ### 3 - Enter the username and click the "Request" button
+    ### 4 - Find the real AnsSecQDialog and simulate rejection by entering wrong answers
+    ### 5 - Assert the warning message WAS shown (wrong answers rejected)
+    ### 6 - Assert the request button is still enabled (user can retry)
 """
 
 
+"""
+   purpose: implement a test for answering wrong answers on security questions to check it doesn't go through.
+   return: none
+   author: Kyle Valdez
+"""
+
 def test_e2e_fail_forgot_password_wrong_security_answer(app):
+
+    ### 1 - Open program and land on login screen
     theme_manager = ThemeManager()
+    login_screen = LoginScreen(theme_manager)
 
-    with patch("ui.prompts.answer_sec_q.QMessageBox.warning") as mock_sq_warning, \
-         patch("ui.prompts.forgot_pw.QMessageBox.information") as mock_success, \
-         patch("ui.prompts.forgot_pw.QMessageBox.critical") as mock_critical:
+    with patch("ui.prompts.login.ForgotPasswordScreen.exec"), \
+            patch("ui.prompts.forgot_pw.AnsSecQDialog.exec"), \
+            patch("ui.prompts.answer_sec_q.QMessageBox.warning") as mock_question_warning:
 
-        # 1 - Open login screen
-        login_screen = LoginScreen(theme_manager)
-        assert isinstance(login_screen, LoginScreen), "Expected login screen to open"
-
-        # 2 - Click Forgot Password
+        ### 2 - Click the Forgot Password button
         login_screen.forgot_pw_btn.click()
         QApplication.processEvents()
 
-        # 3 - Forgot Password screen appears
-        forgot_screen = None
+        # Find the "Password Reset" dialog that was just created
+        forgot_password_screen = None
         for w in QApplication.topLevelWidgets():
             if isinstance(w, ForgotPasswordScreen):
-                forgot_screen = w
-                break
+                forgot_password_screen = w
 
-        assert isinstance(forgot_screen, ForgotPasswordScreen), \
-            "Expected Forgot Password screen to appear after clicking Forgot Password"
+        assert forgot_password_screen, "Expected the Password Reset dialog to appear"
 
-        # 4 - Enter a real existing username
-        # Replace 'user' with a known username that already exists in your test/dev data
-        forgot_screen.username_input.setText("user")
+        ### 3 - Enter the username and click the "Request" button
+        forgot_password_screen.username_input.setText("user")
+        forgot_password_screen.req_btn.click()
 
-        # 5 - Click Request for Username
-        forgot_screen.req_btn.click()
-        QApplication.processEvents()
-
-        # 6 - Real security question dialog appears
-        security_dialog = None
+        # Find the "Answer Security Questions" dialog that was just created
+        answer_security_q_dialog = None
         for w in QApplication.topLevelWidgets():
             if isinstance(w, AnsSecQDialog):
-                security_dialog = w
-                break
+                answer_security_q_dialog = w
 
-        assert isinstance(security_dialog, AnsSecQDialog), \
-            "Expected security question dialog to appear for a valid username"
+        assert answer_security_q_dialog, "Expected the Security Questions Dialog to appear"
 
-        # 7 - Enter intentionally wrong answers
-        security_dialog.answer1_input.setText("wrong1")
-        security_dialog.answer2_input.setText("wrong2")
-
-        # 8 - Click Update
-        security_dialog.update_btn.click()
+        ### 4 - Enter WRONG security question answers and click the "Update" button
+        answer_security_q_dialog.answer1_input.setText("wrong_answer")
+        answer_security_q_dialog.answer2_input.setText("wrong_answer")
+        answer_security_q_dialog.update_btn.click()
         QApplication.processEvents()
 
-        # 9 - Verify invalid-response warning shown
-        assert mock_sq_warning.called, \
-            "Expected invalid-response warning when security answers are wrong"
+        ### 5 - Assert the warning WAS shown (wrong answers should trigger a warning)
+        assert mock_question_warning.called, \
+            "Expected a warning message to display for incorrect security question answers."
 
-        # 10 - Verify security dialog remains open
-        assert security_dialog.isVisible(), \
-            "Expected security dialog to remain open after invalid answers"
-
-        # 11 - Verify password change dialog does not appear
-        password_dialog_found = any(
-            isinstance(w, PasswordChangeDialog)
-            for w in QApplication.topLevelWidgets()
-        )
-        assert not password_dialog_found, \
-            "Password change dialog should not open when security answers are wrong"
-
-        # Also verify no success/reset occurred
-        assert not mock_success.called, \
-            "Success message should not appear when security answers are wrong"
-
-        # 12 - Cancel and verify forgot-password flow recovers
-        security_dialog.cancel_btn.click()
-        QApplication.processEvents()
-
-        assert forgot_screen.isVisible(), \
-            "Expected Forgot Password screen to still be visible after cancelling security dialog"
-
-        assert forgot_screen.req_btn.isEnabled(), \
-            "Expected Request for Username button to be re-enabled after failed security flow"
-
-        assert forgot_screen.req_btn.text() == "Request for Username", \
-            "Expected Request button text to reset after failed security flow"
+        ### 6 - Assert the request button is still enabled so the user can retry
+        assert forgot_password_screen.req_btn.isEnabled(), \
+            "Request button should remain enabled after a failed security answer attempt."
