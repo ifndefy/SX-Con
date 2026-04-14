@@ -1,7 +1,13 @@
 import os
+import sys
 
+from pathlib import Path
 import utils.logger.logger as log
 from utils.core.print_pdf import Sxcprinter
+
+#Compute once at import time to avoid re computing the general path each time
+current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else (Path(__file__).parent.parent / "utils")
+tickets_dir = current_dir / "tickets"
 
 def handler_print(tic_num):
     try:
@@ -20,5 +26,9 @@ def validate_pdf_exists(tic_num):
     return True
 
 def get_pdf_path(ticket_number):
-    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base, "utils", "tickets", f"{ticket_number}.pdf")
+    """
+    :Purpose: Fetches the PDF path
+    :param: ticket_number: Ticket number
+    :Author(s): Joe Lee
+    """
+    return tickets_dir / f"{ticket_number}.pdf"
