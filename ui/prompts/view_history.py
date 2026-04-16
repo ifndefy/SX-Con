@@ -77,7 +77,7 @@ class ViewPayoutHistory(QDialog):
         date_field = QLineEdit(payout_data.get('datetime', 'N/A'))
         date_field.setReadOnly(True)
         date_field.setObjectName("READ_ONLY")
-        date_field.setFixedWidth(150)
+        date_field.setFixedWidth(195)
         top_layout.addWidget(date_field)
 
         top_layout.addStretch()

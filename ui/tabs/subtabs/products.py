@@ -316,7 +316,7 @@ class ProductsTab(BaseTab):
                     if not last_con:
                         continue
                     try:
-                        split_date = datetime.strptime(last_con, "%m/%d/%y -- %H:%M")
+                        split_date = datetime.strptime(last_con, "%m/%d/%y -- %I:%M %p")
                         for product in lc.get('products', []):
                             product_id = int(product.get('product_id'))
                             if ((product_id not in last_consignments) or
