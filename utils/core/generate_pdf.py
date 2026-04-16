@@ -182,19 +182,19 @@ class PDF:
         c.drawString(30, y - 50, "Consignment Ticket")
 
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(375, y, "Ticket Number:")
-        c.rect(475, y - 3, 105, 15)
-        c.drawString(475 + 3, y, str(self.ticket_num))
+        c.drawString(345, y, "Ticket Number:")
+        c.rect(445, y - 3, 135, 15)
+        c.drawString(445 + 3, y, str(self.ticket_num))
         y -= 20
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(375, y, "Vendor ID:")
-        c.rect(475, y - 3, 105, 15)
-        c.drawString(475 + 3, y, str(self.vendor_id))
+        c.drawString(345, y, "Vendor ID:")
+        c.rect(445, y - 3, 135, 15)
+        c.drawString(445 + 3, y, str(self.vendor_id))
         y -= 20
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(375, y, "Date Time:")
-        c.rect(475, y - 3, 105, 15)
-        c.drawString(475 + 3, y, self.ticket_data['datetime'])
+        c.drawString(345, y, "Date Time:")
+        c.rect(445, y - 3, 135, 15)
+        c.drawString(445 + 3, y, self.ticket_data['datetime'])
         y -= 20
 
         c.line(30, y, self.width - 30, y)
