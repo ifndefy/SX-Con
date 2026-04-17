@@ -264,7 +264,7 @@ class PDF:
             c.drawString(477 + 3, y_prod + 1, str(prod.get("sold", "")))
             c.drawString(509, y_prod, "Total:")
             c.rect(533, y_prod - 3, 48, 15)
-            c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}" if vendor_amount else "TBD")
+            c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}" if vendor_amount else f"${0:.2f}")
             y_prod -= 20
 
         # Replace line with page number if both arguments are provided
@@ -352,7 +352,7 @@ class PDF:
             c.setFont("Helvetica", 10)
             c.drawString(216, y_type, str(type))
             c.rect(216 - 3, y_type - 3, 60, 15)
-            c.drawString(290, y_type, f"${total:.2f}" if total else "TBD")
+            c.drawString(290, y_type, f"${total:.2f}" if total else f"${0:.2f}")
             c.rect(290 - 3, y_type - 3, 60, 15)
             y_type -= 18
 
