@@ -16,8 +16,8 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
-
 from pathlib import Path
+import time
 
 from src import SPOT
 
@@ -702,6 +702,10 @@ class CreateNewTab(BaseTab):
         if not self.on_pdf_clicked():
             return
 
+        if not self._wait_for_pdf(ticket):
+            QMessageBox.critical(self, "Print Failed", f"PDF for ticket {ticket} was not ready in time.")
+            return
+
         try:
             handler_print.handler_print(ticket)
             log.info(f"Print requested for ticket {ticket}")
@@ -740,6 +744,22 @@ class CreateNewTab(BaseTab):
             log.error(f"PDF generation failed: {e}")
             QMessageBox.information(self, "PDF Generation Failed", f"Failed to generate a PDF")
             return False
+
+    def _wait_for_pdf(self, ticket, timeout=10, interval=0.2):
+        """
+        :Purpose: Polls for the PDF file to exist before proceeding to print
+        :Author(s): Joe Lee
+        """
+        pdf_path = Path(__file__).parent.parent.parent / "utils" / "tickets" / f"{ticket}.pdf"
+        elapsed = 0.0
+        while elapsed < timeout:
+            if pdf_path.exists():
+                return True
+            time.sleep(interval)
+            elapsed += interval
+
+        log.error(f"Timed out waiting for PDF: {pdf_path}")
+        return False
 
     def _gather_ticket_number(self):
         """
@@ -1025,20 +1045,18 @@ class CreateNewTab(BaseTab):
 
             vendor_data = self._gather_vendor_data()
             if vendor_data is None:
-                # log.error("Error: Could not gather vendor data")
                 return -1
 
             products_data = self._gather_products_data()
             if products_data is None:
-                # log.error("Error: Could not gather products data")
                 return -1
 
             revenue_data = self._gather_revenue_data()
 
-
             record_id = self._post_to_database(vendor_data, products_data, revenue_data)
 
             if record_id != -1:
+                self.on_print_clicked()
                 self.clear_form()
                 status_bar_instance.send_message(f"Ticket created successfully! Ticket Number: {record_id}")
                 return record_id

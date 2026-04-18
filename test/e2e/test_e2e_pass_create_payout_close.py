@@ -121,7 +121,8 @@ def test_e2e_create_payout_close(app):
     # current_tab.print_btn.click() # uncomment this line if you want to see if print actually works
 
     ### 6 - click on create record -> successful
-    current_tab.create_btn.click()
+    with patch.object(current_tab, 'on_print_clicked'):
+        current_tab.create_btn.click()
     assert current_tab.vendor_id_input.text() == "", "Expected form to be cleared after successful record creation"
 
     ### 7 - Go to Vendor Tickets Tab

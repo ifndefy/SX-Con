@@ -108,7 +108,8 @@ def test_e2e_pass_change_rates(app):
     create_new.product_sections[2]['quantity'].setText(prod_qty)
 
     ### 8 - click on create record -> successful
-    create_new.create_btn.click()
+    with patch.object(create_new, 'on_print_clicked'):
+        create_new.create_btn.click()
     assert create_new.vendor_id_input.text() == "", "Expected form to be cleared after successful record creation"
 
     ### 9 - click on search ticket tab

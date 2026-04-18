@@ -71,7 +71,8 @@ def test_e2e_pass_get_latest_price(app, monkeypatch, tmp_path):
     latest_price = prod_1_price
 
     ###click on create record -> successful
-    current_tab.create_btn.click()
+    with patch.object(current_tab, 'on_print_clicked'):
+        current_tab.create_btn.click()
     assert current_tab.vendor_id_input.text() == "", "Expected form to be cleared after successful record creation"
 
     assert latest_price != None, "Expected Latest ticket price to be captured"
