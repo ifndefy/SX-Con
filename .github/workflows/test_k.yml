@@ -1,4 +1,5 @@
 name: test_k.yml
+
 on:
   workflow_dispatch:
     inputs:
@@ -13,9 +14,7 @@ jobs:
     container:
       image: node:20
     steps:
-      - uses: actions/checkout
-        with:
-          node-version: 20
+      - uses: actions/checkout@v4
       - run: ci
       - run: npm test
       - run: npm build
