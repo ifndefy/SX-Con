@@ -1,11 +1,6 @@
 name: Dependency Vulnerability Scan
 
 on:
-  push:
-  pull_request:
-    branches:
-      - integration
-
   workflow_dispatch:
     inputs:
       environment:
