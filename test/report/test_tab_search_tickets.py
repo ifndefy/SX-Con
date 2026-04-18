@@ -167,26 +167,26 @@ def test_open_close_btns(search_tickets_tab):
     status = tab.tickets_section[0]['status'].text().strip()
 
     if status == 'OPEN':
-        with patch('ui.tabs.vendor_tickets.QMessageBox.information'):
+        with patch('ui.tabs.search_tickets.QMessageBox.information'):
             tab.tickets_section[0]['close_btn'].click()
         assert tab.tickets_section[0]['status'].text().strip() == 'CLOSED'
         assert not tab.tickets_section[0]['open_btn'].isHidden()
         assert tab.tickets_section[0]['close_btn'].isHidden()
 
-        with patch('ui.tabs.vendor_tickets.QMessageBox.information'):
+        with patch('ui.tabs.search_tickets.QMessageBox.information'):
             tab.tickets_section[0]['open_btn'].click()
         assert tab.tickets_section[0]['status'].text().strip() == 'OPEN'
         assert not tab.tickets_section[0]['close_btn'].isHidden()
         assert tab.tickets_section[0]['open_btn'].isHidden()
 
     elif status == 'CLOSED':
-        with patch('ui.tabs.vendor_tickets.QMessageBox.information'):
+        with patch('ui.tabs.search_tickets.QMessageBox.information'):
             tab.tickets_section[0]['open_btn'].click()
         assert tab.tickets_section[0]['status'].text().strip() == 'OPEN'
         assert not tab.tickets_section[0]['close_btn'].isHidden()
         assert tab.tickets_section[0]['open_btn'].isHidden()
 
-        with patch('ui.tabs.vendor_tickets.QMessageBox.information'):
+        with patch('ui.tabs.search_tickets.QMessageBox.information'):
             tab.tickets_section[0]['close_btn'].click()
         assert tab.tickets_section[0]['status'].text().strip() == 'CLOSED'
         assert not tab.tickets_section[0]['open_btn'].isHidden()
@@ -207,7 +207,7 @@ def test_pdf_btn(search_tickets_tab):
         self.pdf_filename = pdf_output
 
     with patch.object(PDF, 'set_pdf_filename', set_pdf_filename), \
-            patch('ui.tabs.vendor_tickets.QMessageBox.information'):
+            patch('ui.tabs.search_tickets.QMessageBox.information'):
         tab.tickets_section[0]['pdf_btn'].click()
 
     assert os.path.exists(pdf_output), 'Expected PDF to be generated'
@@ -221,8 +221,8 @@ def test_print_btn(search_tickets_tab):
     tab = search_tickets_tab
     QTest.keyClicks(tab.ticket_number_input, '3')
     QTest.qWait(400)
-    with patch('ui.tabs.vendor_tickets.handler_print'), \
-            patch('ui.tabs.vendor_tickets.QMessageBox.information'):
+    with patch('ui.tabs.search_tickets.handler_print'), \
+            patch('ui.tabs.search_tickets.QMessageBox.information'):
         tab.tickets_section[0]['print_btn'].click()
 
 def test_excel_btn(search_tickets_tab):
@@ -367,7 +367,7 @@ def test_view_ticket_btn_states(search_tickets_tab):
 
     status = tab.tickets_section[0]['status'].text().strip()
     if status == 'OPEN':
-        with patch('ui.tabs.vendor_tickets.QMessageBox.information'):
+        with patch('ui.tabs.search_tickets.QMessageBox.information'):
             tab.tickets_section[0]['close_btn'].click()
 
     tab.tickets_section[0]['view_btn'].click()
@@ -380,7 +380,7 @@ def test_view_ticket_btn_states(search_tickets_tab):
     assert not payout.payout_btn.isEnabled(), 'Expected payout_btn to be locked'
 
     tab.tickets_section[0]['view_btn'].click()
-    with patch('ui.tabs.vendor_tickets.QMessageBox.information'):
+    with patch('ui.tabs.search_tickets.QMessageBox.information'):
         tab.tickets_section[0]['open_btn'].click()
 
     tab.tickets_section[0]['view_btn'].click()
