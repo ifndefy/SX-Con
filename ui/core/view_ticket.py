@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QFrame
+from PyQt6.QtGui import QIntValidator
 
 from src.core.update_quantities import update_quantities
 from services.get_item import get_item
@@ -94,16 +95,17 @@ class ViewTicket(QObject):
             line1_layout.addWidget(QLabel("Sold:"))
             sold_edit = QLineEdit(str(product.get('sold', 0)))
             sold_edit.setFixedWidth(100)
+            sold_edit.setValidator(QIntValidator(0, 99999, sold_edit))
             line1_layout.addWidget(sold_edit)
             if self.ticket_status == "CLOSED":
-                sold_edit.setReadOnly(True)
+                sold_edit.setEnabled(True)
                 sold_edit.setObjectName("LOCKED")
 
             update_btn = QPushButton("Update")
             update_btn.product_id = product_id
             update_btn.product_idx = idx
             if self.ticket_status == "CLOSED":
-                update_btn.setEnabled(True)
+                update_btn.setEnabled(False)
                 update_btn.setObjectName("LOCKED")
             update_btn.clicked.connect(self.handle_update_clicked)
             line1_layout.addWidget(update_btn)
