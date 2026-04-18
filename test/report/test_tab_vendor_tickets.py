@@ -483,7 +483,7 @@ def test_view_btn_revenue_payout_btns(vendor_tickets_tab, test_consignment):
     payout = view_ticket.payout_widget
 
     view_ticket.product_widgets[0]['sold_edit'].clear()
-    view_ticket.product_widgets[0]['sold_edit'].setText('5')
+    QTest.keyClicks(view_ticket.product_widgets[0]['sold_edit'], '5abc ')
     with patch('ui.core.view_ticket.QMessageBox'), \
             patch('ui.core.revenue_payout.QMessageBox'):
         view_ticket.product_widgets[0]['update_btn'].click()
