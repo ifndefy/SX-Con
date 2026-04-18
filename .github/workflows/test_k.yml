@@ -1,0 +1,24 @@
+name: test_k.yml
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Test environment'
+        required: false
+        default: 'test'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: node:20
+    steps:
+      - uses: actions/checkout
+        with:
+          node-version: 20
+      - run: ci
+      - run: npm test
+      - run: npm build
+
+
+
