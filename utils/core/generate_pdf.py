@@ -15,12 +15,13 @@ class PDF:
         self.project_root = None
         self.current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent.parent
         self.tickets_dir = self.current_dir / "tickets"
-        self.tickets_dir.mkdir(parents= True, exist_ok=True)
+        self.tickets_dir.mkdir(parents=True, exist_ok=True)
 
         self.width, self.height = letter
         self.y = self.height - 30
 
         self.ticket_num = ticket_num
+        self.payout_num = None
         self.pdf_filename = None
         self.cursor = None
         self.vendor_id = None
@@ -184,7 +185,8 @@ class PDF:
         c.setFont("Helvetica-Bold", 12)
         c.drawString(345, y, "Ticket Number:")
         c.rect(445, y - 3, 135, 15)
-        c.drawString(445 + 3, y, str(self.ticket_num))
+        ticket_display = f"{self.ticket_num}: Payout #{self.payout_num}" if self.payout_num is not None else str(self.ticket_num)
+        c.drawString(445 + 3, y, ticket_display)
         y -= 20
         c.setFont("Helvetica-Bold", 12)
         c.drawString(345, y, "Vendor ID:")
@@ -234,12 +236,24 @@ class PDF:
         payout_products = []
         if "revenue" in self.ticket_data and "payout" in self.ticket_data["revenue"]:
             payout_list = self.ticket_data["revenue"]["payout"]
-            if payout_list and len(payout_list) > 0:
-                payout_products = payout_list[-1].get("products", [])
+            if payout_list:
+                if self.payout_num is not None and (self.payout_num - 1) < len(payout_list):
+                    payout_products = payout_list[self.payout_num - 1].get("products", [])
+                else:
+                    product_totals = {}
+                    for payout in payout_list:
+                        for prod in payout.get("products", []):
+                            prod_id = prod["product_id"]
+                            product_totals[prod_id] = product_totals.get(prod_id, 0) + prod.get("vendor", 0)
+                    payout_products = [
+                        {"product_id": pid, "vendor": total}
+                        for pid, total in product_totals.items()
+                    ]
+
         payout_index = 0
         for prod in valid_products:
             vendor_amount = 0
-            if payout_index < len(payout_products): # need this for when multiples of the same product_id are in a consignment
+            if payout_index < len(payout_products):  # need this for when multiples of the same product_id are in a consignment
                 vendor_amount = payout_products[payout_index].get("vendor", 0)
                 payout_index += 1
 
@@ -267,7 +281,6 @@ class PDF:
             c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}" if vendor_amount else f"${0:.2f}")
             y_prod -= 20
 
-        # Replace line with page number if both arguments are provided
         if page_num is not None and total_pages is not None:
             c.setFont("Helvetica-Bold", 8)
             page_text = f"Page {page_num} of {total_pages}"
@@ -307,30 +320,32 @@ class PDF:
         c.setFont("Helvetica-Bold", 10)
         c.drawString(30, y_pot, "Accumulated Payouts")
         y_pot -= 18
-        accumulated = self.ticket_data.get('revenue', {}).get('accumulated', {})
+
+        payout_list = self.ticket_data['revenue']['payout']
+
+        if self.payout_num is not None and (self.payout_num - 1) < len(payout_list):
+            accumulated_vendor = sum(p.get('vendor', 0) for p in payout_list[:self.payout_num])
+        else:
+            accumulated_vendor = self.ticket_data.get('revenue', {}).get('accumulated', {}).get('vendor', 0)
+
         c.setFont("Helvetica", 10)
-        c.drawString(40, y_pot, f"${accumulated.get('vendor', 0):.2f}")
+        c.drawString(40, y_pot, f"${accumulated_vendor:.2f}")
         c.rect(40 - 3, y_pot - 3, 120, 15)
 
-        y_pot -= 18
-        c.setFont("Helvetica-Bold", 10)
-        c.drawString(30, y_pot, "Payout")
-        y_pot -= 18
-        payout = self.ticket_data['revenue']['payout']
-        if payout:
-            cashed_out = payout[-1]
+        if self.payout_num is not None and (self.payout_num - 1) < len(payout_list):
+            active_payout = payout_list[self.payout_num - 1]
+        else:
+            active_payout = None
+
+        if active_payout:
+            y_pot -= 18
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(30, y_pot, "Payout")
+            y_pot -= 18
             c.setFont("Helvetica", 10)
-            c.drawString(40, y_pot, f"${cashed_out.get('vendor', 0):.2f}")
+            c.drawString(40, y_pot, f"${active_payout.get('vendor', 0):.2f}")
             c.rect(40 - 3, y_pot - 3, 120, 15)
             y_pot -= 18
-        else:
-            c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, f"TBD")
-            c.rect(34 - 3, y_pot - 3, 60, 15)
-            c.drawString(148, y_pot, f"TBD")
-            c.rect(148 - 3, y_pot - 3, 60, 15)
-            y_pot -= 18
-
 
         c.setFont("Helvetica-Bold", 10)
         c.drawCentredString(285, y, "Revenue by Type")
@@ -339,18 +354,25 @@ class PDF:
         c.drawCentredString(315, y_type, "Total")
         y_type -= 18
 
-        payout_list = self.ticket_data.get('revenue', {}).get('payout', [])
         prod_type_total = {}
-        if payout_list and payout_list[-1].get('grouped'):
-            for item in payout_list[-1]['grouped']:
+        if active_payout and active_payout.get('grouped'):
+            for item in active_payout['grouped']:
                 prod_type_total[item['product_type']] = item['vendor']
-            prod_type_total['Total'] = payout_list[-1].get('vendor', 0)
+            prod_type_total['Total'] = active_payout.get('vendor', 0)
+        elif payout_list:
+            for payout in payout_list:
+                for item in payout.get('grouped', []):
+                    prod_type_total[item['product_type']] = prod_type_total.get(item['product_type'], 0) + item[
+                        'vendor']
+            prod_type_total['Total'] = sum(p.get('vendor', 0) for p in payout_list)
+        else:
+            for item in self.ticket_data.get('revenue', {}).get('grouped', []):
+                prod_type_total[item['product_type']] = item['total']
 
-        c.setFont("Helvetica-Bold", 10)
-        for type in ["Hot Food", "General", "Produce", "Total"]:
-            total = prod_type_total.get(type, 0)
+        for p_type in ["Hot Food", "General", "Produce", "Total"]:
+            total = prod_type_total.get(p_type, 0)
             c.setFont("Helvetica", 10)
-            c.drawString(216, y_type, str(type))
+            c.drawString(216, y_type, str(p_type))
             c.rect(216 - 3, y_type - 3, 60, 15)
             c.drawString(290, y_type, f"${total:.2f}" if total else f"${0:.2f}")
             c.rect(290 - 3, y_type - 3, 60, 15)
@@ -371,7 +393,6 @@ class PDF:
         c.drawString(360, y_sign, "Vendor Signature:")
         c.line(447, y_sign, 582, y_sign)
         y_sign -= 18
-
         c.drawString(360, y_sign, "Employee Name:")
         c.rect(442, y_sign - 3, 140, 15)
         c.drawString(445, y_sign + 1, f"{current_user.get_user_full_name()}")
