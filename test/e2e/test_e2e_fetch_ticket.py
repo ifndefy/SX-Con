@@ -1,5 +1,4 @@
-import pytest
-
+from unittest.mock import patch
 from src.user import current_user
 from ui.core.theme_manager import ThemeManager
 from ui.main_window import MainWindow
@@ -51,7 +50,8 @@ def test_e2e_fetch_ticket(app):
     current_tab.product_sections[0]["quantity"].setText("2")
 
     # 4 - click create record -> successful
-    current_tab.create_btn.click()
+    with patch.object(current_tab, 'on_print_clicked'):
+        current_tab.create_btn.click()
 
     # 5 - verify form clears after successful create
     assert current_tab.vendor_id_input.text() == "", "Expected form to be cleared after successful record creation"

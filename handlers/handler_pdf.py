@@ -2,7 +2,7 @@ import os
 
 from utils.core.generate_pdf import PDF
 
-def handler_live_pdf(ticket_number, vendor_data, product_data, revenue_data, datetime, payout_number=None):
+def handler_live_pdf(ticket_number, vendor_data, product_data, revenue_data, datetime):
     """
     :Purpose: Live PDF generation needs to pass data into the handler
     :Method: passes live data into generate_pdf method
@@ -16,10 +16,7 @@ def handler_live_pdf(ticket_number, vendor_data, product_data, revenue_data, dat
     """
     pdf = PDF("LIVE")
     pdf.ticket_num = ticket_number
-    if not payout_number is None:
-        pdf.set_pdf_filename(payout_number)
-    else:
-        pdf.set_pdf_filename(pdf.ticket_num)
+    pdf.set_pdf_filename()
     pdf.set_cursor(pdf.pdf_filename)
 
     pdf.vendor_id = vendor_data.get('vendor_id')
