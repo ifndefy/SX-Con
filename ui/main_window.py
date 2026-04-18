@@ -111,6 +111,9 @@ class MainWindow(QWidget):
                 self.admin_settings_tab = AdminSettingsTab(self.api_handler, self.db_connection)
                 self.tabs.addTab(self.admin_settings_tab, "Admin Settings")
                 self.tabs.tabBar().setStyleSheet("QTabBar::tab:last { background-color: #691601; }")
+        else:
+            self.theme_manager.apply_default_theme(self)
+
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
     def on_tab_changed(self, index):

@@ -367,7 +367,7 @@ class VendorsTab(BaseTab):
                     if not datetime_string:
                         continue
                     try:
-                        parsed_datetime = datetime.strptime(datetime_string, "%m/%d/%y -- %H:%M")
+                        parsed_datetime = datetime.strptime(datetime_string, "%m/%d/%y -- %I:%M %p")
                         if vendor_id not in last_consignments or parsed_datetime > last_consignments[vendor_id][
                             'parsed']:
                             last_consignments[vendor_id] = {

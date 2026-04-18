@@ -315,7 +315,7 @@ class RevenuePayout(QWidget):
             'vendor': payout['vendor'],
             'super_x': payout['super_x'],
             'user': ', '.join([current_user.get_username(), current_user.get_user_full_name()]),
-            'datetime': datetime.now().strftime("%m/%d/%y -- %H:%M"),
+            'datetime': datetime.now().strftime("%m/%d/%y -- %I:%M %p"),
             'products': payout['products'],
             'grouped': payout['grouped']
         }

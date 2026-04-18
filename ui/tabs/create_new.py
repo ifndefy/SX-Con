@@ -643,8 +643,8 @@ class CreateNewTab(BaseTab):
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle("Warning - Product Line Removal")
         msg_box.setText(f"Are you sure you want to remove this product line?\n{product_id} - {product_name}")
-        confirm_btn = msg_box.addButton("Confirm", QMessageBox.ButtonRole.AcceptRole)
-
+        cancel_btn = msg_box.addButton("Cancel", QMessageBox.ButtonRole.NoRole)
+        confirm_btn = msg_box.addButton("Confirm", QMessageBox.ButtonRole.NoRole)
         msg_box.setDefaultButton(confirm_btn)
 
         msg_box.exec()
@@ -1680,6 +1680,9 @@ class CreateNewTab(BaseTab):
 
         if radio_buttons:
             radio_buttons[0].setChecked(True)
+
+        cancel_btn = QPushButton("Cancel")
+        layout.addWidget(cancel_btn)
 
         confirm_btn = QPushButton("Confirm")
         layout.addWidget(confirm_btn)

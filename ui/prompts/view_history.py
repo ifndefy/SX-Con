@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import QMessageBox
 
 from services.get_item import get_item
 from services.get_property import get_property
-from handlers.handler_pdf import handler_live_pdf
+from handlers.handler_pdf import handler_db_pdf
 from handlers.handler_print import handler_print
 from utils.core import generate_excel as xls_gen
 
@@ -77,7 +77,7 @@ class ViewPayoutHistory(QDialog):
         date_field = QLineEdit(payout_data.get('datetime', 'N/A'))
         date_field.setReadOnly(True)
         date_field.setObjectName("READ_ONLY")
-        date_field.setFixedWidth(150)
+        date_field.setFixedWidth(195)
         top_layout.addWidget(date_field)
 
         top_layout.addStretch()
@@ -217,20 +217,10 @@ class ViewPayoutHistory(QDialog):
         :author(s): Joe Lee
         """
         payout_index = self.sender().property("payout_index")
-        consignment, vendor, revenue_data = self._get_payout_ticket_data(payout_index)
-        if not consignment:
-            return
-
         try:
-            handler_live_pdf(
-                self.consignment_id,
-                vendor,
-                consignment.get('products', []),
-                revenue_data,
-                consignment.get('datetime', ''),
-                payout_number=payout_index + 1
-            )
-            QMessageBox.information(self, "PDF Generated", f"PDF generated for Ticket Number: {self.consignment_id} Payout #{payout_index + 1}")
+            handler_db_pdf(int(self.consignment_id), payout_num=payout_index + 1)
+            QMessageBox.information(self, "PDF Generated",
+                                    f"PDF generated for Ticket Number: {self.consignment_id} Payout #{payout_index + 1}")
             log.info(f"PDF generated for Ticket Number: {self.consignment_id} Payout #{payout_index + 1}")
         except Exception as e:
             log.error(f"Failed to generate PDF for payout #{payout_index + 1}: {e}")
@@ -242,19 +232,9 @@ class ViewPayoutHistory(QDialog):
         :author(s): Joe Lee
         """
         payout_index = self.sender().property("payout_index")
-        consignment, vendor, revenue_data = self._get_payout_ticket_data(payout_index)
-        if not consignment:
-            return
 
         try:
-            handler_live_pdf(
-                self.consignment_id,
-                vendor,
-                consignment.get('products', []),
-                revenue_data,
-                consignment.get('datetime', ''),
-                payout_number=payout_index + 1
-            )
+            handler_db_pdf(int(self.consignment_id), payout_num=payout_index + 1)
         except Exception as e:
             log.error(f"Failed to generate PDF for printing payout #{payout_index + 1}: {e}")
             QMessageBox.critical(self, "PDF Failed", f"Failed to generate PDF:\n\n{e}")

@@ -16,7 +16,10 @@ def handler_live_pdf(ticket_number, vendor_data, product_data, revenue_data, dat
     """
     pdf = PDF("LIVE")
     pdf.ticket_num = ticket_number
-    pdf.set_pdf_filename(payout_number)
+    if not payout_number is None:
+        pdf.set_pdf_filename(payout_number)
+    else:
+        pdf.set_pdf_filename(pdf.ticket_num)
     pdf.set_cursor(pdf.pdf_filename)
 
     pdf.vendor_id = vendor_data.get('vendor_id')
@@ -36,12 +39,16 @@ def handler_live_pdf(ticket_number, vendor_data, product_data, revenue_data, dat
     pdf.create_supermarket_ticket()
     return pdf
 
-def handler_db_pdf(ticket_num):
+def handler_db_pdf(ticket_num, payout_num=None):
     """
     :Purpose: Fetches a consignment item from the database and prints the base data
     :Param: ticket_num: Ticket number
     :Author(s): Joe Lee
     """
     pdf = PDF(ticket_num)
+    pdf.payout_num = payout_num
+    if payout_num is not None:
+        pdf.set_pdf_filename(payout_num)
+        pdf.set_cursor(pdf.pdf_filename)
     pdf.create_supermarket_ticket()
     return pdf
