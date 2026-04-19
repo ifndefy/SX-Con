@@ -367,7 +367,7 @@ class VendorsTab(BaseTab):
                     if not datetime_string:
                         continue
                     try:
-                        parsed_datetime = datetime.strptime(datetime_string, "%m/%d/%y -- %H:%M")
+                        parsed_datetime = datetime.strptime(datetime_string, "%m/%d/%y -- %I:%M %p")
                         if vendor_id not in last_consignments or parsed_datetime > last_consignments[vendor_id][
                             'parsed']:
                             last_consignments[vendor_id] = {
@@ -696,7 +696,15 @@ class VendorsTab(BaseTab):
         self.create_btn.clicked.connect(self.create_new_vendor_prompt)
 
     def check_vendor_id_input(self, dialog):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Joe Lee
+        """
         def handler():
+            """
+            :Purpose: Validates the vendor id input
+            :Author(s): Joe Lee
+            """
             vendor_id_input = dialog.findChild(QLineEdit, "vendor_id_input")
             vendor_id = vendor_id_input.text().strip()
 
@@ -722,11 +730,19 @@ class VendorsTab(BaseTab):
         :Author(s): Joe Lee
         """
         def handler():
+            """
+            :Purpose: Validates the vendor data input for vendor creation
+            :Author(s): Joe Lee
+            """
             if self.validate_vendor_data(dialog):
                 dialog.accept()
         return handler
 
     def validate_vendor_data(self, dialog):
+        """
+        :Purpose: Validates the vendor data input for vendor creation
+        :Author(s): Joe Lee
+        """
         if not VAL.val_fl_name(dialog.findChild(QLineEdit, "first_name_input").text()):
             return False
         if not VAL.val_m_name(dialog.findChild(QLineEdit, "middle_name_input").text()):
@@ -785,6 +801,10 @@ class VendorsTab(BaseTab):
         return vendor_doc
 
     def on_edit_clicked(self):
+        """
+        :Purpose: Handles edit button via a sequence of events
+        :Author(s): Joe Lee
+        """
         btn = self.sender()
         section_widget = btn.parent()
 
@@ -803,6 +823,10 @@ class VendorsTab(BaseTab):
         btn.clicked.connect(self.on_save_clicked)
 
     def on_save_clicked(self):
+        """
+        :Purpose: Handles save button via a sequence of events
+        :Author(s): Joe Lee
+        """
         btn = self.sender()
         section_widget = btn.parent()
 

@@ -1,6 +1,11 @@
 import utils.logger.logger as log
 
 def val_username(username: str) -> bool:
+    """
+    :purpose: Validates username against length and special character requirements
+    :return: True if Valid, False otherwise
+    :author(s): Colin Heinselman
+    """
     # Set conditions
     max_length = 18
     min_length = 4

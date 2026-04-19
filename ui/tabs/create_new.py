@@ -1,5 +1,8 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QRadioButton, QDialog
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QRadioButton
+from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QFrame
@@ -13,8 +16,8 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
-
 from pathlib import Path
+import time
 
 from src import SPOT
 
@@ -521,11 +524,23 @@ class CreateNewTab(BaseTab):
         status_bar_instance.send_message(f"Added product line. Total: {len(self.product_sections)}")
 
     def _make_type_changed_handler(self, sec):
+        """
+        :Purpose: Instance Handler
+        :Author(s): Colin Heinselman, Colin Henderson
+        """
         def handler(_txt):
+            """
+            :Purpose: Handles product type event
+            :Author(s): Colin Heinselman, Colin Henderson
+            """
             self._on_product_type_changed(sec)
         return handler
 
     def handle_total(self):
+        """
+        :Purpose: Handles price total calculation event
+        :Author(s): Joe Lee
+        """
         widget = self.sender()
         if not widget:
             return
@@ -535,12 +550,20 @@ class CreateNewTab(BaseTab):
             self.on_price_qty_changed(section)
 
     def get_sending_widget(self, widget):
+        """
+        :Purpose: Returns the sending widget if it exists
+        :Author(s): Joe Lee
+        """
         for section in self.product_sections:
             if (section['price'] is widget or section['quantity'] is widget or section['rate'] is widget):
                 return section
         return None
 
     def on_price_qty_changed(self, section):
+        """
+        :Purpose: Handles price change event
+        :Author(s): Joe Lee
+        """
         price_text = section['price'].text().strip()
         qty_text = section['quantity'].text().strip()
         rate_text = section['rate'].text().strip().replace('%', '')
@@ -565,6 +588,10 @@ class CreateNewTab(BaseTab):
         section['total'].setText(f"${total:.2f}")
 
     def _on_product_type_changed(self, product_section: dict):
+        """
+        :Purpose: Handles product type change event
+        :Author(s): Colin Heinselman, Colin Henderson
+        """
         try:
             #update any admin changes to table
             self.rates_container = fetch_consignment_data()
@@ -579,6 +606,10 @@ class CreateNewTab(BaseTab):
             log.error(f"Failed to auto-set rate: {e}")
 
     def create_removal_handler(self, widget, product_section):
+        """
+        :Purpose: Handles product line removal
+        :Author(s): Joe Lee
+        """
         def removal_handler():
             if self.show_remove_product_warning(product_section):
                 self.remove_product_line(widget, product_section)
@@ -602,20 +633,28 @@ class CreateNewTab(BaseTab):
         status_bar_instance.send_message(f"Removed product line. Total: {len(self.product_sections)}")
 
     def show_remove_product_warning(self, product_section):
+        """
+        :Purpose: Displays a warning pop up to confirm the user wants to remove the product line
+        :Author(s): Joe Lee
+        """
         product_id = product_section['product_id'].text().strip()
         product_name = product_section['product_name'].text().strip()
 
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle("Warning - Product Line Removal")
         msg_box.setText(f"Are you sure you want to remove this product line?\n{product_id} - {product_name}")
-        confirm_btn = msg_box.addButton("Confirm", QMessageBox.ButtonRole.AcceptRole)
-
+        cancel_btn = msg_box.addButton("Cancel", QMessageBox.ButtonRole.NoRole)
+        confirm_btn = msg_box.addButton("Confirm", QMessageBox.ButtonRole.NoRole)
         msg_box.setDefaultButton(confirm_btn)
 
         msg_box.exec()
         return msg_box.clickedButton() == confirm_btn
 
     def gather_record(self):
+        """
+        :Purpose: Gathers consignment data from the tab
+        :Author(s): Maksym Komarov
+        """
         vendor_info = self._gather_vendor_data()
         product_info = self._gather_products_data()
         revenue_data = self._gather_revenue_data()
@@ -628,6 +667,10 @@ class CreateNewTab(BaseTab):
         }
 
     def handle_excel_btn(self):
+        """
+        :Purpose: Handles excel button via a sequence of events
+        :Author(s): Maksym Komarov
+        """
         self.handle_calc_btn()
         data = self.gather_record()
         xls_gen.generate_excel(data)
@@ -650,9 +693,17 @@ class CreateNewTab(BaseTab):
         self.print_btn.clicked.connect(self.on_print_clicked)
 
     def on_print_clicked(self):
+        """
+        :Purpose: Handles print button via a sequence of events
+        :Author(s): Joe Lee
+        """
         ticket = self.ticket_input.text().strip()
 
         if not self.on_pdf_clicked():
+            return
+
+        if not self._wait_for_pdf(ticket):
+            QMessageBox.critical(self, "Print Failed", f"PDF for ticket {ticket} was not ready in time.")
             return
 
         try:
@@ -663,6 +714,10 @@ class CreateNewTab(BaseTab):
             QMessageBox.critical(self, "Print Failed", f"Failed to print ticket {ticket}:\n\n{e}")
 
     def on_pdf_clicked(self):
+        """
+        :Purpose: Handles pdf button via a sequence of events
+        :Author(s): Joe Lee
+        """
         vendor_data = self._gather_vendor_data()
         if vendor_data is None:
             log.warning("PDF generation skipped: No Vendor data found")
@@ -690,7 +745,27 @@ class CreateNewTab(BaseTab):
             QMessageBox.information(self, "PDF Generation Failed", f"Failed to generate a PDF")
             return False
 
+    def _wait_for_pdf(self, ticket, timeout=10, interval=0.2):
+        """
+        :Purpose: Polls for the PDF file to exist before proceeding to print
+        :Author(s): Joe Lee
+        """
+        pdf_path = Path(__file__).parent.parent.parent / "utils" / "tickets" / f"{ticket}.pdf"
+        elapsed = 0.0
+        while elapsed < timeout:
+            if pdf_path.exists():
+                return True
+            time.sleep(interval)
+            elapsed += interval
+
+        log.error(f"Timed out waiting for PDF: {pdf_path}")
+        return False
+
     def _gather_ticket_number(self):
+        """
+        :Purpose: Gets the ticket number
+        :Author(s): Joe Lee
+        """
         raw_ticket = self.ticket_input.text().strip()
         ticket_number = int(raw_ticket) if raw_ticket else None
         if not ticket_number:
@@ -699,6 +774,10 @@ class CreateNewTab(BaseTab):
         return ticket_number
 
     def _gather_vendor_data(self):
+        """
+        :Purpose: Gathers the input data for vendor
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         raw_vendor_id = self.vendor_id_input.text().strip()
         vendor_id = int(raw_vendor_id) if raw_vendor_id else None
 
@@ -706,8 +785,7 @@ class CreateNewTab(BaseTab):
             validated_vendor_id = vendor_id
         else:
             validated_vendor_id = None
-            self.vendor_id_input.setFocus()
-            self.vendor_id_input.selectAll()
+            self._flag_error(self.vendor_id_input)
             log.error("Invalid Vendor ID")
             return None
 
@@ -716,8 +794,7 @@ class CreateNewTab(BaseTab):
             validated_phone_number = phone
         else:
             validated_phone_number = None
-            self.phone_input.setFocus()
-            self.phone_input.selectAll()
+            self._flag_error(self.phone_input)
             log.error("Invalid Phone Number")
             return None
 
@@ -726,8 +803,7 @@ class CreateNewTab(BaseTab):
             validated_first_name = fname
         else:
             validated_first_name = None
-            self.first_name_input.setFocus()
-            self.first_name_input.selectAll()
+            self._flag_error(self.first_name_input)
             log.error("Invalid First Name")
             return None
 
@@ -736,8 +812,7 @@ class CreateNewTab(BaseTab):
             validated_middle_name = mname
         else:
             validated_middle_name = None
-            self.middle_name_input.setFocus()
-            self.middle_name_input.selectAll()
+            self._flag_error(self.middle_name_input)
             log.error("Invalid Middle Name")
             return None
 
@@ -746,8 +821,7 @@ class CreateNewTab(BaseTab):
             validated_last_name = lname
         else:
             validated_last_name = None
-            self.last_name_input.setFocus()
-            self.last_name_input.selectAll()
+            self._flag_error(self.last_name_input)
             log.error("Invalid Last Name")
             return None
 
@@ -756,8 +830,7 @@ class CreateNewTab(BaseTab):
             validated_address = address
         else:
             validated_address = None
-            self.address_input.setFocus()
-            self.address_input.selectAll()
+            self._flag_error(self.address_input)
             log.error("Invalid Address")
             return None
 
@@ -766,8 +839,7 @@ class CreateNewTab(BaseTab):
             validated_city = city
         else:
             validated_city = None
-            self.city_input.setFocus()
-            self.city_input.selectAll()
+            self._flag_error(self.city_input)
             log.error("Invalid City")
             return None
 
@@ -776,8 +848,7 @@ class CreateNewTab(BaseTab):
             validated_state = state
         else:
             validated_state = None
-            self.state_input.setFocus()
-            self.state_input.selectAll()
+            self._flag_error(self.state_input)
             log.error("Invalid State")
             return None
 
@@ -786,8 +857,7 @@ class CreateNewTab(BaseTab):
             validated_zip = zip
         else:
             validated_zip = None
-            self.zip_input.setFocus()
-            self.zip_input.selectAll()
+            self._flag_error(self.zip_input)
             log.error("Invalid Zip")
             return None
 
@@ -804,6 +874,10 @@ class CreateNewTab(BaseTab):
         }
 
     def _gather_revenue_data(self):
+        """
+        :Purpose: Gathers revenue data
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         return {
             'shared': self.revenue_generation.get_revenue_data(),
             'grouped': self.rev_by_prod.get_revenue_data(),
@@ -811,6 +885,10 @@ class CreateNewTab(BaseTab):
         }
 
     def _gather_products_data(self):
+        """
+        :Purpose: Gathers products data
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         products = []
         has_valid_product = False
         for section in self.product_sections:
@@ -821,8 +899,7 @@ class CreateNewTab(BaseTab):
                 validated_product_id = product_id
             else:
                 validated_product_id = None
-                section['product_id'].setFocus()
-                section['product_id'].selectAll()
+                self._flag_error(section['product_id'])
                 log.error(f"Invalid product id: {product_id}")
                 return None
 
@@ -831,7 +908,7 @@ class CreateNewTab(BaseTab):
                 validated_product_type = product_type
             else:
                 validated_product_type = None
-                section['product_type'].setFocus()
+                self._flag_error(section['product_type'])
                 section['product_type'].showPopup()
                 log.error(f"Invalid product type: {product_type}")
                 return None
@@ -841,8 +918,7 @@ class CreateNewTab(BaseTab):
                 validated_product_name = product_name
             else:
                 validated_product_name = None
-                section['product_name'].setFocus()
-                section['product_name'].selectAll()
+                self._flag_error(section['product_name'])
                 log.error(f"Invalid product name: {product_name}")
                 return None
 
@@ -853,8 +929,7 @@ class CreateNewTab(BaseTab):
                 validated_rate = rate
             else:
                 validated_rate = None
-                section['rate'].setFocus()
-                section['rate'].selectAll()
+                self._flag_error(section['rate'])
                 log.error(f"Invalid rate: {rate}")
                 return None
 
@@ -863,8 +938,7 @@ class CreateNewTab(BaseTab):
                 validated_price = price
             else:
                 validated_price = None
-                section['price'].setFocus()
-                section['price'].selectAll()
+                self._flag_error(section['price'])
                 log.error(f"Invalid price: {price}")
                 return None
 
@@ -873,8 +947,7 @@ class CreateNewTab(BaseTab):
                 validated_quantity = quantity
             else:
                 validated_quantity = None
-                section['quantity'].setFocus()
-                section['quantity'].selectAll()
+                self._flag_error(section['quantity'])
                 log.error(f"Invalid quantity: {quantity}")
                 return None
 
@@ -894,13 +967,16 @@ class CreateNewTab(BaseTab):
 
         if not has_valid_product:
             log.error("All product sections are empty")
-            self.product_sections[0]['product_id'].setFocus()
-            self.product_sections[0]['product_id'].selectAll()
+            self._flag_error(self.product_sections[0]['product_id'])
             return None
 
         return products
 
     def _gather_consignment_data(self, vendor_data, products_data, revenue_data):
+        """
+        :Purpose: Gathers all consignment data
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         raw_ticket = self.ticket_input.text().strip()
         if not raw_ticket:
             log.error("Ticket number is required")
@@ -918,6 +994,10 @@ class CreateNewTab(BaseTab):
         }
 
     def _post_to_database(self, vendor_data, products_data, revenue_data):
+        """
+        :Purpose: Uploads gathered data to database
+        :Author(s): Alexander Bubienko, Joe Lee
+        """
         try:
             if val_check_does_not_exists("Entities", "vendor", "vendor_id", vendor_data['vendor_id']):
                 if insert_item("Entities", "vendor", vendor_data) == -1:
@@ -965,20 +1045,18 @@ class CreateNewTab(BaseTab):
 
             vendor_data = self._gather_vendor_data()
             if vendor_data is None:
-                # log.error("Error: Could not gather vendor data")
                 return -1
 
             products_data = self._gather_products_data()
             if products_data is None:
-                # log.error("Error: Could not gather products data")
                 return -1
 
             revenue_data = self._gather_revenue_data()
 
-
             record_id = self._post_to_database(vendor_data, products_data, revenue_data)
 
             if record_id != -1:
+                self.on_print_clicked()
                 self.clear_form()
                 status_bar_instance.send_message(f"Ticket created successfully! Ticket Number: {record_id}")
                 return record_id
@@ -1192,7 +1270,13 @@ class CreateNewTab(BaseTab):
         self.update_ticket_number()
 
     def _parse_money(self, s: str) -> float:
-        """Parse '$1,234.56' / '1234.56' / '' -> float (empty -> 0.0). Raises ValueError if bad."""
+        """
+        Parse '$1,234.56' / '1234.56' / '' -> float (empty -> 0.0). Raises ValueError if bad.
+        Purpose: Parse strings to make sure valid integer or float
+        Return: float/int and True when checking for valid inputs, None/0 for error and False for invalid inputs
+        Author: Kyle Valdez
+
+        """
         if s is None:
             log.error(f"Invalid price: {s} is None")
             return None
@@ -1203,7 +1287,10 @@ class CreateNewTab(BaseTab):
         return float(cleaned)
 
     def _parse_int(self, s: str) -> int:
-        """Parse integer quantity (empty -> 0). Raises ValueError if bad."""
+        """
+        :Purpose: Parse integer quantity (empty -> 0). Raises ValueError if bad
+        :Author(s): Kyle Valdez
+        """
         if s is None:
             return 0
         cleaned = s.strip()
@@ -1212,7 +1299,10 @@ class CreateNewTab(BaseTab):
         return int(cleaned)
 
     def _valid_revenue_result(self, res: dict) -> bool:
-        """Ensure SXC-22 output has required numeric fields."""
+        """
+        :Purpose: Checks if the revenue is valid
+        :Author(s): Kyle Valdez
+        """
         try:
             return (
                     isinstance(res, dict)
@@ -1223,6 +1313,10 @@ class CreateNewTab(BaseTab):
             return False
 
     def handle_calc_btn(self):
+        """
+        :Purpose: Handles the calculate event via a sequence of events
+        :Author(s): Joe Lee
+        """
         if not self.val_prod_sections():
             return
         self.handle_total()
@@ -1230,6 +1324,10 @@ class CreateNewTab(BaseTab):
         self.rev_by_prod.handle_updating(self.product_sections)
 
     def check_empty_prod_section(self, prod_section):
+        """
+        :Purpose: Checks if the prod_section is empty to skip
+        :Author(s): Joe Lee
+        """
         empty = (prod_section['product_id'].text().strip() == ''
                  and prod_section['product_name'].text().strip() == ''
                  and prod_section['product_type'].currentIndex() == -1
@@ -1239,6 +1337,10 @@ class CreateNewTab(BaseTab):
         return empty
 
     def val_prod_sections(self):
+        """
+        :Purpose: Validates a product section is populated correctly
+        :Author(s): Joe Lee
+        """
         has_valid = False
         for prod in self.product_sections:
             if self.check_empty_prod_section(prod):
@@ -1246,29 +1348,25 @@ class CreateNewTab(BaseTab):
             has_valid = True
             if prod['product_id'].text().strip() == '':
                 log.error(f"Please enter a product id")
-                prod['product_id'].setFocus()
-                prod['product_id'].selectAll()
+                self._flag_error(prod['product_id'])
                 return False
             else:
                 if prod['product_type'].currentIndex() == -1:
                     log.error(f"Please enter a product type")
-                    prod['product_type'].setFocus()
+                    self._flag_error(prod['product_type'])
                     prod['product_type'].showPopup()
                     return False
                 if prod['price'].text().replace('$', '').strip() == '':
                     log.error(f"Please enter a price")
-                    prod['price'].setFocus()
-                    prod['price'].selectAll()
+                    self._flag_error(prod['price'])
                     return False
                 if prod['quantity'].text().strip() == '':
                     log.error(f"Please enter a quantity")
-                    prod['quantity'].setFocus()
-                    prod['quantity'].selectAll()
+                    self._flag_error(prod['quantity'])
                     return False
                 if prod['rate'].text().replace('%', '').strip() == '':
                     log.error(f"Error: Failed to sync rate")
-                    prod['rate'].setFocus()
-                    prod['rate'].selectAll()
+                    self._flag_error(prod['rate'])
                     return False
         if not has_valid:
             log.info(f"No products to calculate")
@@ -1277,10 +1375,9 @@ class CreateNewTab(BaseTab):
 
     def update_revenue_fields(self) -> int:
         """
-        - Compute subtotal = sum(price * quantity) across product lines
-        - For each row (25/50/75/100%), call RevenueGeneration.calculate_revenues
-        - Validate outputs and populate the revenue widget fields
-        - Update status; return -1 on any error, 0 on success
+        Purpose: Compute subtotal = sum(price * quantity) across product lines and validate outputs and populate the revenue widget fields
+        Return: -1 on any error, 0 on success
+        Author: Kyle Valdez
         """
         try:
             records = getattr(self.revenue_generation, "revenue_records", None)
@@ -1300,6 +1397,8 @@ class CreateNewTab(BaseTab):
                             'super_x': d.Decimal('0.00')}
                 #iterate over every product
                 for section in self.product_sections:
+                    if self.check_empty_prod_section(section):
+                        continue
                     price = self._parse_money(section['price'].text())
                     qty = self._parse_int(section['quantity'].text())
                     #This will catch both empty values and values that don't exist in the table for some reason (i.e somehow someone tries 'Car' product type)
@@ -1413,6 +1512,10 @@ class CreateNewTab(BaseTab):
             log.error(f"Failed to fetch record: {e}")
 
     def auto_pop_prod_by_name(self):
+        """
+        :Purpose: Autopopulates a product section using the input product name
+        :Author(s): Joe Lee
+        """
         if SPOT.OFFLINE:
             log.error(f"Unable to autopopulate product fields using product name. Not connected to the database.")
         try:
@@ -1473,6 +1576,10 @@ class CreateNewTab(BaseTab):
             log.error(f"Failed to fetch record by name: {e}")
 
     def auto_pop_vend_by_field(self):
+        """
+        :Purpose: Autopopulates the vendor section via the vendor id input
+        :Author(s): Joe Lee
+        """
         if SPOT.OFFLINE:
             log.error("Unable to autopopulate vendor fields. Not connected to the database.")
             return
@@ -1554,6 +1661,10 @@ class CreateNewTab(BaseTab):
             log.error(f"Failed to fetch vendor by {db_field}: {e}")
 
     def prompt_vendor_selection(self, vendors):
+        """
+        :Purpose: Opens a dialog when multiple vendors are found with the same input value
+        :Author(s): Joe Lee
+        """
         dialog = QDialog(self)
         dialog.setWindowTitle("Multiple Vendors Found")
         dialog.setModal(True)
@@ -1588,12 +1699,19 @@ class CreateNewTab(BaseTab):
         if radio_buttons:
             radio_buttons[0].setChecked(True)
 
+        cancel_btn = QPushButton("Cancel")
+        layout.addWidget(cancel_btn)
+
         confirm_btn = QPushButton("Confirm")
         layout.addWidget(confirm_btn)
 
         selected = [None]
 
         def on_confirm():
+            """
+            :Purpose: Handles the confirmation button in the vendor dialog
+            :Author(s): Joe Lee
+            """
             for i, rb in enumerate(radio_buttons):
                 if rb.isChecked():
                     selected[0] = vendors[i]
@@ -1607,3 +1725,26 @@ class CreateNewTab(BaseTab):
         if dialog.exec() == QDialog.DialogCode.Accepted and selected[0] is not None:
             return selected[0]
         return None
+
+    def _flag_error(self, field):
+        """
+        :Purpose: sets the calling field to red on failed validation or error call
+        :Author(s): Joe Lee
+        """
+        self._error_field = field
+        field.setStyleSheet("background-color: #691601;")
+        field.style().unpolish(field)
+        field.style().polish(field)
+        field.setFocus()
+        if hasattr(field, 'selectAll'):
+            field.selectAll()
+        QTimer.singleShot(2000, self._clear_field_error)
+
+    def _clear_field_error(self):
+        """
+        :Purpose: resets the calling field's style back to default
+        :Author(s): Joe Lee
+        """
+        self._error_field.setStyleSheet("")
+        self._error_field.style().unpolish(self._error_field)
+        self._error_field.style().polish(self._error_field)

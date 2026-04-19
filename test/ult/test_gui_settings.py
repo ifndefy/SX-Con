@@ -7,12 +7,15 @@ from ui.tabs.settings import SettingsTab
 @pytest.fixture
 def settings_tab(app):
     fake_api = MagicMock()
-    fake_db = MagicMock()
+    fake_theme_manager = MagicMock()
+    fake_theme_manager.get_current_theme.return_value = "Super"
+    fake_theme_manager.get_available_themes.return_value = ["Super"]
+    fake_app = MagicMock()
     with patch('ui.tabs.settings.current_user') as test_user, \
          patch.object(SettingsTab, 'get_user_id_from_username', return_value=999):
         test_user.get_username.return_value = 'test_user'
         test_user.is_admin.return_value = True
-        yield SettingsTab(fake_api, fake_db)
+        yield SettingsTab(fake_api, fake_theme_manager, fake_app)
 
 def test_btns_exist(settings_tab):
     tab = settings_tab

@@ -1,4 +1,6 @@
+import sys
 import os
+from pathlib import Path
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -11,15 +13,15 @@ from services.get_item_by_property import get_item_by_property
 class PDF:
     def __init__(self, ticket_num):
         self.project_root = None
-        self.current_file = __file__
-        self.project_root = os.path.dirname(os.path.dirname(os.path.dirname(self.current_file)))
-        self.tickets_dir = os.path.join(self.project_root, "utils", "tickets")
-        os.makedirs(self.tickets_dir, exist_ok=True)
+        self.current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent.parent
+        self.tickets_dir = self.current_dir / "tickets"
+        self.tickets_dir.mkdir(parents=True, exist_ok=True)
 
         self.width, self.height = letter
         self.y = self.height - 30
 
         self.ticket_num = ticket_num
+        self.payout_num = None
         self.pdf_filename = None
         self.cursor = None
         self.vendor_id = None
@@ -42,18 +44,41 @@ class PDF:
                         break
 
     def set_ticket_data(self):
+        """
+        :Purpose: Retrieves ticket data from DB
+        :Author(s): Joe Lee
+        """
         self.ticket_data = get_item_by_property("Consignments", "consignment", "consignment_id", self.ticket_num)
 
-    def set_vendor_num(self, ):
+    def set_vendor_num(self):
+        """
+        :Purpose: Sets vendor id from ticket data
+        :Author(s): Joe Lee
+        """
         self.vendor_id = self.ticket_data["vendor_id"]
 
     def set_vendor_data(self):
+        """
+        :Purpose: Retrieves vendor data from DB
+        :Author(s): Joe Lee
+        """
         self.vendor_data = get_item_by_property("Entities", "vendor", "vendor_id", self.vendor_id)
 
-    def set_pdf_filename(self):
-        self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
+    def set_pdf_filename(self, payout_number=None):
+        """
+        :Purpose: Sets PDF file name
+        :Author(s): Joe Lee
+        """
+        if payout_number is not None:
+            self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}_payout_{payout_number}.pdf")
+        else:
+            self.pdf_filename = os.path.join(self.tickets_dir, f"{str(self.ticket_num)}.pdf")
 
     def set_cursor(self, f_name):
+        """
+        :Purpose: Creates Cursor for f_name file
+        :Author(s): Joe Lee
+        """
         if f_name:
             self.pdf_filename = f_name
         if self.pdf_filename is None:
@@ -61,6 +86,10 @@ class PDF:
         self.cursor = canvas.Canvas(self.pdf_filename, pagesize=letter)
 
     def create_supermarket_ticket(self):
+        """
+        :Purpose: Creates the consignment ticket in PDF form
+        :Author(s): Joe Lee
+        """
         valid_products = []
         for p in self.ticket_data["products"]:
             if self._is_valid_product(p):
@@ -85,6 +114,10 @@ class PDF:
         self.cursor.save()
 
     def _draw_pages(self, products, header_content, header_content_footer, rows_with_footer):
+        """
+        :Purpose: Populates the PDF file with the consignment details
+        :Author(s): Joe Lee
+        """
         num_rows = len(products)
 
         if num_rows <= header_content_footer:
@@ -118,6 +151,10 @@ class PDF:
             self.cursor.showPage()
 
     def draw_2_in_one(self):
+        """
+        :Purpose: Draws two copies of the consignment ticket on one page
+        :Author(s): Joe Lee
+        """
         self.draw_header(self.cursor, self.y)
         self.draw_ticket_content(self.cursor, self.y)
         self.draw_footer(self.cursor, self.y)
@@ -128,6 +165,10 @@ class PDF:
         self.draw_footer(self.cursor, self.y)
 
     def draw_header(self, cursor, y_axis):
+        """
+        :Purpose: Draws the header of the ticket
+        :Author(s): Joe Lee
+        """
         y = y_axis
         c = cursor
 
@@ -142,19 +183,20 @@ class PDF:
         c.drawString(30, y - 50, "Consignment Ticket")
 
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(375, y, "Ticket Number:")
-        c.rect(475, y - 3, 105, 15)
-        c.drawString(475 + 3, y, str(self.ticket_num))
+        c.drawString(345, y, "Ticket Number:")
+        c.rect(445, y - 3, 135, 15)
+        ticket_display = f"{self.ticket_num}: Payout #{self.payout_num}" if self.payout_num is not None else str(self.ticket_num)
+        c.drawString(445 + 3, y, ticket_display)
         y -= 20
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(375, y, "Vendor ID:")
-        c.rect(475, y - 3, 105, 15)
-        c.drawString(475 + 3, y, str(self.vendor_id))
+        c.drawString(345, y, "Vendor ID:")
+        c.rect(445, y - 3, 135, 15)
+        c.drawString(445 + 3, y, str(self.vendor_id))
         y -= 20
         c.setFont("Helvetica-Bold", 12)
-        c.drawString(375, y, "Date Time:")
-        c.rect(475, y - 3, 105, 15)
-        c.drawString(475 + 3, y, self.ticket_data['datetime'])
+        c.drawString(345, y, "Date Time:")
+        c.rect(445, y - 3, 135, 15)
+        c.drawString(445 + 3, y, self.ticket_data['datetime'])
         y -= 20
 
         c.line(30, y, self.width - 30, y)
@@ -176,6 +218,10 @@ class PDF:
 
     def draw_ticket_content(self, cursor, y_axis, products=None,
                             page_num=None, total_pages=None):
+        """
+        :Purpose: Draws the ticket product details
+        :Author(s): Joe Lee
+        """
         y_prod = y_axis
         c = cursor
 
@@ -190,13 +236,24 @@ class PDF:
         payout_products = []
         if "revenue" in self.ticket_data and "payout" in self.ticket_data["revenue"]:
             payout_list = self.ticket_data["revenue"]["payout"]
-            if payout_list and len(payout_list) > 0:
-                payout_products = payout_list[0].get("products", [])
+            if payout_list:
+                if self.payout_num is not None and (self.payout_num - 1) < len(payout_list):
+                    payout_products = payout_list[self.payout_num - 1].get("products", [])
+                else:
+                    product_totals = {}
+                    for payout in payout_list:
+                        for prod in payout.get("products", []):
+                            prod_id = prod["product_id"]
+                            product_totals[prod_id] = product_totals.get(prod_id, 0) + prod.get("vendor", 0)
+                    payout_products = [
+                        {"product_id": pid, "vendor": total}
+                        for pid, total in product_totals.items()
+                    ]
 
         payout_index = 0
         for prod in valid_products:
             vendor_amount = 0
-            if payout_index < len(payout_products): # need this for when multiples of the same product_id are in a consignment
+            if payout_index < len(payout_products):  # need this for when multiples of the same product_id are in a consignment
                 vendor_amount = payout_products[payout_index].get("vendor", 0)
                 payout_index += 1
 
@@ -221,10 +278,9 @@ class PDF:
             c.drawString(477 + 3, y_prod + 1, str(prod.get("sold", "")))
             c.drawString(509, y_prod, "Total:")
             c.rect(533, y_prod - 3, 48, 15)
-            c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}" if vendor_amount else "TBD")
+            c.drawString(533 + 3, y_prod + 1, f"${vendor_amount:.2f}" if vendor_amount else f"${0:.2f}")
             y_prod -= 20
 
-        # Replace line with page number if both arguments are provided
         if page_num is not None and total_pages is not None:
             c.setFont("Helvetica-Bold", 8)
             page_text = f"Page {page_num} of {total_pages}"
@@ -238,6 +294,10 @@ class PDF:
         self.y = y_prod
 
     def draw_footer(self, cursor, y_axis):
+        """
+        :Purpose: Draws the consignment footer
+        :Author(s): Joe Lee
+        """
         c = cursor
         y = y_axis
         c.line(30, y, self.width - 30, y)
@@ -246,9 +306,8 @@ class PDF:
 
         y_type = y - 15
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(30, y, "Potential at Signing")
+        c.drawString(30, y, "Total Potential Payout at Signing")
         y_pot = y - 15
-        # y_pot -= 18
 
         shared = self.ticket_data["revenue"]["shared"]
         if shared:
@@ -256,27 +315,37 @@ class PDF:
             c.setFont("Helvetica", 10)
             c.drawString(40, y_pot, f"${last_cut.get('vendor', 0):.2f}")
             c.rect(40 - 3, y_pot - 3, 120, 15)
-            y_pot -= 18
 
         y_pot -= 18
         c.setFont("Helvetica-Bold", 10)
-        c.drawString(30, y_pot, "Payout")
+        c.drawString(30, y_pot, "Accumulated Payouts")
         y_pot -= 18
-        payout = self.ticket_data['revenue']['payout']
-        if payout:
-            cashed_out = payout[-1]
+
+        payout_list = self.ticket_data['revenue']['payout']
+
+        if self.payout_num is not None and (self.payout_num - 1) < len(payout_list):
+            accumulated_vendor = sum(p.get('vendor', 0) for p in payout_list[:self.payout_num])
+        else:
+            accumulated_vendor = self.ticket_data.get('revenue', {}).get('accumulated', {}).get('vendor', 0)
+
+        c.setFont("Helvetica", 10)
+        c.drawString(40, y_pot, f"${accumulated_vendor:.2f}")
+        c.rect(40 - 3, y_pot - 3, 120, 15)
+
+        if self.payout_num is not None and (self.payout_num - 1) < len(payout_list):
+            active_payout = payout_list[self.payout_num - 1]
+        else:
+            active_payout = None
+
+        if active_payout:
+            y_pot -= 18
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(30, y_pot, "Payout")
+            y_pot -= 18
             c.setFont("Helvetica", 10)
-            c.drawString(40, y_pot, f"${cashed_out.get('vendor', 0):.2f}")
+            c.drawString(40, y_pot, f"${active_payout.get('vendor', 0):.2f}")
             c.rect(40 - 3, y_pot - 3, 120, 15)
             y_pot -= 18
-        else:
-            c.setFont("Helvetica", 10)
-            c.drawString(34, y_pot, f"TBD")
-            c.rect(34 - 3, y_pot - 3, 60, 15)
-            c.drawString(148, y_pot, f"TBD")
-            c.rect(148 - 3, y_pot - 3, 60, 15)
-            y_pot -= 18
-
 
         c.setFont("Helvetica-Bold", 10)
         c.drawCentredString(285, y, "Revenue by Type")
@@ -285,20 +354,27 @@ class PDF:
         c.drawCentredString(315, y_type, "Total")
         y_type -= 18
 
-        payout_list = self.ticket_data.get('revenue', {}).get('payout', [])
         prod_type_total = {}
-        if payout_list and payout_list[-1].get('grouped'):
-            for item in payout_list[-1]['grouped']:
+        if active_payout and active_payout.get('grouped'):
+            for item in active_payout['grouped']:
                 prod_type_total[item['product_type']] = item['vendor']
-            prod_type_total['Total'] = payout_list[-1].get('vendor', 0)
+            prod_type_total['Total'] = active_payout.get('vendor', 0)
+        elif payout_list:
+            for payout in payout_list:
+                for item in payout.get('grouped', []):
+                    prod_type_total[item['product_type']] = prod_type_total.get(item['product_type'], 0) + item[
+                        'vendor']
+            prod_type_total['Total'] = sum(p.get('vendor', 0) for p in payout_list)
+        else:
+            for item in self.ticket_data.get('revenue', {}).get('grouped', []):
+                prod_type_total[item['product_type']] = item['total']
 
-        c.setFont("Helvetica-Bold", 10)
-        for type in ["Hot Food", "General", "Produce", "Total"]:
-            total = prod_type_total.get(type, 0)
+        for p_type in ["Hot Food", "General", "Produce", "Total"]:
+            total = prod_type_total.get(p_type, 0)
             c.setFont("Helvetica", 10)
-            c.drawString(216, y_type, str(type))
+            c.drawString(216, y_type, str(p_type))
             c.rect(216 - 3, y_type - 3, 60, 15)
-            c.drawString(290, y_type, f"${total:.2f}" if total else "TBD")
+            c.drawString(290, y_type, f"${total:.2f}" if total else f"${0:.2f}")
             c.rect(290 - 3, y_type - 3, 60, 15)
             y_type -= 18
 
@@ -317,7 +393,6 @@ class PDF:
         c.drawString(360, y_sign, "Vendor Signature:")
         c.line(447, y_sign, 582, y_sign)
         y_sign -= 18
-
         c.drawString(360, y_sign, "Employee Name:")
         c.rect(442, y_sign - 3, 140, 15)
         c.drawString(445, y_sign + 1, f"{current_user.get_user_full_name()}")
@@ -329,6 +404,3 @@ class PDF:
 
     def save_y(self, y_axis):
         self.y = y_axis
-
-test = PDF(90)
-test.create_supermarket_ticket()

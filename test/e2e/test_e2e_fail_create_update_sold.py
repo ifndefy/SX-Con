@@ -103,7 +103,7 @@ def test_e2e_fail_create_update_sold(app):
     os.remove(output_path)
 
     pdf_output = os.path.join(os.path.dirname(__file__), "e2e_test.pdf")
-    def set_pdf_filename(self):
+    def set_pdf_filename(self, payout_number=None):
         self.pdf_filename = pdf_output
 
     with patch.object(PDF, "set_pdf_filename", set_pdf_filename), \
@@ -117,8 +117,9 @@ def test_e2e_fail_create_update_sold(app):
     # with patch('ui.tabs.create_new.QMessageBox.information') :
     #   current_tab.print_btn.click() # uncomment this line if you want to see if print actually works
 
-    ### 6 - click on create record -> successful
-    current_tab.create_btn.click()
+    ### 6 - click on create record -> successful, does not print
+    with patch.object(current_tab, 'on_print_clicked'):
+        current_tab.create_btn.click()
     assert current_tab.vendor_id_input.text() == "", "Expected form to be cleared after successful record creation"
 
     ### 7 - Go to Vendor Tickets Tab

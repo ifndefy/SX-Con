@@ -5,10 +5,12 @@
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtCore import Qt
 
+
 """
     Param: self and parent (widgets)
     Purpose: input text widget, aligns it to the right and has a placeholder of "$0.00". Connects to user edits. Leading Zeroes.
     Author(s): Kyle Valdez
+
 """
 
 

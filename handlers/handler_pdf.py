@@ -4,13 +4,14 @@ from utils.core.generate_pdf import PDF
 
 def handler_live_pdf(ticket_number, vendor_data, product_data, revenue_data, datetime):
     """
-    :param live: live indicates usage will not be able to pull from db
-    :param vendor_data:
-    :param product_data:
-    :param revenue_data:
-    :param datetime:
     :Purpose: Live PDF generation needs to pass data into the handler
     :Method: passes live data into generate_pdf method
+    :Param: ticket_number: Ticket number
+    :Param: vendor_data: Vendor document
+    :Param: product_data: Product document
+    :Param: revenue_data: Revenue document
+    :Param: datetime: Date and time
+    :Param: payout_number: Payout number
     :Author(s): Joe Lee
     """
     pdf = PDF("LIVE")
@@ -35,8 +36,16 @@ def handler_live_pdf(ticket_number, vendor_data, product_data, revenue_data, dat
     pdf.create_supermarket_ticket()
     return pdf
 
-
-def handler_db_pdf(ticket_num):
+def handler_db_pdf(ticket_num, payout_num=None):
+    """
+    :Purpose: Fetches a consignment item from the database and prints the base data
+    :Param: ticket_num: Ticket number
+    :Author(s): Joe Lee
+    """
     pdf = PDF(ticket_num)
+    pdf.payout_num = payout_num
+    if payout_num is not None:
+        pdf.set_pdf_filename(payout_num)
+        pdf.set_cursor(pdf.pdf_filename)
     pdf.create_supermarket_ticket()
     return pdf

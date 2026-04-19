@@ -1,4 +1,5 @@
 import logging as log
+import sys
 from pathlib import Path
 from datetime import datetime
 
@@ -14,13 +15,14 @@ class ForwardHandler(log.Handler):
     def emit(self, record):
         if status_bar_instance is None:
             return
-        try:
-            status_bar_instance.bus_signal.emit(record.getMessage())
-        except Exception:
-            pass
+        msg = record.getMessage()
+        status_bar_instance.bus_signal.emit(msg)
+        if record.levelno >= log.ERROR:
+            status_bar_instance.error_signal.emit(msg)
 
 __timestamp = datetime.now().strftime("%Y-%m-%d")
-__log_location = Path(__file__).parent / "logs" / f"{__timestamp}.log"
+__resolved_path = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent
+__log_location = __resolved_path / "logs" / f"{__timestamp}.log"
 __log_location.parent.mkdir(parents=True, exist_ok=True)
 
 __app_logger = log.getLogger('base_logger')

@@ -8,11 +8,12 @@ from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QFrame
+from PyQt6.QtGui import QIntValidator
 
 from src.core.update_quantities import update_quantities
 from services.get_item import get_item
+from ui.core.accumulated_payout import AccumulatedPayout
 from ui.core.revenue_by_product_type import RevenueByProdType
-from ui.core.revenue_generation import RevenueGeneration
 from ui.core.revenue_payout import RevenuePayout
 
 import utils.logger.logger as log
@@ -22,7 +23,7 @@ class ViewTicket(QObject):
         super().__init__()
         self.ticket_id = ticket_id
         self.product_widgets = {}
-        self.revenue_widget = None
+        self.accumulated_widget = None
         self.rev_by_type = None
         self.payout_widget = None
         self.ticket_status = None
@@ -94,19 +95,23 @@ class ViewTicket(QObject):
             line1_layout.addWidget(QLabel("Sold:"))
             sold_edit = QLineEdit(str(product.get('sold', 0)))
             sold_edit.setFixedWidth(100)
+            sold_edit.setValidator(QIntValidator(0, 99999, sold_edit))
             line1_layout.addWidget(sold_edit)
             if self.ticket_status == "CLOSED":
-                sold_edit.setReadOnly(True)
+                sold_edit.setEnabled(True)
                 sold_edit.setObjectName("LOCKED")
 
             update_btn = QPushButton("Update")
             update_btn.product_id = product_id
             update_btn.product_idx = idx
             if self.ticket_status == "CLOSED":
-                update_btn.setEnabled(True)
+                update_btn.setEnabled(False)
                 update_btn.setObjectName("LOCKED")
             update_btn.clicked.connect(self.handle_update_clicked)
             line1_layout.addWidget(update_btn)
+
+            # enable enter key press to trigger update button
+            sold_edit.returnPressed.connect(update_btn.click)
 
             product_layout.addLayout(line1_layout)
 
@@ -181,20 +186,20 @@ class ViewTicket(QObject):
             revenue_container_layout = QHBoxLayout()
             revenue_container_layout.setObjectName("view_bg")
 
-            shared_layout = QVBoxLayout()
-            shared_label = QLabel("Signed")
-            shared_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            shared_layout.addWidget(shared_label)
+            summary_layout = QVBoxLayout()
+            summary_label = QLabel("Revenue Summary")
+            summary_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            summary_layout.addWidget(summary_label)
             hr2 = QFrame()
             hr2.setFrameShape(QFrame.Shape.HLine)
             hr2.setFrameShadow(QFrame.Shadow.Sunken)
             hr2.setObjectName("hr")
-            shared_layout.addWidget(hr2)
-            self.revenue_widget = RevenueGeneration()
-            self.revenue_widget.setObjectName("view_bg")
-            self.revenue_widget.set_revenue_data(revenue_sharing)
-            shared_layout.addWidget(self.revenue_widget)
-            revenue_container_layout.addLayout(shared_layout)
+            summary_layout.addWidget(hr2)
+            self.accumulated_widget = AccumulatedPayout()
+            self.accumulated_widget.setObjectName("view_bg")
+            self.accumulated_widget.load(self.ticket_id)
+            summary_layout.addWidget(self.accumulated_widget)
+            revenue_container_layout.addLayout(summary_layout)
 
             vr1 = QFrame()
             vr1.setFrameShape(QFrame.Shape.VLine)
@@ -203,7 +208,7 @@ class ViewTicket(QObject):
             revenue_container_layout.addWidget(vr1)
 
             grouped_layout = QVBoxLayout()
-            grouped_label = QLabel("Grouped")
+            grouped_label = QLabel("Grouped Payout Data")
             grouped_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             grouped_layout.addWidget(grouped_label)
             hr1 = QFrame()
@@ -214,7 +219,7 @@ class ViewTicket(QObject):
             self.rev_by_type = RevenueByProdType()
             self.rev_by_type.setObjectName("view_bg")
             self.rev_by_type.load_from_db_document(ticket_data)
-            grouped_layout.addWidget(self.rev_by_type)
+            grouped_layout.addWidget(self.rev_by_type, alignment=Qt.AlignmentFlag.AlignHCenter)
             revenue_container_layout.addLayout(grouped_layout)
 
             vr2 = QFrame()
@@ -235,6 +240,7 @@ class ViewTicket(QObject):
             self.payout_widget = RevenuePayout()
             self.payout_widget.setObjectName("view_bg")
             self.payout_widget.on_calculated = self.rev_by_type.update_display_values
+            self.payout_widget.on_payout_committed = self.accumulated_widget.refresh
             self.payout_widget.set_products(valid_products, self.ticket_id)
             payout_layout.addWidget(self.payout_widget)
             revenue_container_layout.addLayout(payout_layout)
@@ -242,6 +248,10 @@ class ViewTicket(QObject):
             product_layout.addLayout(revenue_container_layout)
 
     def handle_update_clicked(self):
+        """
+        :Purpose: handles update button clicked via a sequence of events
+        :Author(s): Joe Lee
+        """
         product_id, product_index, widgets = self.get_product_and_widgets()
         if not product_id:
             log.error(f"Failed to find product id")
@@ -343,6 +353,10 @@ class ViewTicket(QObject):
 
     @staticmethod
     def fix_price(price_val):
+        """
+        :Purpose: Backup price formatting for backwards compatibility when prices were stored with '$'
+        :Author(s): Joe Lee
+        """
         price_str = str(price_val)
         if not price_str.startswith('$'):
             price_str = '$' + price_str
