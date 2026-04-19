@@ -83,6 +83,7 @@ class SearchTicketsTab(BaseTab):
         self.status_input.setFixedWidth(75)
         self.status_input.currentTextChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.status_input)
+
         search_section_row_1.addStretch()
 
         main_layout.addLayout(search_section_row_1)

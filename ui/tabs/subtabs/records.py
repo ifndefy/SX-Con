@@ -1,6 +1,6 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout, QComboBox
 from PyQt6.QtWidgets import QFrame
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QHBoxLayout
@@ -62,28 +62,28 @@ class RecordsTab(BaseTab):
         search_section_row_1.addWidget(QLabel("Ticket Number:"))
         self.ticket_number_input = QLineEdit()
         self.ticket_number_input.setPlaceholderText("T Num")
-        self.ticket_number_input.setFixedWidth(73)
+        self.ticket_number_input.setFixedWidth(100)
         self.ticket_number_input.setValidator(QIntValidator(0, 2147483647, self))
         self.ticket_number_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.ticket_number_input)
-
-        search_section_row_1.addWidget(QLabel("Status:"))
-        self.status_input = QLineEdit()
-        self.status_input.setPlaceholderText("Status")
-        self.status_input.setMaxLength(10)
-        self.status_input.setFixedWidth(75)
-        self.status_input.textChanged.connect(self.on_search_input_changed)
-        search_section_row_1.addWidget(self.status_input)
-
-        search_section_row_1.addStretch()
 
         search_section_row_1.addWidget(QLabel("Datetime:"))
         self.datetime_input = QLineEdit()
         self.datetime_input.setPlaceholderText("Datetime")
         self.datetime_input.setMaxLength(30)
-        self.datetime_input.setFixedWidth(160)
+        self.datetime_input.setFixedWidth(195)
         self.datetime_input.textChanged.connect(self.on_search_input_changed)
         search_section_row_1.addWidget(self.datetime_input)
+
+        search_section_row_1.addWidget(QLabel("Status:"))
+        self.status_input = QComboBox()
+        self.status_input.addItems(['OPEN', 'CLOSED'])
+        self.status_input.setCurrentIndex(-1)
+        self.status_input.setFixedWidth(75)
+        self.status_input.currentTextChanged.connect(self.on_search_input_changed)
+        search_section_row_1.addWidget(self.status_input)
+
+        search_section_row_1.addStretch()
 
         main_layout.addLayout(search_section_row_1)
 
@@ -159,7 +159,6 @@ class RecordsTab(BaseTab):
             self.vendor_id_input,
             self.product_id_input,
             self.datetime_input,
-            self.status_input,
         ]
         for field in fields:
             field.blockSignals(True)
@@ -169,6 +168,10 @@ class RecordsTab(BaseTab):
             field.blockSignals(False)
             field.style().unpolish(field)
             field.style().polish(field)
+
+        self.status_input.blockSignals(True)
+        self.status_input.setCurrentIndex(-1)
+        self.status_input.blockSignals(False)
 
         status_bar_instance.send_message("Query and Results cleared")
 
@@ -207,7 +210,7 @@ class RecordsTab(BaseTab):
             ticket_number_int = int(ticket_number)
             add_property("consignment_id", ticket_number_int, "=")
 
-        status = self.status_input.text().strip()
+        status = self.status_input.currentText().strip()
         if status:
             add_property("status", status, "CONTAINS")
 
