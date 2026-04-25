@@ -227,3 +227,77 @@ def test_perform_password_update_missing_user_id(forgot_pw_screen):
         assert mock_critical.called, "Expected error popup when user_id is missing"
         call_args = mock_critical.call_args[0]
         assert "Could not determine user ID" in str(call_args), "Expected missing user_id error message"
+
+def test_empty_security_answers_do_not_advance(forgot_pw_screen):
+    """
+    :Purpose: verifies empty security question answers do not allow password reset flow to continue
+    :Author(s): Colin Henderson
+    """
+    screen = forgot_pw_screen
+    QTest.keyClicks(screen.username_input, "user")
+
+    mock_user = {"user_id": 1, "username": "user"}
+
+    with patch("ui.prompts.forgot_pw.get_item_by_property", return_value=mock_user), \
+         patch.object(screen, "get_sec_questions", return_value=["Q1", "Q2"]), \
+         patch("ui.prompts.forgot_pw.AnsSecQDialog") as mock_qa_dialog, \
+         patch.object(screen, "show_password_change_dialog") as mock_pw_dialog:
+
+        mock_dialog_instance = MagicMock()
+
+        # Simulate user leaving answers blank and dialog rejecting
+        mock_dialog_instance.exec.return_value = QDialog.DialogCode.Rejected
+        mock_qa_dialog.return_value = mock_dialog_instance
+
+        screen.req_btn.click()
+
+        assert mock_qa_dialog.called, "Expected security question dialog to open"
+        assert not mock_pw_dialog.called, "Expected password change dialog to remain closed on blank answers"
+
+
+def test_blank_new_password_does_not_update(forgot_pw_screen):
+    """
+    :Purpose: verifies blank new password does not proceed with update
+    :Author(s): Colin Henderson
+    """
+    screen = forgot_pw_screen
+    QTest.keyClicks(screen.username_input, "user")
+    screen.user_id = 1
+
+    with patch("ui.prompts.forgot_pw.PasswordChangeDialog") as mock_pw_dialog_class, \
+         patch.object(screen, "perform_password_update") as mock_update:
+
+        mock_dialog = MagicMock()
+        mock_dialog.exec.return_value = QDialog.DialogCode.Accepted
+        mock_dialog.new_password = ""
+        mock_pw_dialog_class.return_value = mock_dialog
+
+        screen.show_password_change_dialog()
+
+        assert mock_pw_dialog_class.called, "Expected password dialog to open"
+        assert not mock_update.called, "Expected blank password to block update"
+
+
+def test_mismatched_new_password_does_not_update(forgot_pw_screen):
+    """
+    :Purpose: verifies mismatched password inputs do not proceed with update
+    :Author(s): Colin Henderson
+    """
+    screen = forgot_pw_screen
+    QTest.keyClicks(screen.username_input, "user")
+    screen.user_id = 1
+
+    with patch("ui.prompts.forgot_pw.PasswordChangeDialog") as mock_pw_dialog_class, \
+         patch.object(screen, "perform_password_update") as mock_update:
+
+        mock_dialog = MagicMock()
+
+        # Simulate mismatch causing dialog rejection
+        mock_dialog.exec.return_value = QDialog.DialogCode.Rejected
+        mock_dialog.new_password = None
+        mock_pw_dialog_class.return_value = mock_dialog
+
+        screen.show_password_change_dialog()
+
+        assert mock_pw_dialog_class.called, "Expected password dialog to open"
+        assert not mock_update.called, "Expected mismatched passwords to block update"
