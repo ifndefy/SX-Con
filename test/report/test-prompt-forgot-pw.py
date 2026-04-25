@@ -169,7 +169,7 @@ def test_perform_password_update_success(forgot_pw_screen):
          patch("ui.prompts.forgot_pw.QMessageBox.information") as mock_info, \
          patch.object(screen, "close") as mock_close:
 
-        screen.perform_password_update("NewPassword123!")
+        screen.perform_password_update("qwer")
 
         assert mock_info.called, "Expected success message on password update"
         assert mock_close.called, "Expected dialog to close after successful password change"
@@ -184,7 +184,7 @@ def test_perform_password_update_no_username(forgot_pw_screen):
     screen.user_id = 1
 
     with patch("ui.prompts.forgot_pw.QMessageBox.critical") as mock_critical:
-        screen.perform_password_update("NewPassword123!")
+        screen.perform_password_update("qwer")
 
         assert mock_critical.called, "Expected error popup when no username is present"
         call_args = mock_critical.call_args[0]
@@ -203,7 +203,7 @@ def test_perform_password_update_hash_failure(forgot_pw_screen):
     with patch("ui.prompts.forgot_pw.hash_password", return_value="-1"), \
          patch("ui.prompts.forgot_pw.QMessageBox.critical") as mock_critical:
 
-        screen.perform_password_update("NewPassword123!")
+        screen.perform_password_update("qwer")
 
         assert mock_critical.called, "Expected error popup when hashing fails"
         call_args = mock_critical.call_args[0]
@@ -222,7 +222,7 @@ def test_perform_password_update_missing_user_id(forgot_pw_screen):
     with patch("ui.prompts.forgot_pw.hash_password", return_value="hashed_pw"), \
          patch("ui.prompts.forgot_pw.QMessageBox.critical") as mock_critical:
 
-        screen.perform_password_update("NewPassword123!")
+        screen.perform_password_update("qwer")
 
         assert mock_critical.called, "Expected error popup when user_id is missing"
         call_args = mock_critical.call_args[0]
