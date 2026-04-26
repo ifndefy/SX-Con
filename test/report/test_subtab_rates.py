@@ -1,6 +1,7 @@
 import pytest
-from unittest.mock import patch
 import pandas as pd
+from unittest.mock import patch
+from PyQt6.QtTest import QTest
 
 from ui.tabs.subtabs.rates import CRTab
 from ui.tabs.subtabs.rates import _CREntry
@@ -106,10 +107,16 @@ def test_save_btn_valid_update(rates_tab):
 
     rate_field.setText("25")
 
-    #Simulate Save Click and make sure we don't write anything to file
+    #Simulate Save Click and make sure we don't actually write anything to file
     with patch("ui.tabs.subtabs.rates._write_to_spot_csv", return_value = None) as mock_to_csv:
         save_btn.click()
         mock_to_csv.assert_called()
+
+        passed_data = mock_to_csv.call_args[0][0]
+        expected_arg = {'type' : fake_data.get("Type")[0], 'rate' : "25"}
+
+        #check that the value we are writing to csv matches the expected type and rate
+        assert passed_data == expected_arg, f"Expected {expected_arg} to be passed to csv writer, Actual: {passed_data}"
 
     #Check that the buttons were properly swapped
     assert not edit_btn.isHidden(), f"Edit button for Entry 0 in Layout did not toggle visibility to visible"
@@ -183,20 +190,96 @@ def test_cancel_btn(rates_tab):
 def test_rate_input_filter_char(rates_tab):
     #Test that field editing filters out chars, does not add to field
     tab = rates_tab
-    pass
+    expected = ""
+
+    #Grab the first ticket object we find
+    for i in range(tab.consignments_section_layout.count()):
+        widget = tab.consignments_section_layout.itemAt(i).widget()
+        if isinstance(widget, _CREntry):
+            break
+    
+    #Fetch the appropriate subwidgets for the test
+    edit_btn = widget.entry_edit_btn
+    rate_field = widget.product_rate_input
+
+    #Simulate Click to make field editable
+    edit_btn.click()
+
+    #Clear Field to test only filtering
+    rate_field.setText("")
+    QTest.keyClicks(rate_field, "asdf")
+    
+    assert rate_field.text() == expected, f"rate_field value did not filter properly. Expected: {expected} Actual: {rate_field.text()}"
 
 def test_rate_input_filter_valid_nums(rates_tab):
     #Test that field editing accepts valid nums
     tab = rates_tab
-    pass
+    expected = "10"
+
+    #Grab the first ticket object we find
+    for i in range(tab.consignments_section_layout.count()):
+        widget = tab.consignments_section_layout.itemAt(i).widget()
+        if isinstance(widget, _CREntry):
+            break
+    
+    #Fetch the appropriate subwidgets for the test
+    edit_btn = widget.entry_edit_btn
+    rate_field = widget.product_rate_input
+
+    #Simulate Click to make field editable
+    edit_btn.click()
+
+    #Clear Field to test only filtering
+    rate_field.setText("")
+    QTest.keyClicks(rate_field, "10")
+    
+    assert rate_field.text() == expected, f"rate_field value did not filter properly. Expected: {expected} Actual: {rate_field.text()}"
 
 def test_rate_input_filter_mixed_input(rates_tab):
     #Test that field editing accepts correctly parses mixed inputs and only keeps numbers
     tab = rates_tab
-    pass
+    expected = "10"
+
+    #Grab the first ticket object we find
+    for i in range(tab.consignments_section_layout.count()):
+        widget = tab.consignments_section_layout.itemAt(i).widget()
+        if isinstance(widget, _CREntry):
+            break
+    
+    #Fetch the appropriate subwidgets for the test
+    edit_btn = widget.entry_edit_btn
+    rate_field = widget.product_rate_input
+
+    #Simulate Click to make field editable
+    edit_btn.click()
+
+    #Clear Field to test only filtering
+    rate_field.setText("")
+    QTest.keyClicks(rate_field, "as1df0")
+    
+    assert rate_field.text() == expected, f"rate_field value did not filter properly. Expected: {expected} Actual: {rate_field.text()}"
 
 def test_rate_input_filter_shift_num(rates_tab):
     #Test that field editing accepts does not accept special chars with same key as nums
     tab = rates_tab
-    pass
+    expected = ""
+
+    #Grab the first ticket object we find
+    for i in range(tab.consignments_section_layout.count()):
+        widget = tab.consignments_section_layout.itemAt(i).widget()
+        if isinstance(widget, _CREntry):
+            break
+    
+    #Fetch the appropriate subwidgets for the test
+    edit_btn = widget.entry_edit_btn
+    rate_field = widget.product_rate_input
+
+    #Simulate Click to make field editable
+    edit_btn.click()
+
+    #Clear Field to test only filtering
+    rate_field.setText("")
+    QTest.keyClicks(rate_field, "!)")
+    
+    assert rate_field.text() == expected, f"rate_field value did not filter properly. Expected: {expected} Actual: {rate_field.text()}"
 
