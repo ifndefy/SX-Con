@@ -499,7 +499,7 @@ def test_view_btn_revenue_payout_btns(vendor_tickets_tab, test_consignment):
     """
     tab = vendor_tickets_tab
     QTest.keyClicks(tab.vendor_id_input, '1')
-    QTest.qWait(400)
+    QTest.qWait(500)
     tab.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
     tab.show()
 

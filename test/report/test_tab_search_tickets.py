@@ -403,7 +403,7 @@ def test_view_btn_revenue_payout_btns(search_tickets_tab, test_consignment):
     """
     tab = search_tickets_tab
     QTest.keyClicks(tab.ticket_number_input, '99999')
-    QTest.qWait(400)
+    QTest.qWait(500)
     tab.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
     tab.show()
 
