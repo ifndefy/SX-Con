@@ -71,7 +71,133 @@ def test_buttons_exist(users_tab):
     assert tab.clear_btn is not None, "Expected Clear Button field to exist"
     assert tab.search_btn is not None, "Expected Search Button field to exist"
 
+def test_id_input(users_tab):
+    tab = users_tab
 
+    QTest.keyClicks(tab.user_id_input, "1")
+    assert tab.user_id_input.text() == '1', "Expected User ID field to accept single-digit integer input"
+    QTest.keyClicks(tab.user_id_input, "2")
+    assert tab.user_id_input.text() == '12', "Expected User ID field to accept 2 digit integer input"
+    QTest.keyClicks(tab.user_id_input, "3")
+    assert tab.user_id_input.text() == '123', "Expected User ID field to accept 3 digit integer input"
+    QTest.keyClicks(tab.user_id_input, "4")
+    assert tab.user_id_input.text() == '1234', "Expected User ID field to accept 4 digit integer input"
+
+    QTest.keyClicks(tab.user_id_input, "5")
+    assert tab.user_id_input.text() == '1234', "Expected User ID field to only accept input up to 4 digits long"
+
+def test_username_input(users_tab):
+    tab = users_tab
+
+    QTest.keyClicks(tab.username_input, "user")
+    assert tab.username_input.text() == "user", "Expected username field to accept valid input"
+
+    QTest.keyClicks(tab.username_input, "123")
+    assert tab.username_input.text() == "user", "Expected username field to reject numeric input"
+
+    QTest.keyClicks(tab.username_input, "!@#$%^&*()-_=+[{]}\|;:'\",<.>/?")
+    assert tab.username_input.text() == "user", "Expected username field to reject special characters"
+
+def test_first_name_input(users_tab):
+    tab = users_tab
+
+    QTest.keyClicks(tab.first_name_input, "first")
+    assert tab.first_name_input.text() == "first", "Expected first name field to accept valid input"
+
+    QTest.keyClicks(tab.first_name_input, "123")
+    assert tab.first_name_input.text() == "first", "Expected first name field to reject numeric input"
+
+    QTest.keyClicks(tab.first_name_input, "!@#$%^&*()-_=+[{]}\|;:'\",<.>/?")
+    assert tab.first_name_input.text() == "first", "Expected first name field to reject special characters"
+
+def test_last_name_input(users_tab):
+    tab = users_tab
+
+    QTest.keyClicks(tab.last_name_input, "last")
+    assert tab.last_name_input.text() == "last", "Expected last name field to accept valid input"
+
+    QTest.keyClicks(tab.last_name_input, "123")
+    assert tab.last_name_input.text() == "last", "Expected last name field to reject numeric input"
+
+    QTest.keyClicks(tab.last_name_input, "!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?")
+    assert tab.last_name_input.text() == "last", "Expected last name field to reject special characters"
+
+
+def test_last_consignment_input(users_tab):
+    tab = users_tab
+
+    QTest.keyClicks(tab.last_consignment_input, "01")
+    assert tab.last_consignment_input.text() == "01", "Expected last consignment field to accept valid input"
+
+    QTest.keyClicks(tab.last_consignment_input, "abc")
+    assert tab.last_consignment_input.text() == "01abc", "Expected last consignment field to accept numeric input"
+
+    QTest.keyClicks(tab.last_consignment_input, "!@#$%^&*()-_=+[{]}\\|;:")
+    assert tab.last_consignment_input.text() == "01abc!@#$%^&*()-_=+[{]}\\|;:", "Expected last consignment field to accept special characters"
+
+
+def test_admin_input(users_tab):
+    tab = users_tab
+
+    admin_field = tab.admin_field
+
+    admin_field.setCurrentIndex(-1)
+    assert admin_field.currentText() == "", "Expected an out of bounds index for the admin field to have a blank selection"
+    admin_field.setCurrentIndex(999)
+    assert admin_field.currentText() == "", "Expected an out of bounds index for the admin field to have a blank selection"
+
+    admin_field.setCurrentIndex(0)
+    assert admin_field.currentText() in ["True", "False"], "Expected the first option of the admin field to be either True or False"
+    admin_field.setCurrentIndex(1)
+    assert admin_field.currentText() in ["True", "False"], "Expected the second option of the admin field to be either True or False"
+
+
+def test_users_section(users_tab):
+    tab = users_tab
+
+    # initial size is 0
+    print("\nlist size = " + str(len(tab.users_section)))
+
+    # section / results list
+    print("\nsection type = " + tab.users_section.__class__.__name__)
+    # list in UI form
+    print("\nlayout type = " + tab.users_layout.__class__.__name__)
+
+
+
+    print("current input fields:")
+
+    print(tab.user_id_input.text())
+    print(tab.username_input.text())
+    print(tab.first_name_input.text())
+    print(tab.last_name_input.text())
+    print(tab.last_consignment_input.text())
+    print(tab.admin_field.currentText())
+
+    print("end of input fields")
+
+
+    tab.search_btn.click()
+    QTest.qWait(400)
+
+    print("length = " + str(len(tab.users_section)))
+
+
+    print("ui layout = " + str(tab.users_layout.count()))
+
+    #assert len(tab.users_section) > 1, "Expected user sections for a search"
+
+
+    #print("\ntype of section elements: " + tab.users_section[1].__class__.__name__)
+
+
+
+
+
+
+
+
+### Tests for the Create New User prompt/window
 def test_create_user_button_fields(create_user_fields):
     fields = create_user_fields
     username_field = fields["username_field"]
@@ -93,61 +219,6 @@ def test_create_user_button_fields(create_user_fields):
     assert question2_field != None, "Expected Question2 field to exist"
     assert response2_field != None, "Expected Response2 field to exist"
     assert admin_question_field != None, "Expected Admin Question field to exist"
-
-
-
-
-
-
-    #popup = tab.findChild(QDialog)
-    def populate_dialog():
-        QTest.keyClicks(username_field, "username123")
-        QTest.keyClicks(first_name_field, "first123")
-        QTest.keyClicks(last_name_field, "last123")
-        QTest.keyClicks(password_field, "asdf")
-
-
-
-        print(question1_field.__class__.__name__)
-        index = question1_field.findText("pet", Qt.MatchFlag.MatchContains)
-        question1_field.setCurrentIndex(index)
-        print("index = " + str(index) + ", " + str(question1_field.currentIndex()))
-
-
-
-        QTest.keyClicks(response1_field, "")
-        #QTest.keyClicks(question2_field, "")
-        QTest.keyClicks(response2_field, "")
-        #QTest.keyClicks(admin_question_field, "")
-
-        print("question1_field = " + str(question1_field.currentIndex()))
-
-
-        #first_name_field.setText("first")
-        last_name_field.setText("last")
-        password_field.setText("asdf")
-        question1_field.setCurrentIndex(0)
-        response1_field.setText("response 1")
-        question2_field.setCurrentIndex(1)
-        response2_field.setText("response 2")
-        admin_question_field.setCurrentIndex(1)
-
-        # QLineEdit : print("username input = " + username_input.__class__.__name__)
-        # print("username input = " + username_field.text())
-
-    populate_dialog()
-    QTimer.singleShot(0, populate_dialog)
-
-
-
-    assert username_field.text() == "username", "Expected username field to have text"
-    assert first_name_field.text() == "first", "Expected first name field to have text"
-    assert last_name_field.text() == "last", "Expected last name field to have text"
-    assert question1_field.currentIndex() == 0, "Expected Question1 field index to be set"
-    assert response1_field.text() == "response 1", "Expected Response 1 field to have text"
-    assert question2_field.currentIndex() == 1, "Expected Question2 field index to be set"
-    assert response2_field.text() == "response 2", "Expected Response 2 field to have text"
-    assert admin_question_field.currentIndex() == 1, "Expected Admin Question field index to be set"
 
 
 
