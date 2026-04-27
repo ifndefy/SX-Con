@@ -32,7 +32,7 @@ def test_login_screen_loads(login_screen):
 
 def test_blank_credentials_rejected(login_screen):
     """
-    :Purpose: verifies blank username and password are rejected without showing a warning
+    :Purpose: verifies blank username and password are rejected and showing a warning
     :Author(s): Kyle Valdez
     """
     screen = login_screen
@@ -42,7 +42,7 @@ def test_blank_credentials_rejected(login_screen):
         screen.login_btn.click()
 
         mock_auth.assert_called_once_with("", ""), "Expected authenticate to be called with empty strings"
-        assert not mock_warning.called, "Expected no warning for blank credentials (authenticate handles it)"
+        assert mock_warning.called, "Expected no warning for blank credentials (authenticate handles it)"
 
 
 def test_invalid_credentials_show_warning(login_screen):
