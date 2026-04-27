@@ -4,9 +4,16 @@ from unittest.mock import patch, MagicMock
 from PyQt6.QtCore import Qt
 from PyQt6.QtTest import QTest
 from PyQt6.QtWidgets import QDialog
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QLabel
+from unittest.mock import patch
 
-from ui.prompts.login import LoginScreen
+from src import SPOT
+from src.user import current_user
 from ui.core.theme_manager import ThemeManager
+from ui.prompts.login import LoginScreen
+from ui.prompts.forgot_pw import ForgotPasswordScreen
 
 
 @pytest.fixture
@@ -270,3 +277,121 @@ def test_authenticate_returns_false_on_exception(login_screen):
     with patch("ui.prompts.login.db_connection.connect", side_effect=Exception("Connection failed")):
         result = screen.authenticate("validuser", "somepassword")
         assert result is False, "Expected False when a database exception occurs"
+
+@pytest.fixture
+def prompt_login(app):
+    theme_manager = ThemeManager()
+    yield LoginScreen(theme_manager)
+
+def test_window_instantiates(prompt_login):
+    """
+    :Purpose: verifies the login prompt/dialog screen instantiates
+    :Author(s): Kyle Valdez
+    """
+    window = prompt_login
+    assert window is not None, "Expected LoginScreen to instantiate"
+
+def test_title(prompt_login):
+    """
+    :Purpose: verifies the title of the login screen window is valid
+    :Author(s): Kyle Valdez
+    """
+    window = prompt_login
+    assert window.windowTitle() == "SX-Con - Login", "Expected window title to be 'SX-Con - Login'"
+
+def test_theme(prompt_login):
+    """
+    :Purpose: verifies the login screen has the default theme applied
+    :Author(s): Kyle Valdez
+    """
+    window = prompt_login
+    assert window.theme_manager.get_current_theme() == "Super"
+
+def test_logo_exists(prompt_login):
+    """
+    :Purpose: verifies the logo exists on the login screen
+    :Author(s): Kyle Valdez
+    """
+    window = prompt_login
+    assert window.logo is not None, "Expected 'logo' to exist"
+
+def test_revision_exists(prompt_login):
+    """
+    :Purpose: verifies the revision is on the login screen
+    :Author(s): Kyle Valdez
+    """
+    window = prompt_login
+    rev = window.findChild(QLabel, "rev_label")
+    assert rev is not None
+    assert rev.text() == SPOT.APP_VERSION
+
+def test_username_field(prompt_login):
+    """
+    :Purpose: verifies the functionality of the username field
+    :Author(s): Kyle Valdez
+    """
+    window = prompt_login
+    assert window.username_input is not None, "Expected 'username' input field to exist"
+
+    QTest.keyClicks(window.username_input, "123./")
+    assert window.username_input.text() == '', "Expected field validator to reject all entered characters"
+    window.username_input.clear()
+    QTest.keyClicks(window.username_input, "123./abc")
+    assert window.username_input.text() == 'abc', "Expected only 'abc' to remain after validators restrict input characters"
+
+def test_password_field(prompt_login):
+    """
+    :Purpose: verifies the functionality of the password field
+    :Author(s): Kyle Valdez
+    """
+    window = prompt_login
+    assert window.password_input is not None, "Expected 'password' input field to exist"
+    QTest.keyClicks(window.password_input, "123./")
+    assert window.password_input.text() == '123./', "Expected no character limitations for password input"
+    window.password_input.clear()
+    QTest.keyClicks(window.password_input, "123./abc")
+    assert window.password_input.text() == '123./abc', "Expected no character limitations for password input"
+
+def test_login_button_works(prompt_login):
+    """
+    :Purpose: verifies the functionality of the login button
+    :Author(s): Kyle Valdez
+    """
+    window = prompt_login
+    assert window.login_btn is not None, "Expected 'Login' button to exist"
+    QTest.keyClicks(window.username_input, "user")
+    assert window.username_input.text() == 'user', "Expected 'user' to be entered as input text"
+    QTest.keyClicks(window.password_input, "asdf")
+    assert window.password_input.text() == 'asdf', "Expected 'asdf' to be entered as input text"
+    QTest.mouseClick(window.login_btn, Qt.MouseButton.LeftButton)
+    assert current_user.get_username() == "user", "Expected to be able to login with test user account"
+
+def test_login_fails_gracefully(prompt_login):
+    window = prompt_login
+    with patch('ui.prompts.login.QMessageBox.warning') as mock_warn:
+        QTest.keyClicks(window.username_input, "doesnt")
+        assert window.username_input.text() == 'doesnt', "Expected 'doesnt' to be entered as input text"
+        QTest.keyClicks(window.password_input, "work")
+        assert window.password_input.text() == 'work', "Expected 'work' to be entered as input text"
+        QTest.mouseClick(window.login_btn, Qt.MouseButton.LeftButton)
+        mock_warn.assert_called_once_with(window, 'Login Failed', 'Invalid username or password!')
+
+def test_forgot_password_button(prompt_login):
+    """
+    :Purpose: verifies the functionality of the forgot password button
+    :Author(s): Kyle Valdez
+    """
+    window = prompt_login
+    assert window.forgot_pw_btn is not None
+
+    def check_pw_dialog():
+        """
+        :Purpose: helper method to verify that the forgot password dialog window opens
+        :Author(s): Kyle Valdez
+        """
+        dialog = QApplication.activeModalWidget()
+        assert isinstance(dialog, ForgotPasswordScreen)
+        dialog.close()
+
+    QTimer.singleShot(0, check_pw_dialog)
+    QTest.mouseClick(window.forgot_pw_btn, Qt.MouseButton.LeftButton)
