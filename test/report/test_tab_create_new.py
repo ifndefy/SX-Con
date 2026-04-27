@@ -130,7 +130,7 @@ def test_datetime(create_new_tab):
     tab = create_new_tab
     assert tab.datetime_input is not None, 'Expected datetime field to exist'
     assert tab.datetime_input.isReadOnly(), 'Expected datetime field to be readOnly'
-    assert re.match(r'\d{2}/\d{2}/\d{2} -- \d{2}:\d{2} (AM|PM)', tab.datetime_input.text().strip()), "Expected datetime field to have format 'MM\DD\YY -- %I:%M %p"
+    assert re.match(r'\d{2}/\d{2}/\d{2} -- \d{2}:\d{2} (AM|PM)', tab.datetime_input.text().strip()), "Expected datetime field to have format 'MM\\DD\\YY -- %I:%M %p"
 
 def test_first_name_inputs(create_new_tab):
     """

@@ -244,7 +244,7 @@ def test_ticket_section(vendor_tickets_tab):
     assert isinstance(int(tab.tickets_section[0]['ticket_num'].text()), int), 'Expected ticket number field to be an integer value'
     assert tab.tickets_section[0]['datetime'] is not None, 'Expected datetime field to exist in ticket section'
     assert tab.tickets_section[0]['datetime'].isReadOnly(), 'Expected datetime field to be read only'
-    assert re.match(r'\d{2}/\d{2}/\d{2} -- \d{2}:\d{2} (AM|PM)', tab.tickets_section[0]['datetime'].text()), "Expected datetime field to have format 'MM\DD\YY -- %I:%M %p"
+    assert re.match(r'\d{2}/\d{2}/\d{2} -- \d{2}:\d{2} (AM|PM)', tab.tickets_section[0]['datetime'].text()), "Expected datetime field to have format 'MM\\DD\\YY -- %I:%M %p"
     assert tab.tickets_section[0]['status'] is not None, 'Expected status field to exist for ticket section'
     assert tab.tickets_section[0]['status'].isReadOnly(), 'Expected status field to be read only'
     assert re.match(r'(OPEN|CLOSED)', tab.tickets_section[0]['status'].text()), "Expected status field to be either 'OPEN' or 'CLOSED'"

@@ -131,7 +131,7 @@ def test_username_input(users_tab):
     QTest.qWait(10)
     assert tab.username_input.text() == "user", "Expected username field to reject numeric input"
 
-    QTest.keyClicks(tab.username_input, "!@#$%^&*()-_=+[{]}\|;:'\",<.>/?")
+    QTest.keyClicks(tab.username_input, "!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?")
     QApplication.processEvents()
     QTest.qWait(10)
     assert tab.username_input.text() == "user", "Expected username field to reject special characters"
@@ -152,7 +152,7 @@ def test_first_name_input(users_tab):
     QTest.qWait(10)
     assert tab.first_name_input.text() == "first", "Expected first name field to reject numeric input"
 
-    QTest.keyClicks(tab.first_name_input, "!@#$%^&*()-_=+[{]}\|;:'\",<.>/?")
+    QTest.keyClicks(tab.first_name_input, "!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?")
     QApplication.processEvents()
     QTest.qWait(10)
     assert tab.first_name_input.text() == "first", "Expected first name field to reject special characters"
