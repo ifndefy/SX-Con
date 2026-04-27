@@ -180,77 +180,133 @@ def test_users_layout(users_tab):
         assert admin_field.currentText() in ['True','False'], 'Expected result to have an admin value of either True or False'
 
 
-
-        ### Test buttons for each result
+        ### Test that buttons exist for each result
         buttons = result.findChildren(QPushButton)
         assert len(buttons) == 2, 'Expected 2 buttons for result'
 
-        assert buttons[0].text() == "Reset Password", "Expected first button for result to be 'Reset Password'"
-        assert buttons[1].text() == "Edit", "Expected second button for result to be 'Edit'"
+        reset_password_button = buttons[0]
+        edit_button = buttons[1]
 
-        
-
-    result = tab.users_layout.itemAt(1).widget()
-    fields = result.findChildren(QLineEdit)
-
-    # Check that I can use the edit button, but don't actually change values
-    # Check that the
-
-
-    '''print("result type = " + first_result.__class__.__name__)
-    username_input = first_result.findChild(QLineEdit, "READ_ONLY")
-    print("username type = " + username_input.__class__.__name__)
-    print("value = " + username_input.text())
-
-    fields = first_result.findChildren(QLineEdit)
-    for field in fields:
-        print("values = " + field.text())
-'''
+        assert reset_password_button.text() == "Reset Password", "Expected first button for result to be 'Reset Password'"
+        assert edit_button.text() == "Edit", "Expected second button for result to be 'Edit'"
 
 
 
+def test_edit_button_read_only(users_tab):
+    tab = users_tab
 
-
-    print("type of result: " + tab.users_layout.itemAt(1).__class__.__name__)
-
-
-
-
-    # initial size is 0
-    print("\nlist size = " + str(len(tab.users_section)))
-
-    # section / results list
-    print("\nsection type = " + tab.users_section.__class__.__name__)
-    # list in UI form
-    print("\nlayout type = " + tab.users_layout.__class__.__name__)
-
-
-
-    print("current input fields:")
-
-    print(tab.user_id_input.text())
-    print(tab.username_input.text())
-    print(tab.first_name_input.text())
-    print(tab.last_name_input.text())
-    print(tab.last_consignment_input.text())
-    print(tab.admin_field.currentText())
-
-    print("end of input fields")
-
-
+    QTest.keyClicks(tab.username_input, "")
     tab.search_btn.click()
-    QTest.qWait(400)
+    results_count = tab.users_layout.count()
+    assert results_count > 0, "Expected results to display for a blank search"
 
-    print("length = " + str(len(tab.users_section)))
+    for i in range(results_count):
+        ### Test fields for each result
+        result = tab.users_layout.itemAt(i).widget()
+        fields = result.findChildren(QLineEdit)
+
+        user_id_field = fields[0]
+        username_field = fields[1]
+        last_consignment_field = fields[2]
+        first_name_field = fields[3]
+        last_name_field = fields[4]
+        admin_field = result.findChild(QComboBox)
+
+        buttons = result.findChildren(QPushButton)
+        reset_password_button = buttons[0]
+        edit_button = buttons[1]
+
+        # Check that all fields are read-only
+        assert user_id_field.isReadOnly(), "Expected user id field to be read-only"
+        assert username_field.isReadOnly(), "Expected username field to be read-only"
+        assert last_consignment_field.isReadOnly(), "Expected last consignment field to be read-only"
+        assert first_name_field.isReadOnly(), "Expected first name field to be read-only"
+        assert last_name_field.isReadOnly(), "Expected last name field to be read-only"
+        assert not admin_field.isEnabled(), "Expected admin field to be read-only"
+
+        edit_button.click()
+
+        # Check that the proper fields stay read-only or become editable as intended
+        assert user_id_field.isReadOnly(), "Expected user id field to stay read-only after clicking edit button"
+        assert last_consignment_field.isReadOnly(), "Expected last consignment field to stay ready-only after clicking edit button"
+
+        assert not username_field.isReadOnly(), "Expected username field to be editable after clicking edit button"
+        assert not first_name_field.isReadOnly(), "Expected first name field to be editable after clicking edit button"
+        assert not last_name_field.isReadOnly(), "Expected last name field to be editable after clicking edit button"
+        assert admin_field.isEnabled(), "Expected admin field to be editable after clicking edit button"
+
+        edit_button.click()
+        assert user_id_field.isReadOnly(), "Expected user id field to remain read-only after clicking edit button again"
+        assert username_field.isReadOnly(), "Expected username field to become read-only after clicking edit button again"
+        assert last_consignment_field.isReadOnly(), "Expected last consignment field to remain read-only after clicking edit button again"
+
+        assert first_name_field.isReadOnly(), "Expected first name field to become read-only after clicking edit button again"
+        assert last_name_field.isReadOnly(), "Expected last name field to become read-only after clicking edit button again"
+        assert not admin_field.isEnabled(), "Expected admin field to be read-only after clicking edit button"
+
+def test_edit_button_change_values(users_tab):
+    tab = users_tab
+
+    QTest.keyClicks(tab.username_input, "")
+    tab.search_btn.click()
+    results_count = tab.users_layout.count()
+    assert results_count > 0, "Expected results to display for a blank search"
+
+    if results_count < 2:
+        count = results_count
+    else:
+        count = 2
+
+    # Only tests the first two results for the sake of security
+    for i in range(count):
+        ### Test fields for each result
+        result = tab.users_layout.itemAt(i).widget()
+        fields = result.findChildren(QLineEdit)
+
+        user_id_field = fields[0]
+        username_field = fields[1]
+        last_consignment_field = fields[2]
+        first_name_field = fields[3]
+        last_name_field = fields[4]
+        admin_field = result.findChild(QComboBox)
+
+        buttons = result.findChildren(QPushButton)
+        reset_password_button = buttons[0]
+        edit_button = buttons[1]
 
 
-    print("ui layout = " + str(tab.users_layout.count()))
+        ### Test that the "Edit" button allows admins to update user information
+        edit_button.click()
 
+        original_username = username_field.text()
+        original_first_name = first_name_field.text()
+        original_last_name = last_name_field.text()
 
+        QTest.keyClicks(username_field, "O")
+        QTest.keyClicks(first_name_field, "O")
+        QTest.keyClicks(last_name_field, "O")
 
+        assert username_field.text() == original_username + "O", "Expected to be able to type in username field"
+        assert first_name_field.text() == original_first_name + "O", "Expected to be able to type in first name field"
+        assert last_name_field.text() == original_last_name + "O", "Expected to be able to type in last name field"
 
+        # Click save button
+        edit_button.click()
+        assert username_field.text() == original_username + "O", "Expected to be able to save edits to username field"
+        assert first_name_field.text() == original_first_name + "O", "Expected to be able to save edits to first name field"
+        assert last_name_field.text() == original_last_name + "O", "Expected to be able to save edits to last name field"
 
+        # Open up fields for edits again
+        edit_button.click()
+        username_field.setText(original_username)
+        first_name_field.setText(original_first_name)
+        last_name_field.setText(original_last_name)
 
+        # Click 'Save' button to save edits
+        edit_button.click()
+        assert username_field.text() == original_username, "Expected to be able to change username back to original"
+        assert first_name_field.text() == original_first_name, "Expected to be able to change first name back to original"
+        assert last_name_field.text() == original_last_name, "Expected to be able to change last name back to original"
 
 
 
@@ -444,42 +500,4 @@ def test_create_user_admin_field(create_user_fields):
     assert admin_field.currentText() in ["True", "False"], "Expected the first option of the admin field to be either True or False"
     admin_field.setCurrentIndex(1)
     assert admin_field.currentText() in ["True", "False"], "Expected the second option of the admin field to be either True or False"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
