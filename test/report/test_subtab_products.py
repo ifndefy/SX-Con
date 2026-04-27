@@ -1,8 +1,7 @@
 import pytest
-import pandas as pd
 from unittest.mock import patch
 from PyQt6.QtTest import QTest
-from PyQt6.QtWidgets import QDialog, QVBoxLayout
+from PyQt6.QtWidgets import QDialog
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QComboBox
@@ -10,7 +9,6 @@ from services.connect_database import db_connection
 
 from services.insert_item import insert_item
 from services.delete_item import delete_item
-from services.get_item_by_property import get_item_by_property
 from ui.tabs.subtabs.products import ProductsTab
 from handlers.api_handler import APIHandler
 
