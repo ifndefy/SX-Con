@@ -9,8 +9,8 @@ from services.connect_database import db_connection
 from ui.tabs import AdminSettingsTab
 from ui.tabs.subtabs import UsersTab
 
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtWidgets import QDialog, QLineEdit, QComboBox
+from PyQt6.QtWidgets import QApplication, QPushButton
+from PyQt6.QtWidgets import QDialog, QLineEdit, QComboBox, QLabel
 
 
 
@@ -152,8 +152,69 @@ def test_admin_input(users_tab):
     assert admin_field.currentText() in ["True", "False"], "Expected the second option of the admin field to be either True or False"
 
 
-def test_users_section(users_tab):
+def test_users_layout(users_tab):
     tab = users_tab
+
+    QTest.keyClicks(tab.username_input, "")
+    tab.search_btn.click()
+    results_count = tab.users_layout.count()
+    assert results_count > 0, "Expected results to display for a blank search"
+
+    for i in range(results_count):
+        ### Test fields for each result
+        result = tab.users_layout.itemAt(i).widget()
+        fields = result.findChildren(QLineEdit)
+
+        user_id_field = fields[0]
+        username_field = fields[1]
+        last_consignment_field = fields[2]
+        first_name_field = fields[3]
+        last_name_field = fields[4]
+        admin_field = result.findChild(QComboBox)
+
+        assert user_id_field.text() is not None, "Expected result to have a user id"
+        assert username_field.text() is not None, 'Expected result to have a username'
+        assert last_consignment_field.text() is not None, 'Expected result to have a last consignment'
+        assert first_name_field.text() is not None, 'Expected result to have a first name'
+        assert last_name_field.text() is not None, 'Expected result to have a last name'
+        assert admin_field.currentText() in ['True','False'], 'Expected result to have an admin value of either True or False'
+
+
+
+        ### Test buttons for each result
+        buttons = result.findChildren(QPushButton)
+        assert len(buttons) == 2, 'Expected 2 buttons for result'
+
+        assert buttons[0].text() == "Reset Password", "Expected first button for result to be 'Reset Password'"
+        assert buttons[1].text() == "Edit", "Expected second button for result to be 'Edit'"
+
+        
+
+    result = tab.users_layout.itemAt(1).widget()
+    fields = result.findChildren(QLineEdit)
+
+    # Check that I can use the edit button, but don't actually change values
+    # Check that the
+
+
+    '''print("result type = " + first_result.__class__.__name__)
+    username_input = first_result.findChild(QLineEdit, "READ_ONLY")
+    print("username type = " + username_input.__class__.__name__)
+    print("value = " + username_input.text())
+
+    fields = first_result.findChildren(QLineEdit)
+    for field in fields:
+        print("values = " + field.text())
+'''
+
+
+
+
+
+    print("type of result: " + tab.users_layout.itemAt(1).__class__.__name__)
+
+
+
 
     # initial size is 0
     print("\nlist size = " + str(len(tab.users_section)))
@@ -185,10 +246,7 @@ def test_users_section(users_tab):
 
     print("ui layout = " + str(tab.users_layout.count()))
 
-    #assert len(tab.users_section) > 1, "Expected user sections for a search"
 
-
-    #print("\ntype of section elements: " + tab.users_section[1].__class__.__name__)
 
 
 
