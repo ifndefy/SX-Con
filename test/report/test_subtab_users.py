@@ -37,6 +37,10 @@ def create_user_dialog(app, users_tab):
 @pytest.fixture
 def create_user_fields(app, create_user_dialog):
     popup = create_user_dialog
+    buttons = popup.findChildren(QPushButton)
+    create_btn = buttons[0]
+    cancel_btn = buttons[1]
+
     fields = {
         "username_field" : popup.findChild(QLineEdit, "username_input"),
         "first_name_field" : popup.findChild(QLineEdit, "first_name_input"),
@@ -47,10 +51,10 @@ def create_user_fields(app, create_user_dialog):
         "question2_field" : popup.findChild(QComboBox, "question2"),
         "response2_field" : popup.findChild(QLineEdit, "response2"),
         "admin_question_field" : popup.findChild(QComboBox, "admin_question"),
+        "create_btn" : create_btn,
+        "cancel_btn" : cancel_btn
     }
     return fields
-
-
 
 
 def test_fields_exist(users_tab):
@@ -191,6 +195,44 @@ def test_users_layout(users_tab):
         assert edit_button.text() == "Edit", "Expected second button for result to be 'Edit'"
 
 
+def test_clear_button(users_tab):
+    tab = users_tab
+
+    QTest.keyClicks(tab.username_input, "")
+    tab.search_btn.click()
+    results_count = tab.users_layout.count()
+    assert results_count > 0, "Expected results to display for a blank search"
+
+    tab.clear_btn.click()
+    assert tab.users_layout.count() == 0, "Expected results to clear / disappear after clicking the 'Clear' button"
+
+
+def test_search_filters_results(users_tab):
+    tab = users_tab
+
+    QTest.keyClicks(tab.username_input, "user")
+    tab.search_btn.click()
+
+    results_count = tab.users_layout.count()
+    assert results_count >= 0, "Expected at least one result for search on username 'user'"
+
+    for i in range(results_count):
+        result = tab.users_layout.itemAt(i).widget()
+        username_field = result.findChildren(QLineEdit)[1]
+
+        assert "user" in username_field.text().lower(), "Expected search to properly filter results"
+
+
+def test_search_no_results(users_tab):
+    tab = users_tab
+
+    QTest.keyClicks(tab.username_input, "zzzzzzzzzz")
+    tab.search_btn.click()
+
+    assert tab.users_layout.count() == 0, "Expected no search results for search on username 'zzzzzzzzzz'"
+
+
+
 
 def test_edit_button_read_only(users_tab):
     tab = users_tab
@@ -257,7 +299,7 @@ def test_edit_button_change_values(users_tab):
     else:
         count = 2
 
-    # Only tests the first two results for the sake of security
+    # Only tests the first two results for the sake of simplicity and security.
     for i in range(count):
         ### Test fields for each result
         result = tab.users_layout.itemAt(i).widget()
@@ -309,6 +351,18 @@ def test_edit_button_change_values(users_tab):
         assert last_name_field.text() == original_last_name, "Expected to be able to change last name back to original"
 
 
+def test_reset_password_button_executes(users_tab):
+    tab = users_tab
+
+    QTest.keyClicks(tab.username_input, "")
+    tab.search_btn.click()
+
+    result = tab.users_layout.itemAt(0).widget()
+    reset_btn = result.findChildren(QPushButton)[0]
+
+    with patch("ui.tabs.subtabs.users.PasswordChangeDialog") as mock_dialog:
+        reset_btn.click()
+        assert mock_dialog.called, "Expected password change dialog to be created"
 
 
 ### Tests for the Create New User prompt/window
@@ -500,4 +554,3 @@ def test_create_user_admin_field(create_user_fields):
     assert admin_field.currentText() in ["True", "False"], "Expected the first option of the admin field to be either True or False"
     admin_field.setCurrentIndex(1)
     assert admin_field.currentText() in ["True", "False"], "Expected the second option of the admin field to be either True or False"
-
