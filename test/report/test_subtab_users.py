@@ -1,12 +1,10 @@
 import pytest
 
-from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtTest import QTest
 from unittest.mock import patch
 
 from handlers.api_handler import APIHandler
 from services.connect_database import db_connection
-from ui.tabs import AdminSettingsTab
 from ui.tabs.subtabs import UsersTab
 
 from PyQt6.QtWidgets import QApplication, QPushButton
@@ -378,15 +376,15 @@ def test_create_user_button_fields(create_user_fields):
     response2_field = fields["response2_field"]
     admin_question_field = fields["admin_question_field"]
 
-    assert username_field != None, "Expected Username field to exist"
-    assert first_name_field != None, "Expected First name field to exist"
-    assert last_name_field != None, "Expected Lastname field to exist"
-    assert password_field != None, "Expected Password field to exist"
-    assert question1_field != None, "Expected Question1 field to exist"
-    assert response1_field != None, "Expected Response1 field to exist"
-    assert question2_field != None, "Expected Question2 field to exist"
-    assert response2_field != None, "Expected Response2 field to exist"
-    assert admin_question_field != None, "Expected Admin Question field to exist"
+    assert username_field is not None, "Expected Username field to exist"
+    assert first_name_field is not None, "Expected First name field to exist"
+    assert last_name_field is not None, "Expected Lastname field to exist"
+    assert password_field is not None, "Expected Password field to exist"
+    assert question1_field is not None, "Expected Question1 field to exist"
+    assert response1_field is not None, "Expected Response1 field to exist"
+    assert question2_field is not None, "Expected Question2 field to exist"
+    assert response2_field is not None, "Expected Response2 field to exist"
+    assert admin_question_field is not None, "Expected Admin Question field to exist"
 
 
 
