@@ -17,7 +17,7 @@ from ui.prompts.forgot_pw import ForgotPasswordScreen
 
 
 @pytest.fixture
-def login_screen(app):
+def prompt_login(app):
     theme_manager = ThemeManager()
     yield LoginScreen(theme_manager)
 
@@ -277,10 +277,6 @@ def test_authenticate_returns_false_on_exception(login_screen):
     with patch("ui.prompts.login.db_connection.connect", side_effect=Exception("Connection failed")):
         result = screen.authenticate("validuser", "somepassword")
         assert result is False, "Expected False when a database exception occurs"
-
-def prompt_login(app):
-    theme_manager = ThemeManager()
-    yield LoginScreen(theme_manager)
 
 def test_window_instantiates(prompt_login):
     """

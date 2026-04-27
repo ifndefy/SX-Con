@@ -1,11 +1,11 @@
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QRegularExpressionValidator
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QVBoxLayout
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QRegularExpression
 
 from src.imgs import img_helpers
 
@@ -59,6 +59,8 @@ class LoginScreen(QDialog):
         layout.addWidget(QLabel("Username:"))
         self.username_input = QLineEdit()
         self.username_input.setPlaceholderText("Enter username")
+        alpha_validator = QRegularExpressionValidator(QRegularExpression("[A-Za-z ]+"))
+        self.username_input.setValidator(alpha_validator)
         self.username_input.setMaxLength(30)
         layout.addWidget(self.username_input)
 
