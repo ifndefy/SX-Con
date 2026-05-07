@@ -1,225 +1,181 @@
-<!--
-SX-Con - Vendor Management System
-A comprehensive application for managing vendor records, products, and revenue sharing.
--->
-
-<div align="center">
-
-  <img src="src/imgs/logo.jpg" width="400" height="auto" />
-  
+<center>
+<img src="src/imgs/sxc_window_logo.png" width="400" height="auto" />
   <h1>SX-Con</h1>
-  
   <p>
-    Content Management System to streamline and automate our client's Consignment process.
+    Consignment Content Management System.
   </p>
-  
-<!-- Badges -->
+
 [![Contributers](https://img.shields.io/github/contributors/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/graphs/contributors)
 [![Last Update](https://img.shields.io/github/last-commit/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/commits/integration/)
-[![Forks](https://img.shields.io/github/forks/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/network/members)
-[![Stars](https://img.shields.io/github/stars/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/stargazers)
-[![Open Issues](https://img.shields.io/github/issues/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/issues/)
-[![License](https://img.shields.io/github/license/ifndefy/SX-Con)](https://github.com/ifndefy/SX-Con/blob/integration/LICENSE)
+</center>
 
-<h4>
-    <a href="https://github.com/ifndefy/SX-Con/">View Demo</a>
-  <span> · </span>
-    <a href="https://github.com/ifndefy/SX-Con/issues/">Report Bug</a>
-  <span> · </span>
-    <a href="https://github.com/ifndefy/SX-Con/issues/">Request Feature</a>
-  </h4>
-</div>
+<hr>
 
-<br />
-
-<!-- Table of Contents -->
 # Table of Contents
-
 - [About the Project](#about-the-project)
-  * [Screenshots](#screenshots)
-  * [Tech Stack](#tech-stack)
-  * [Features](#features)
-  * [Configuration](#configuration)
-- [Getting Started](#getting-started)
-  * [Prerequisites](#prerequisites)
-  * [Installation](#installation)
-- [Usage](#usage)
-- [Roadmap](#roadmap)
-- [License](#license)
+  * [Development Tech Stack](#Development-Tech-Stack)
+  * [Features](#Features)
+- [Installation](#Installation)
+  * [Prerequisites](#Prerequisites)
+  * [Program Setup](#Program-Setup)
+  * [Database Configuration](#Database-Configuration)
+- [User Manual](#usage)
+- [Testing](#testing)
 - [Third Party Components](#third-party-components)
 - [Contact](#contact)
 
-<!-- About the Project -->
-## About the Project
+<hr>
 
-SX-Con is a desktop application built with PyQt6 for managing Consignment data.
-The application provides a user-friendly interface for creating, viewing, and managing consignment records with robust input validation and Azure Cosmos database integration.
+# About the Project
+SX-Con is a desktop application designed for Super X Market to manage Consignment data.
+The application provides a user-friendly interface for CRUD actions.
+The multitab setup provides for a snappy user interface to reduce time spent in the consignment process.
+The program offers both online and offline modes where consignments made in offline mode can be uploaded to the online database once there is network access.
 
-<!-- Screenshots -->
-<div align="center">
-
-# Screenshots
-
-## Create New Ticket
-![Create New Ticket](src/imgs/create_new.PNG)
-
-## Vendor Tickets
-![Vendor Tickets](src/imgs/vendor_tickets.PNG)
-
-## Open Tickets  
-![Open Tickets](src/imgs/open_tickets.PNG)
-
-## Settings
-![Settings](src/imgs/settings.PNG)
-
-## Admin
-![Admin](src/imgs/admin.PNG)
-
-## ERD
-![ERD](src/imgs/ERD1.png)
-![ERD](src/imgs/ERD2.png)
-
-</div>
-<!-- TechStack -->
-
-### Tech Stack
+## Development Tech Stack
 
 - **Language:**
   - Python v3.11.9
-- **Version Control:**
-  - git
-  - github
 - **IDE and Tools:**
   - Atlassian Confluence
+  - Atlassian JIRA
   - Jetbrains Pycharm Professional
-  - Poetry
+  - poetry = "2.2.1"
 - **Frontend:**
-  - Python PyQt6
+  - pyqt6 = "6.10.0"
 - **Backend:**
-  - Azure Cosmos DB SDK
-  - Python bcrypt
-<!-- Update the tech stack, it should list what's on the slideshow -->
+  - azure-core = "1.36.0"
+  - azure-cosmos = "4.14.2"
+  - bcrypt = "5.0.0"
+  - openpyxl = "3.1.5"
+  - pandas = "3.0.0"
+  - pywin32 = "310"
+  - reportlab = "4.4.0"
 
-<!-- Features -->
-### Features
-
-- **Multi-tab Interface**: Separate tabs for Create New, Vendor Tickets, Open Tickets, Settings, and Admin Settings
-    - User Interface is reduced, cleaned, and modernized using tabs to quickly move through options
+## Features
+- **Aggregate Data**:
+    - Average price of a product
+    - Last price used for a product
+    - Last consignment rate used of ra product
+- **Auto-generated Fields**:
+    - ticket numbers and timestamps
+    - Vendor Auto Population triggered from the vendor id or phone number fields
+    - Product Auto Population triggered from the product id or product name fields
+- **Content Management**: Create and manage consignment records
+    - User input data is stored in Azure Cosmos NoSQL Database.
 - **Login Authentication**: login credentials are hashed and stored
     - Passwords are hashed using bcrypt algorithm and stored along with usernames in Azure database to protect user information
-- **Content Management**: Create and manage records with comprehensive information
-    - User input data is stored in Azure Cosmos NoSQL Database. Additional features such as Cosmos actions, autogeneration, and validation are combined to manage the content.
-- **Input Validation**: Robust input restrictions matching database constraints
-    - Form fields enforce strict data type validation using PyQt6 validators to prevent database insertion errors. All validation matches Azure SQL database column constraints.
-- **Revenue Sharing**: Calculate and manage revenue distribution
-    - Implemented a button-triggered revenue calculation that derives totals from (price × quantity) and applies each percentile row (25/50/75/100) to compute gross, vendor (75%), and Super X (25%) shares
-- **Azure Cosmos NoSQL Integration**: Secure cloud database connectivity
-    - Cosmos NoSQL allows for minimal upkeep/scaling costs, ease of use and improved database connection latency. Secure access is guaranteed thorugh either key-based authentication.  
-- **Azure Cosmos NoSQL Actions**: 
-    - Azure Cosmos NoSQL gives the user ability to interact with the database (being with insert, update, delete, and get the value) with its own query language.
-- **Auto-generated Fields**: Automatic ticket numbers and timestamps
-    - Additional information is automatically fetched from the database and entered when the user enters product information and vendor ID
-    - Database is fetched on startup to automatically generate the next ticket number as well as the ticket's date and timestamp
-- **Printing**: Ticket/Traveler printing
-    - Tickets are generated as PDFs for easy printing.
-    - PDF layout and formatting is created using reportlab.
-    - Once the PDF is generated, it is automatically downloaded to the user's machine using standard os file-handling functions.
+- **Multi-tab Interface**: Separate tabs for Create New, Vendor Tickets, Search Tickets, Settings, and Admin Settings
+    - User Interface is minimal, clean, and modernized using tabs to quickly move through the windows
+- **Individual Payout Data**: consignments can be created through compound payouts
+- **Revenue Sharing**: Calculate revenue distribution
+    - group by product type
+    - group by potential revenue quartiles
+- **Linear Consignment generation**:
+  1. PDF generation
+  2. Physical print
+  3. Database upload
 
-<!-- Config Files -->
-### Configuration
+<hr>
 
-The connection method will look for the config.ini in services directory
-Create `services/config.ini` with the following structure:
+# Installation
+## Prerequisites
+- Python v3.11.9
+  * Install using the following link: <a href="https://www.python.org/downloads/release/python-3119/">here</a>
+
+- Poetry v2.2.1
+```powershell
+pip install poetry==2.2.1
+```
+
+## Program Setup
+1. Clone the repository
+```powershell
+git clone https://github.com/ifndefy/SX-Con.git
+```
+
+2. Setup the dependencies
+- Navigate inside of the cloned repo then enter the following command:
+```powershell
+poetry install
+```
+
+3. Setup the `config.ini` file as guided below.
+
+## Database Configuration
+The following instructions can also be found in the user manual with image guidance.<br><br>
+Link the program with the Azure Cosmos NoSQL database using the following guide:<br>
+The connection method will look for the config.ini in services directory<br>
+1. Create `services/config.ini` with the following structure:
 
 ```ini
 [Cosmos Connection Parameters]
 endpoint = your-cosmos-endpoint
-key = your-cosmos-key
 database_name = your-database
-container_name = your-container
+key = your-cosmos-key
 ```
 
-## Getting Started
+Log into the Azure portal and navigate to the "Overview" page
+2. From the "Overview" page, locate and copy the "URI" value
+3. In the `config.ini` file, paste the URI as the value of `endpoint`
+```ini
+[Cosmos Connection Parameters]
+endpoint = {URI} <--
+database_name = your-database
+key = your-cosmos-key
+```
+Navigate to the `Data Explorer` page in the portal
+4. Locate and copy the name of the database
+5. In the `config.ini` file, paste the database name as the value of `database_name`
+```ini
+[Cosmos Connection Parameters]
+endpoint = {URI}
+database_name = {DB_NAME} <--
+key = your-cosmos-key
+```
+Navigate to the `Keys` page nested under `Settings`
+6. Locate and copy the `PRIMARY KEY` value
+7. In the `config.ini` file, paste the primary key as the value of `key`
+```ini
+[Cosmos Connection Parameters]
+endpoint = {URI}
+database_name = {DB_NAME}
+key = {PRIMARY_KEY} <--
+```
+8. Save the file
 
-### Prerequisites
-- Python v3.11.9
-- Poetry v2.2.1
+# Usage
+The developer documented user manual can be found via the following link: <a href='https://github.com/ifndefy/SX-Con/blob/integration/src/documents/user_manual.pdf'>User Manual</a><br>
+The developer documented maintenance manual can be found via the following link: <a href='https://github.com/ifndefy/SX-Con/blob/integration/src/documents/maintenance_manual.pdf'>Maintenance Manual</a>
 
-### Installation
-1. Confirm Poetry/Python version.
-
+# Testing
+The test framework is self-contained and can be activated using a single command after setup.<br>
+1. Install pytest
 ```powershell
-poetry --version
+pip install pytest==9.0.2
 ```
-
+2. Execute the automated tests
 ```powershell
-Python --version
+pytest -s -v
 ```
 
-2. Enable Python environment using Poetry.
-
+The pytest module will look through the repository for all files with `test` either at the beginning or end of the name<br>
+Then it will look through the file for all methods with `test` either at the beginning or end of the name and execute them<br>
+Should the user only want to execute a specific file, use the following command:
 ```powershell
-poetry env activate
+pytest {file.py} -s -v
 ```
 
-3. Install dependencies from `poetry.lock`.
+# Third Party Components
+SumatraPDF executable is used to guarantee the ability to render PDFs to enable printing:<br>
+- https://github.com/sumatrapdfreader/sumatrapdf
 
-```powershell
-poetry install --no-root
-```
-
-<!-- Usage -->
-
-## Usage
-1. Open shell terminal in SX-Con root directory.
-2. Enable poetry environment.
-
-```powershell
-poetry env activate
-```
-
-3. Run python script.
-
-```powershell
-poetry run python SXC.py
-```
-
-<!-- explain how to use this step by step -->
-
-1. Upon program startup, login using credentials.
-2. On home page landing, populate the fields. Required fields include VendorID, ProductID(s), Price(s), Quantity(s)
-3. Click "Create Record" button to insert into database
-4. Navigate through tabs for other usage. The same buttons existing on the home page also exist on the other pages, with the exception of record creation.
-
-<!-- Roadmap -->
-## Roadmap and Milestones
-1. Design and Structure
-2. Implement Core methods
-3. Implement "Create New" tab as MVP
-4. Implement CMS tabs
-5. Test
-6. Refine
-7. Publish
-
-## Testing
-
-## Deployment
-
-## Developer Instructions
-
-## Third Party Components
-SumatraPDF:
-https://github.com/sumatrapdfreader/sumatrapdf
-
-<!-- Contact -->
-## Contact
-
-- Joe Lee, joeslee@csus.edu
-- Maksym Komarov, mkomarov@csus.edu
-- Colin Henderson, colinrhenderson@csus.edu
+# Contact
 - Alexander Bubienko, alexanderbubienko@csus.edu
-- Kyle Valdez, cvaldez3@csus.edu
-- Tim Liu, timliu@csusu.edu
 - Colin Heinselman, cheinselman@csus.edu
+- Colin Henderson, colinrhenderson@csus.edu
+- Maksym Komarov, mkomarov@csus.edu
+- Joe Lee, joeslee@csus.edu
+- Tim Liu, timliu@csusu.edu
 - Tyler Slagboom, tylerslagboom@csus.edu
-<!-- Put your name and email here -->
+- Kyle Valdez, cvaldez3@csus.edu
