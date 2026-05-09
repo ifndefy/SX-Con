@@ -32,6 +32,8 @@ The application provides a user-friendly interface for CRUD actions.
 The multitab setup provides for a snappy user interface to reduce time spent in the consignment process.
 The program offers both online and offline modes where consignments made in offline mode can be uploaded to the online database once there is network access.
 
+<img src="src/imgs/create.png">
+
 ## Development Tech Stack
 
 - **Language:**
