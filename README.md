@@ -178,6 +178,6 @@ SumatraPDF executable is used to guarantee the ability to render PDFs to enable 
 - Colin Henderson, colinrhenderson@csus.edu
 - Maksym Komarov, mkomarov@csus.edu
 - Joe Lee, joeslee@csus.edu
-- Tim Liu, timliu@csusu.edu
+- Tim Liu, timliu@csus.edu
 - Tyler Slagboom, tylerslagboom@csus.edu
 - Kyle Valdez, cvaldez3@csus.edu
