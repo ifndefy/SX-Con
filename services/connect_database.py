@@ -12,8 +12,8 @@ class DatabaseConnection:
 
     def __init__(self):
         config = cparser.ConfigParser()
-        current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent
-        config_path = current_dir / 'config.ini'
+        current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent.parent
+        config_path = current_dir / 'services' / 'config.ini'
 
         #Try to read the network config, on fail default to offline mode
         try:
