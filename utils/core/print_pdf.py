@@ -11,10 +11,8 @@ class Sxcprinter:
     def __init__(self, ticket_number):        
         self.root_path = Path(sys.executable).parent if getattr(sys, 'frozen', False) else (Path(__file__).parent.parent.parent)
         self.sumatra_exe = self.root_path / SPOT.SUMATRA_RELATIVE_PATH
-        self.pdf_rel_dir = r"utils\tickets"
 
-        print(self.root_path)
-        print(self.sumatra_exe)
+        self.pdf_rel_dir = r"tickets" if getattr(sys, 'frozen', False) else r"utils\tickets"
 
         self.printer_name = None
         self.ticket_number = None
@@ -56,7 +54,7 @@ class Sxcprinter:
         return self.ticket_number
 
     def set_pdf_path_from_ticket(self, ticket_number):
-        wanted_path = os.path.join(self.root_path, self.pdf_rel_dir, f"{str(ticket_number)}.pdf")
+        wanted_path = self.root_path / self.pdf_rel_dir / f"{str(ticket_number)}.pdf"
         self.pdf_path = wanted_path
 
     def set_printer_name(self, printer_name):
