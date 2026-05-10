@@ -58,6 +58,7 @@ jobs:
       shell: powershell
       run: | 
         Move-Item -Path "./dist/SXC/_internal/ui" -Destination "./dist/SXC"
+        Move-Item -Path "./third_party" -Destination "./dist/SXC"
 
     - name: Compress to single folder
       shell: powershell
