@@ -33,15 +33,43 @@ def test_consignment(vendor_tickets_tab):
                 'rate': 30,
                 'price': 10.00,
                 'quantity': 10,
-                'sold': 0,
-                'remaining': 10,
+                'sold': 4,
+                'remaining': 6,
+                'total': 28.00,
             }
         ],
         'revenue': {
             'shared': [{'vendor': 100.00, 'super_x': 50.00}],
-            'grouped': [],
-            'payout': [],
-            'accumulated': {}
+            'grouped': [
+                {'product_type': 'General', 'total': 28.00},
+                {'product_type': 'Total', 'total': 28.00},
+            ],
+            'payout': [
+                {
+                    'vendor': 28.00,
+                    'super_x': 12.00,
+                    'user': 'test, Test User',
+                    'datetime': str(generate_host_datetime()),
+                    'products': [
+                        {
+                            'product_id': 1,
+                            'product_name': 'Test Product',
+                            'sold': 4,
+                            'vendor': 28.00,
+                            'super_x': 12.00,
+                        }
+                    ],
+                    'grouped': [
+                        {'product_type': 'General', 'vendor': 28.00, 'super_x': 12.00}
+                    ],
+                }
+            ],
+            'accumulated': {
+                'vendor': 28.00,
+                'super_x': 12.00,
+                'signed_vendor': 28.00,
+                'signed_super_x': 0.00,
+            }
         }
     }
     insert_item('Consignments', 'consignment', consignment)
@@ -216,7 +244,7 @@ def test_ticket_section(vendor_tickets_tab):
     assert isinstance(int(tab.tickets_section[0]['ticket_num'].text()), int), 'Expected ticket number field to be an integer value'
     assert tab.tickets_section[0]['datetime'] is not None, 'Expected datetime field to exist in ticket section'
     assert tab.tickets_section[0]['datetime'].isReadOnly(), 'Expected datetime field to be read only'
-    assert re.match(r'\d{2}/\d{2}/\d{2} -- \d{2}:\d{2} (AM|PM)', tab.tickets_section[0]['datetime'].text()), "Expected datetime field to have format 'MM\DD\YY -- %I:%M %p"
+    assert re.match(r'\d{2}/\d{2}/\d{2} -- \d{2}:\d{2} (AM|PM)', tab.tickets_section[0]['datetime'].text()), "Expected datetime field to have format 'MM\\DD\\YY -- %I:%M %p"
     assert tab.tickets_section[0]['status'] is not None, 'Expected status field to exist for ticket section'
     assert tab.tickets_section[0]['status'].isReadOnly(), 'Expected status field to be read only'
     assert re.match(r'(OPEN|CLOSED)', tab.tickets_section[0]['status'].text()), "Expected status field to be either 'OPEN' or 'CLOSED'"
@@ -499,7 +527,7 @@ def test_view_btn_revenue_payout_btns(vendor_tickets_tab, test_consignment):
     """
     tab = vendor_tickets_tab
     QTest.keyClicks(tab.vendor_id_input, '1')
-    QTest.qWait(400)
+    QTest.qWait(500)
     tab.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
     tab.show()
 
@@ -571,7 +599,7 @@ def test_view_payout_history_cards_exist(vendor_tickets_tab):
     assert layout.count() > 0, 'Expected at least one card in the dialog'
     dialog.close()
 
-def test_view_payout_history_card_toggle(vendor_tickets_tab):
+def test_view_payout_history_card_toggle(vendor_tickets_tab, test_consignment):
     """
     :Purpose: verifies that history dialog view button executes successfully
     :Author(s): Joe Lee
@@ -607,7 +635,7 @@ def test_view_payout_history_card_toggle(vendor_tickets_tab):
     assert expand_btn.text() == 'View', 'Expected button text to change back to View'
     dialog.close()
 
-def test_view_payout_history_card_content(vendor_tickets_tab):
+def test_view_payout_history_card_content(vendor_tickets_tab, test_consignment):
     """
     :Purpose: verifies that payout cards contain the appropriate details
     :Author(s): Joe Lee
@@ -653,7 +681,7 @@ def test_view_payout_history_card_content(vendor_tickets_tab):
     assert found_print, 'Expected Print button in card'
     dialog.close()
 
-def test_view_payout_history_pdf_btn(vendor_tickets_tab):
+def test_view_payout_history_pdf_btn(vendor_tickets_tab, test_consignment):
     """
     :Purpose: verifies that payout card's pdf button executes successfully
     :Author(s): Joe Lee
@@ -695,7 +723,7 @@ def test_view_payout_history_pdf_btn(vendor_tickets_tab):
     mock_pdf.assert_called_once()
     dialog.close()
 
-def test_view_payout_history_print_btn(vendor_tickets_tab):
+def test_view_payout_history_print_btn(vendor_tickets_tab, test_consignment):
     """
     :Purpose: verifies that payout card's print button can execute
     :Author(s): Joe Lee
@@ -737,7 +765,7 @@ def test_view_payout_history_print_btn(vendor_tickets_tab):
         print_btn.click()
     dialog.close()
 
-def test_view_payout_history_excel_btn(vendor_tickets_tab):
+def test_view_payout_history_excel_btn(vendor_tickets_tab, test_consignment):
     """
     :Purpose: verifies that payout card's excel button executes successfully
     :Author(s): Joe Lee
