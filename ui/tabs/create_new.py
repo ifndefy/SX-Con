@@ -751,7 +751,7 @@ class CreateNewTab(BaseTab):
         :Purpose: Polls for the PDF file to exist before proceeding to print
         :Author(s): Joe Lee
         """
-        current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else (Path(__file__).parent.parent / "utils")
+        current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else (Path(__file__).parent.parent.parent / "utils")
         tickets_dir = current_dir / "tickets"
         pdf_path = tickets_dir / f"{ticket}.pdf"
         elapsed = 0.0
