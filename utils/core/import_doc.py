@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 from services.insert_item import insert_item
@@ -14,7 +15,8 @@ def import_offline_records():
     note: validation should not be done here, they should have been validated prior to exporting
     author(s): Joe Lee
     """
-    offline_dir = Path(__file__).parent.parent / 'OFFLINE_tickets'
+    current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else (Path(__file__).parent.parent)
+    offline_dir = current_dir / "OFFLINE_tickets"
     if not offline_dir.exists():
         log.info("No OFFLINE_tickets directory found, skipping import")
         return

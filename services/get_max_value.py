@@ -3,7 +3,7 @@ from pathlib import Path
 from services.connect_database import db_connection
 from src import SPOT
 import utils.logger.logger as log
-
+import sys
 
 def get_max_value(container_name, property_name):
     """
@@ -37,7 +37,8 @@ def get_max_value(container_name, property_name):
             return -1
     else:
         log.warning("OFFLINE - Unable to connect to Database. OFFLINE semantics used to generate ticket number")
-        offline_tickets_dir = Path(__file__).parent.parent / 'utils' / 'OFFLINE_tickets'
+        current_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else (Path(__file__).parent.parent / "utils")
+        offline_tickets_dir = current_dir / "OFFLINE_tickets"
         if not offline_tickets_dir.exists():
             return 0
         max_value = 0

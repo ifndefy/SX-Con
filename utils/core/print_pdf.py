@@ -1,15 +1,18 @@
 import os
 import subprocess
 import win32print
+import sys
 
+from pathlib import Path
 from src import SPOT
 import utils.logger.logger as log
 
 class Sxcprinter:
-    def __init__(self, ticket_number):
-        self.root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        self.pdf_rel_dir = r"utils\tickets"
-        self.sumatra_exe = os.path.join(self.root_path, SPOT.SUMATRA_RELATIVE_PATH)
+    def __init__(self, ticket_number):        
+        self.root_path = Path(sys.executable).parent if getattr(sys, 'frozen', False) else (Path(__file__).parent.parent.parent)
+        self.sumatra_exe = self.root_path / SPOT.SUMATRA_RELATIVE_PATH
+
+        self.pdf_rel_dir = r"tickets" if getattr(sys, 'frozen', False) else r"utils\tickets"
 
         self.printer_name = None
         self.ticket_number = None
@@ -51,7 +54,7 @@ class Sxcprinter:
         return self.ticket_number
 
     def set_pdf_path_from_ticket(self, ticket_number):
-        wanted_path = os.path.join(self.root_path, self.pdf_rel_dir, f"{str(ticket_number)}.pdf")
+        wanted_path = self.root_path / self.pdf_rel_dir / f"{str(ticket_number)}.pdf"
         self.pdf_path = wanted_path
 
     def set_printer_name(self, printer_name):
@@ -175,7 +178,7 @@ class Sxcprinter:
         return True
 
     def val_dependencies(self):
-        sumatra_path = os.path.join(self.root_path, SPOT.SUMATRA_RELATIVE_PATH)
+        sumatra_path = self.root_path / SPOT.SUMATRA_RELATIVE_PATH
         if not os.path.exists(sumatra_path):
             log.error(f"Portable SumatraPDF not found at: {SPOT.SUMATRA_RELATIVE_PATH}")
             return False
